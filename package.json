@@ -1,0 +1,90 @@
+{
+  "name": "bias-copilot-aiguard",
+  "displayName": "Bias Copilot · AI Guard",
+  "description": "VS Code copilot that wraps LLM chat/completion/refactor with the GCAE second-person causal audit layer (D/A/ΔD, ¬A⇒ΔD). Core audit runs offline; LLM only generates and optionally polishes narrative.",
+  "version": "0.1.0",
+  "icon": "media/icon.png",
+  "publisher": "Nohn-ai",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Nohn-ai/bias-copilot-aiguard.git"
+  },
+  "engines": { "vscode": "^1.85.0" },
+  "categories": ["Other", "Programming Languages", "Machine Learning"],
+  "activationEvents": ["onStartupFinished"],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      { "command": "secondPerspective.refactorSelection", "title": "Causal Audit: Refactor Selection", "category": "Causal Audit", "icon": "$(sparkle)" },
+      { "command": "secondPerspective.auditSelection", "title": "Causal Audit: Audit Selection", "category": "Causal Audit", "icon": "$(shield)" },
+      { "command": "secondPerspective.configure", "title": "Causal Audit: Configure LLM / Audit", "category": "Causal Audit", "icon": "$(settings-gear)" },
+      { "command": "secondPerspective.refresh", "title": "Refresh", "category": "Causal Audit", "icon": "$(refresh)" }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        { "id": "secondPerspective", "title": "Causal Audit", "icon": "media/activitybar-icon.svg" }
+      ]
+    },
+    "views": {
+      "secondPerspective": [
+        { "id": "secondPerspective.audit", "name": "Causal Audit", "type": "webview" }
+      ]
+    },
+    "menus": {
+      "editor/context": [
+        { "command": "secondPerspective.refactorSelection", "when": "editorHasSelection", "group": "9_cutcopypaste@1" },
+        { "command": "secondPerspective.auditSelection", "when": "editorHasSelection", "group": "9_cutcopypaste@2" }
+      ],
+      "view/title": [
+        { "command": "secondPerspective.refresh", "when": "view == secondPerspective.audit", "group": "navigation" },
+        { "command": "secondPerspective.configure", "when": "view == secondPerspective.audit", "group": "1_configure" }
+      ]
+    },
+    "configuration": {
+      "title": "Causal Audit Copilot",
+      "properties": {
+        "causalAudit.llmProvider": { "type": "string", "default": "openai", "enum": ["openai", "anthropic", "ollama", "custom"], "description": "LLM provider preset (all OpenAI-compatible base)." },
+        "causalAudit.baseUrl": { "type": "string", "default": "https://api.openai.com/v1", "description": "API base URL (override for Azure / local Ollama / proxies)." },
+        "causalAudit.model": { "type": "string", "default": "gpt-4o-mini", "description": "Model id." },
+        "causalAudit.apiKey": { "type": "string", "default": "", "description": "(Legacy) import-only; prefer SecretStorage." },
+        "causalAudit.temperature": { "type": "number", "default": 0.2, "minimum": 0, "maximum": 1 },
+        "causalAudit.maxTokens": { "type": "number", "default": 2048 },
+        "causalAudit.enforceAuditBeforeApply": { "type": "boolean", "default": true, "description": "Require a passing causal audit before applying completion/refactor." },
+        "causalAudit.strictness": { "type": "string", "default": "standard", "enum": ["lenient", "standard", "strict"] },
+        "causalAudit.pythonPath": { "type": "string", "default": "", "description": "Python interpreter for the local audit engine; empty = auto-detect (Windows: py launcher, else python3)." },
+        "causalAudit.engineDir": { "type": "string", "default": "", "description": "Absolute path to python-engine dir; defaults to bundled." },
+        "causalAudit.useLlmNarrative": { "type": "boolean", "default": false, "description": "Use LLM only to polish the human-readable narrative (core audit stays local)." }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run build",
+    "build": "webpack --mode production --config webpack.config.js && webpack --mode production --config webpack.webview.config.js",
+    "watch": "webpack --mode development --watch --config webpack.config.js & webpack --mode development --watch --config webpack.webview.config.js",
+    "build:ext": "webpack --mode production --config webpack.config.js",
+    "build:web": "webpack --mode production --config webpack.webview.config.js",
+    "compile": "tsc -p ./",
+    "lint": "eslint src --ext ts,tsx"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "css-loader": "^6.10.0",
+    "eslint": "^8.57.0",
+    "style-loader": "^3.3.4",
+    "ts-loader": "^9.5.0",
+    "typescript": "^5.4.0",
+    "webpack": "^5.90.0",
+    "webpack-cli": "^5.1.0"
+  },
+  "dependencies": {
+    "openai": "^4.52.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  }
+}
