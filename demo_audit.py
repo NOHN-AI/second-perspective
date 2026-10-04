@@ -20,14 +20,7 @@ CognitiveAuditEngine = engine_mod.CognitiveAuditEngine
 ResponsibilityAccount = engine_mod.ResponsibilityAccount
 AuditConfigLoader = engine_mod.AuditConfigLoader
 
-from plugins import (
-    NarrativeStripPlugin,
-    ImplicitAssumptionPlugin,
-    FragilityLatchPlugin,
-    CausalChainSyncPlugin,
-    StateAnchorPlugin,
-    ReportRenderer,
-)
+from plugins import ReportRenderer
 
 
 def main():
@@ -45,15 +38,8 @@ def main():
     )
 
     engine = CognitiveAuditEngine(account=account, config=config)
-    # 注册官方五算子插件（引擎无 load_core_plugins，改为显式注册）
-    for cls in (
-        NarrativeStripPlugin,
-        ImplicitAssumptionPlugin,
-        FragilityLatchPlugin,
-        CausalChainSyncPlugin,
-        StateAnchorPlugin,
-    ):
-        engine.register_plugin(cls())
+    # 加载官方五算子插件（引擎负责包装为带权限层级别的 AuditPlugin）
+    engine.load_core_plugins()
 
     # ── 测试用例 1: 带叙事粉饰 + 隐假设 + 缺分支响应 ──
     print("=" * 70)

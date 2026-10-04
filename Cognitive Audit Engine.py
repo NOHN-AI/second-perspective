@@ -269,6 +269,7 @@ class CognitiveAuditEngine:
         self.llm_default_tier: LLMPermissionTier = LLMPermissionTier.T3_NARRATIVE
         self.event_chain: List[AuditEvent] = []
         self._prev_event_hash: str = 'ROOT'
+        self._clock: Optional[float] = None
 
         allowed_stages = self.config.get('allowed_stages', [])
         if allowed_stages and account.stage not in allowed_stages:
@@ -287,13 +288,69 @@ class CognitiveAuditEngine:
     def register_plugin(self, plugin: AuditPlugin) -> None:
         self.plugins.append(plugin)
 
+    def set_clock(self, t: Optional[float]) -> None:
+        '''注入虚拟时钟以实现可复现审计；传 None 恢复系统墙钟。
+
+        可复现性前提：未注入时钟时，审计证书与哈希链根**不可复现**
+        —— 证书签名内嵌 int(time.time())，链事件时间戳取系统时钟。
+        审计内容（裁定 / 各算子分析）在任何情况下均为决定论。
+        '''
+        self._clock = t
+
+    CORE_PLUGIN_TIERS: Dict[str, 'PluginTier'] = {
+        'NS': PluginTier.T3_NARRATIVE,      # 纯文本骨架，不产出 status
+        'IAP': PluginTier.T2_SIGNAL,        # 只出风险信号，不得阻断
+        'LCH': PluginTier.T2_SIGNAL,        # 只出脆弱性信号，不得阻断
+        'CCS': PluginTier.T1_STRUCTURAL,    # 产出 halt_count，允许阻断
+        'STATE': PluginTier.T1_STRUCTURAL,  # 产出最终裁定
+    }
+
+    def load_core_plugins(self) -> List[str]:
+        """加载官方五算子插件（NS / IAP / LCH / CCS / STATE）。
+
+        `plugins/` 下的算子类只暴露 ``name`` 与 ``analyze()``；引擎契约要求
+        ``AuditPlugin(name, tier, analyze_func, description)``。此处负责包装并
+        按 CORE_PLUGIN_TIERS 赋予权限层级别。返回已注册的插件名列表。
+        """
+        import sys as _sys
+
+        _here = os.path.dirname(os.path.abspath(__file__))
+        if _here not in _sys.path:
+            _sys.path.insert(0, _here)
+
+        from plugins import CORE_PLUGINS  # type: ignore
+
+        registered: List[str] = []
+        for cls in CORE_PLUGINS:
+            instance = cls()
+            name = getattr(instance, 'name', cls.PLUGIN_NAME)
+            if name not in self.CORE_PLUGIN_TIERS:
+                raise ValueError(f'未声明权限层级别的核心插件: {name}')
+            self.register_plugin(AuditPlugin(
+                name=name,
+                tier=self.CORE_PLUGIN_TIERS[name],
+                analyze_func=instance.analyze,
+                description=getattr(cls, 'PLUGIN_DESCRIPTION', ''),
+            ))
+            registered.append(name)
+        return registered
+
     # -------- 哈希链 --------
 
     def _append_event(self, event_type: str, payload: Dict[str, Any]) -> AuditEvent:
+        idx = len(self.event_chain)
+        ts = self._clock if self._clock is not None else time.time()
+        # 确定性 nonce：由前序哈希 / 事件类型 / 序号推导，取代 uuid4 随机值，
+        # 否则同一输入两次运行的链根哈希不同，破坏可复现性。
+        nonce = hashlib.sha256(
+            f'{self._prev_event_hash}|{event_type}|{idx}'.encode('utf-8')
+        ).hexdigest()[:8]
         ev = AuditEvent(
             event_type=event_type,
             payload=payload,
             prev_hash=self._prev_event_hash,
+            timestamp=ts,
+            nonce=nonce,
         )
         self.event_chain.append(ev)
         self._prev_event_hash = ev.hash
@@ -488,6 +545,7 @@ class CognitiveAuditEngine:
 
         run_ctx = dict(ctx)
         run_ctx['_responsibility_account'] = asdict(self.account)
+        run_ctx['_clock'] = self._clock
         prior: Dict[str, Any] = {}
         run_ctx['_prior_audit_results'] = prior
 
@@ -538,7 +596,7 @@ class CognitiveAuditEngine:
 
     def _write_log(self, report: Dict[str, Any], log_dir: str) -> str:
         os.makedirs(log_dir, exist_ok=True)
-        audit_id = f'SPL-{self.account.nonce}-{int(time.time())}'
+        audit_id = f'SPL-{self.account.nonce}-{int(self._clock if self._clock is not None else time.time())}'
         report['chain_root_hash'] = self.chain_root_hash
         report['audit_id'] = audit_id
         path = os.path.join(log_dir, f'{audit_id}.json')

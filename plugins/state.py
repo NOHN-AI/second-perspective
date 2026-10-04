@@ -150,8 +150,13 @@ class StateAnchorPlugin:
     @staticmethod
     def _generate_certificate(resp: Dict[str, Any], verdict: Dict[str, Any],
                               ctx: Dict[str, Any]) -> Dict[str, Any]:
-        """生成不可篡改的审计证书（哈希签名）。"""
-        timestamp = int(time.time())
+        """生成不可篡改的审计证书（哈希签名）。
+
+        可复现性：timestamp 取自 ctx['_clock']（engine.set_clock 注入）。
+        未注入时退回系统墙钟，此时证书跨时间不可复现。
+        """
+        clock = ctx.get("_clock")
+        timestamp = int(clock) if clock is not None else int(time.time())
         # 构造待签名字符串
         sig_input = (
             f"{resp.get('organization','')}"
