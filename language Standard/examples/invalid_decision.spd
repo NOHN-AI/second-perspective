@@ -1,0 +1,13 @@
+# 违规样本 —— 仅用于演示诊断码，不得作为书写范例
+# 期望结果：多个 ERROR（E104/E105/E107/E302/E303）+ 多个 WARN（W401/W402/W403）
+
+Decision: 我们应当采用排名第一的方案 B
+
+Assumption A1: 客户可能有大预算
+Assumption A2: 团队执行力强
+Assumption A2: 交付周期不超过 4 周
+
+Dependency: A3 requires A1
+
+Branch A1: 建议转向方案 C
+Branch A4: 预算不足则缩减范围

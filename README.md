@@ -173,21 +173,46 @@ The optional narrative generation adapter is at [`llm_adapters/openai_adapter.py
 
 ```
 second-perspective/
-├── cognitive audit engine.py      # Core engine (space-separated naming by design)
+├── Cognitive Audit Engine.py      # Core engine (space-separated naming by design)
 ├── demo_audit.py                  # Five-operator end-to-end demo
 ├── plugins/                       # Five operators as plugins
 │   ├── ns.py                      #   Narrative Stripping
 │   ├── iap.py                     #   Implicit Assumption Perspective
 │   ├── lch.py                     #   Fragility Latch
 │   ├── ccs.py                     #   Causal Chain Synchronization
-│   └── state.py                   #   State Anchoring
-├── llm_adapters/openai_adapter.py # Optional OpenAI narrative adapter
+│   ├── state.py                   #   State Anchoring
+│   └── report.py                  #   Bilingual report renderer
 ├── language Standard/             # Language Standard 2026
-├── 全新决策结构语言/              # Decision-structure language specification
+│   ├── 2026.md                    #   Normative standard (natural language)
+│   ├── grammar.md                 #   Grammar specification
+│   ├── decision.ebnf              #   Formal grammar (ISO/IEC 14977 EBNF)
+│   ├── dsl.py                     #   Validator + generator, zero-dependency CLI
+│   └── examples/                  #   .spd samples (valid / invalid / generated)
+├── 全新决策结构语言.md            # One-page decision-structure language overview
+├── docs/COMPLIANCE_SHANGHAI.md    # Shanghai compliance note
+├── llm_adapters/openai_adapter.py # Optional OpenAI narrative adapter
 ├── IMDA_AI_Verify_Causal_Audit_Report.pdf
 ├── requirements.txt · requirements-openai.txt
 └── LICENSE
 ```
+
+### Language toolchain
+
+`language Standard/` ships the Decision Structure Language — a structural DSL that describes *the
+boundary within which a decision holds*, and carries no execution semantics. Three layers, all
+verified: **grammar** (`decision.ebnf`) → **validator** (`dsl.py check`) → **sample generator**
+(`dsl.py gen`).
+
+```bash
+python "language Standard/dsl.py" check "language Standard/examples/valid_decision.spd"   # PASS, exit 0
+python "language Standard/dsl.py" check "language Standard/examples/invalid_decision.spd" # FAIL, exit 1
+python "language Standard/dsl.py" gen --seed 2026 --count 5 --out samples/ --self-check
+python "language Standard/dsl.py" codes                                                    # 19 diagnostic codes
+```
+
+Zero external dependencies, stdlib only, deterministic (seeded). Per the standard's *Constraints*,
+the validator **rejects** conclusions, recommendations, ranking/scoring and optimisation guidance;
+the generator accordingly emits *form-valid samples only*, never advice.
 
 <p align="center">— ✦ —</p>
 

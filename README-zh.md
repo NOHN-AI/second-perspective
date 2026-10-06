@@ -173,21 +173,44 @@ from plugins import (
 
 ```
 second-perspective/
-├── cognitive audit engine.py      # 核心引擎（有意采用带空格的文件名）
+├── Cognitive Audit Engine.py      # 核心引擎（有意采用带空格的文件名）
 ├── demo_audit.py                  # 五算子端到端演示
 ├── plugins/                       # 五个算子插件
 │   ├── ns.py                      #   叙事剥离
 │   ├── iap.py                     #   内隐假设透视
 │   ├── lch.py                     #   脆弱性闩锁
 │   ├── ccs.py                     #   因果链同步
-│   └── state.py                   #   状态锚定
-├── llm_adapters/openai_adapter.py # 可选的 OpenAI 叙述适配器
+│   ├── state.py                   #   状态锚定
+│   └── report.py                  #   双语报告渲染器
 ├── language Standard/             # 语言标准 2026
-├── 全新决策结构语言/              # 决策结构语言规范
+│   ├── 2026.md                    #   规范性标准（自然语言）
+│   ├── grammar.md                 #   语法规范
+│   ├── decision.ebnf              #   形式文法（ISO/IEC 14977 EBNF）
+│   ├── dsl.py                     #   校验器 + 造词器（零依赖 CLI）
+│   └── examples/                  #   .spd 样本（合规 / 违规 / 生成）
+├── 全新决策结构语言.md            # 决策结构语言一页纸概览
+├── docs/COMPLIANCE_SHANGHAI.md    # 上海合规说明
+├── llm_adapters/openai_adapter.py # 可选的 OpenAI 叙述适配器
 ├── IMDA_AI_Verify_Causal_Audit_Report.pdf
 ├── requirements.txt · requirements-openai.txt
 └── LICENSE
 ```
+
+### 语言工具链
+
+`language Standard/` 目录承载**决策结构语言** —— 一门只描述「一个决策在什么假设边界内成立」的
+结构语言，不含任何执行语义。三层能力均已实测通过：**文法**（`decision.ebnf`）→ **校验器**
+（`dsl.py check`）→ **样本造词器**（`dsl.py gen`）。
+
+```bash
+python "language Standard/dsl.py" check "language Standard/examples/valid_decision.spd"   # 通过，退出码 0
+python "language Standard/dsl.py" check "language Standard/examples/invalid_decision.spd" # 失败，退出码 1
+python "language Standard/dsl.py" gen --seed 2026 --count 5 --out samples/ --self-check
+python "language Standard/dsl.py" codes                                                    # 19 条诊断码
+```
+
+零外部依赖，仅标准库，确定性（按 seed 可复现）。依标准 *Constraints* 段，校验器**拒绝**结论、
+建议、评分排序与优化引导类表述；造词器因此只产出**形式合法的样本**，不产出任何建议。
 
 <p align="center">— ✦ —</p>
 

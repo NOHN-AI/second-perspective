@@ -1,0 +1,117 @@
+(* ==================================================================
+   Decision Structure Language — Formal Grammar
+   Second Perspective Language · Language Standard 2026
+   ------------------------------------------------------------------
+   Version        : 2026.1
+   Notation       : ISO/IEC 14977 (Extended BNF)
+   Normative ref  : language Standard/2026.md
+   Companion doc  : language Standard/grammar.md
+   File extension : .spd
+   ------------------------------------------------------------------
+   DESIGN INVARIANT
+   This language describes structure only. It carries no execution
+   semantics and MUST NOT express conclusions, recommendations,
+   rankings, scores or probabilities.
+   See 2026.md "Constraints". Enforced by dsl.py as E301-E304.
+   ================================================================== *)
+
+
+(* ==================================================================
+   1. DOCUMENT — top-level shape and block ordering
+   ------------------------------------------------------------------
+   Exactly one decision, at least one assumption, at least one branch,
+   zero or more dependencies.
+   Block order is normative: Decision < Assumption < Dependency < Branch.
+   Comment lines may appear anywhere.
+   ================================================================== *)
+
+document        = { comment } , decision ,
+                  { comment } , assumptions ,
+                  { comment } , [ dependencies ] ,
+                  { comment } , branches ,
+                  { comment } ;
+
+assumptions     = assumption , { { comment } , assumption } ;
+
+dependencies    = dependency , { { comment } , dependency } ;
+
+branches        = branch , { { comment } , branch } ;
+
+
+(* ==================================================================
+   2. CORE PRODUCTIONS
+   ------------------------------------------------------------------
+   decision    — the intended action or judgement, stated flatly
+   assumption  — a falsifiable premise that validates the decision
+   dependency  — an explicit ordering constraint between assumptions
+   branch      — the structural change to the decision when an
+                 assumption fails; NOT an alternative decision
+   ================================================================== *)
+
+decision        = "Decision" , colon , text ;
+
+assumption      = "Assumption" , space , id , colon , text ;
+
+dependency      = "Dependency" , colon , space , id , space , verb ,
+                  space , id ;
+
+branch          = "Branch" , space , id , colon , text ;
+
+
+(* ==================================================================
+   3. LEXICAL ELEMENTS
+   ================================================================== *)
+
+(* --- dependency verb: the only two relations the language admits -- *)
+
+verb            = "requires" | "depends" , space , "on" ;
+
+(* --- identifier: referenced by branches and dependencies ----------- *)
+
+id              = letter , { letter | digit | "_" } ;
+
+(* --- free text payload: must contain at least one non-blank char --- *)
+
+text            = { space } , nonspace , { graphic | space } ;
+
+(* --- comment: whole-line only, never trailing ---------------------- *)
+
+comment         = "#" , { graphic | space } ;
+
+(* --- terminals ----------------------------------------------------- *)
+
+colon           = ":" | "：" ;
+space           = " " ;
+letter          = upper | lower ;
+upper           = ? U+0041 .. U+005A , i.e. "A" to "Z" ? ;
+lower           = ? U+0061 .. U+007A , i.e. "a" to "z" ? ;
+digit           = ? U+0030 .. U+0039 , i.e. "0" to "9" ? ;
+nonspace        = ? any Unicode character except U+0009, U+000A, U+000D, U+0020 ? ;
+graphic         = ? any Unicode character except U+0009, U+000A, U+000D ? ;
+newline         = ? U+000A | U+000D U+000A ? ;
+
+
+(* ==================================================================
+   4. CONDITIONAL / SEMANTIC RULES
+   ------------------------------------------------------------------
+   The following cannot be expressed in pure EBNF context-free form
+   and are therefore enforced by the accompanying validator (dsl.py).
+   They are normative, not advisory.
+
+   R1  every branch id MUST equal some declared assumption id       E104
+   R2  every dependency endpoint MUST be a declared assumption id   E104
+   R3  assumption ids MUST be unique                                E105
+   R4  the dependency graph MUST be acyclic                         E106
+   R5  every assumption MUST have exactly one matching branch       E107
+   R6  the decision text MUST NOT carry conclusions                 E301
+   R7  no text field MAY carry recommendations                      E302
+   R8  no text field MAY carry ranking / scoring / probability      E303
+   R9  no text field MAY carry optimisation guidance                E304
+   R10 assumption text SHOULD carry a measurable threshold          W402
+   R11 assumption text SHOULD NOT carry vague qualifiers            W401
+   R12 assumption text SHOULD NOT be self-evident                   W403
+   ================================================================== *)
+
+(* ==================================================================
+   END OF GRAMMAR — Language Standard 2026.1
+   ================================================================== *)
