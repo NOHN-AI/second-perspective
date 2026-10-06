@@ -1,41 +1,46 @@
-# 决策结构语言 · 语法规范
+# Decision Structure Language — Grammar Specification
 
-**Decision Structure Language — Grammar Specification**
-
-| 项 | 值 |
+| Item | Value |
 |---|---|
-| 版本 | 2026.1 |
-| 记法 | ISO/IEC 14977 EBNF |
-| 上位文档 | [`2026.md`](./2026.md) — Language Standard 2026 |
-| 文法文件 | [`decision.ebnf`](./decision.ebnf) |
-| 校验工具 | [`dsl.py`](./dsl.py) |
-| 文件扩展名 | `.spd` |
+| Version | 2026.1 |
+| Notation | ISO/IEC 14977 EBNF |
+| Parent standard | [`2026.md`](./2026.md) — Language Standard 2026 |
+| Grammar file | [`decision.ebnf`](./decision.ebnf) |
+| Toolchain | [`dsl.py`](./dsl.py) |
+| File extension | `.spd` |
+| Chinese edition | [`grammar-zh.md`](./grammar-zh.md) |
 
 ---
 
-## 0. 定位：这不是编程语言
+## 0. Positioning: this is not a programming language
 
-在讨论语法之前，必须先钉死边界，否则一切后续实现都会跑偏。
+Before any grammar discussion, the boundary must be nailed down — otherwise every downstream
+implementation drifts.
 
-本语言属于 **DSL（领域专用描述语言）**，与 Python 这类通用编程语言只有"上半身"相同：
+This language is a **DSL (domain-specific description language)**. It shares only the *upper half*
+with general-purpose languages such as Python:
 
-| 层 | 本语言 | Python |
+| Layer | This language | Python |
 |---|---|---|
-| ① 文法 | ✅ `decision.ebnf` | ✅ Language Reference |
-| ② 解析/校验 | ✅ `dsl.py check` | ✅ Parser |
-| ③ 执行引擎 | ❌ **规范禁止** | ✅ Interpreter |
+| ① Grammar | ✅ `decision.ebnf` | ✅ Language Reference |
+| ② Parse / validate | ✅ `dsl.py check` | ✅ Parser |
+| ③ Execution engine | ❌ **forbidden by the standard** | ✅ Interpreter |
 
-**为什么没有第 ③ 层。** `2026.md` 的 *Constraints* 段明文规定：不得输出结论或建议、不得评分排序或赋值概率、不得给出优化或决策引导、系统不得替代或模拟决策。因此本语言**只描述"一个决策在什么假设边界内成立"，不计算任何结果**。
+**Why layer ③ is absent.** The *Constraints* section of `2026.md` states explicitly: no conclusions
+or recommendations may be emitted; no scoring, ranking or probability assignment; no optimisation
+or decision guidance; the system must not replace or simulate decision-making. Therefore this
+language **only describes "the boundary within which a decision holds" and computes no result**.
 
-它更接近 **JSON Schema** 的定位：定义形状、检查合规、不承载业务逻辑。
+Its closest analogue is **JSON Schema**: it defines shape, checks conformance, and carries no
+business logic.
 
 ---
 
-## 1. 完整文法
+## 1. Complete grammar
 
-以下为规范性文法，与 [`decision.ebnf`](./decision.ebnf) 内容一致。
+The following is normative and matches [`decision.ebnf`](./decision.ebnf) verbatim.
 
-### 1.1 文档结构
+### 1.1 Document structure
 
 ```ebnf
 document        = { comment } , decision ,
@@ -49,15 +54,15 @@ dependencies    = dependency , { { comment } , dependency } ;
 branches        = branch , { { comment } , branch } ;
 ```
 
-**区块顺序是规范性的**，不可调换：
+**Block order is normative** and may not be permuted:
 
 ```
 Decision  →  Assumption+  →  Dependency*  →  Branch+
 ```
 
-顺序颠倒将报 `E108`。
+Any other order raises `E108`.
 
-### 1.2 核心产生式
+### 1.2 Core productions
 
 ```ebnf
 decision        = "Decision" , colon , text ;
@@ -69,16 +74,18 @@ dependency      = "Dependency" , colon , space , id , space , verb , space , id 
 branch          = "Branch" , space , id , colon , text ;
 ```
 
-| 产生式 | 语义 | 关键约束 |
+| Production | Semantics | Key constraint |
 |---|---|---|
-| `decision` | 待执行的具体行动或判断 | 全文有且仅有一条 |
-| `assumption` | 使该决策成立的显式前提 | 必须可证伪、不得模糊、不得自明 |
-| `dependency` | 前提之间的显式依赖关系 | 可选建议项；必须指向已声明前提；图必须无环 |
-| `branch` | 某前提失效时，决策的**结构性变更** | 必须描述结构影响，不得给出替代方案 |
+| `decision` | The concrete action or judgement to execute | Exactly one per document |
+| `assumption` | An explicit premise that validates the decision | Must be falsifiable, non-vague, non-self-evident |
+| `dependency` | An explicit ordering relation between premises | Optional; must reference declared premises; graph must be acyclic |
+| `branch` | The **structural change** to the decision when a premise fails | Must describe structural impact — never an alternative decision |
 
-> **关于 `branch` 的边界**：它回答"假设塌了，原决策还成不成立、怎么变形"，而**不是**"那改成什么更好"。后者属于建议，被规范禁止。
+> **On the boundary of `branch`**: it answers "if this assumption collapses, does the decision still
+> hold, and how does it deform?" — **not** "what would be better instead?" The latter is a
+> recommendation, and the standard forbids it.
 
-### 1.3 词法元素
+### 1.3 Lexical elements
 
 ```ebnf
 verb            = "requires" | "depends" , space , "on" ;
@@ -100,188 +107,225 @@ graphic         = ? any Unicode character except U+0009, U+000A, U+000D ? ;
 newline         = ? U+000A | U+000D U+000A ? ;
 ```
 
-要点：
+Points of note:
 
-1. **`id`** 以字母开头，可以后跟字母、数字、下划线。`A1`、`budget_2`、`X` 均合法。
-2. **`text`** 按行读取，首尾空白被裁剪；裁剪后不得为空（否则报 `E203`）。
-3. **`comment`** 只支持整行注释，不支持行尾注释。这是刻意的：行尾注释会让 `text` 的边界变得不可判定。
-4. **全角冒号 `：`** 与半角 `:` 等价，方便中文写作。仅首个冒号参与分词。
-
----
-
-## 2. 元符号表
-
-| 符号 | 含义 | 例 |
-|---|---|---|
-| `=` | 定义：左侧概念由右侧替换 | `id = letter , ...` |
-| `,` | 连接：左右必须依次出现 | `"Assumption" , id` |
-| `\|` | 选择：左右任选其一 | `"requires" \| "depends on"` |
-| `{ ... }` | 重复：出现 0 次或多次 | `{ letter \| digit }` |
-| `[ ... ]` | 可选：出现 0 次或 1 次 | `[ dependencies ]` |
-| `( ... )` | 分组：限定选择与重复的作用域 | — |
-| `"..."` | 终结符：原样出现的字面量 | `"Decision"` |
-| `? ... ?` | 特殊序列：无法形式化的部分，用自然语言说明 | `? any Unicode character ?` |
-| `(* ... *)` | 注释：不参与文法 | 见文件头 |
+1. **`id`** starts with a letter, optionally followed by letters, digits or underscores. `A1`,
+   `budget_2` and `X` are all valid.
+2. **`text`** is read per line; leading and trailing whitespace is trimmed. After trimming it must
+   not be empty (otherwise `E203`).
+3. **`comment`** supports whole-line comments only, never trailing comments. This is deliberate:
+   trailing comments make the extent of `text` undecidable.
+4. **Full-width colon `：`** is equivalent to `:` for convenience in CJK writing. Only the first
+   colon participates in tokenisation.
 
 ---
 
-## 3. 合规约束
+## 2. Meta-symbol table
 
-约束分四级。前三项源于 `2026.md` 的 *Constraints*，第四项源于 *Branches* 段。
-
-### L1 · 结构（Structural）
-
-| 编号 | 规则 | 违反后果 |
+| Symbol | Meaning | Example |
 |---|---|---|
-| `E101` | 必须有且仅有一条 `Decision` | 无决策主体 / 决策歧义 |
-| `E103` | 至少一条 `Assumption` | 决策无边界，退化为断言 |
-| `E107` | 每条 `Assumption` 必须有同 ID 的 `Branch` | 存在未标注的断裂点 |
-| `E105` | `Assumption` ID 唯一 | 引用歧义 |
-| `E104` | `Branch` / `Dependency` 引用必须已声明 | 悬空引用 |
-| `E106` | 依赖图必须无环 | 循环依赖，无法定序 |
-| `E108` | 区块顺序不得颠倒 | 解析歧义 |
-
-### L2 · 约束（Constraints · `2026.md` 第 44-50 行）
-
-| 编号 | 规则 | 依据 |
-|---|---|---|
-| `E301` | 不得出现结论性表述 | *No conclusions* |
-| `E302` | 不得出现建议 / 推荐表述 | *No recommendations* |
-| `E303` | 不得出现评分 / 排序 / 概率赋值 | *No scoring, ranking, or probability assignment* |
-| `E304` | 不得出现优化或决策引导 | *No optimization or decision guidance* |
-
-> 这四条是**本语言区别于普通笔记格式的全部意义所在**。一个 `.spd` 文件即使语法完美，只要出现"建议采用"，就是不合规的。
-
-### L3 · 质量（Advisory · 只警告不阻断）
-
-| 编号 | 规则 | 说明 |
-|---|---|---|
-| `W401` | 假设含模糊限定词（可能 / 也许 / 大约 / probably…） | 可证伪性不足 |
-| `W402` | 假设无可观测阈值（无数字且无比较词） | 无法判定真伪 |
-| `W403` | 假设疑似自明（过短或属常识） | 不构成有效边界 |
-
-### L4 · 依赖语义
-
-- `requires` 表示**前置必需要**：B 不成立则 A 不可评估。
-- `depends on` 表示**取值相关**：B 的成立程度影响 A 的成立程度。
-- 二者仅作语义标记，语言本身**不计算**依赖强度。
+| `=` | Definition: the left-hand concept is replaced by the right-hand side | `id = letter , ...` |
+| `,` | Concatenation: both sides must appear in order | `"Assumption" , id` |
+| `\|` | Choice: either side | `"requires" \| "depends on"` |
+| `{ ... }` | Repetition: zero or more occurrences | `{ letter \| digit }` |
+| `[ ... ]` | Optional: zero or one occurrence | `[ dependencies ]` |
+| `( ... )` | Grouping: scopes choice and repetition | — |
+| `"..."` | Terminal: a literal sequence appearing verbatim | `"Decision"` |
+| `? ... ?` | Special sequence: not expressible in EBNF, described in prose | `? any Unicode character ?` |
+| `(* ... *)` | Comment: not part of the grammar | see file header |
 
 ---
 
-## 4. 错误码总表
+## 3. Compliance constraints
 
-| 码 | 级别 | 含义 |
+Constraints are graded in four tiers. The first three derive from the *Constraints* section of
+`2026.md`; the fourth derives from its *Branches* section.
+
+### L1 · Structural
+
+| Code | Rule | Consequence of violation |
 |---|---|---|
-| `E101` | ERROR | 缺少 `Decision` 块 |
-| `E102` | ERROR | `Decision` 重复 |
-| `E103` | ERROR | 缺少 `Assumption` 块 |
-| `E104` | ERROR | 引用未声明的前提 ID |
-| `E105` | ERROR | ID 重复声明 |
-| `E106` | ERROR | 依赖图存在环 |
-| `E107` | ERROR | 前提缺少对应的 `Branch` |
-| `E108` | ERROR | 区块顺序颠倒 |
-| `E201` | ERROR | 行无法识别（未知关键字） |
-| `E202` | ERROR | ID 格式非法 |
-| `E203` | ERROR | 文本为空 |
-| `E204` | ERROR | 缺少冒号或分隔符 |
-| `E301` | ERROR | 出现结论性表述 |
-| `E302` | ERROR | 出现建议 / 推荐表述 |
-| `E303` | ERROR | 出现评分 / 排序 / 概率赋值 |
-| `E304` | ERROR | 出现优化引导 |
-| `W401` | WARN | 假设含模糊限定词 |
-| `W402` | WARN | 假设缺少可观测阈值 |
-| `W403` | WARN | 假设疑似自明 |
+| `E101` | Exactly one `Decision` is required | No subject, or ambiguous subject |
+| `E103` | At least one `Assumption` is required | Decision has no boundary — it degrades into an assertion |
+| `E107` | Every `Assumption` needs a `Branch` with the same id | Unlabelled failure points |
+| `E105` | `Assumption` ids must be unique | Ambiguous references |
+| `E104` | `Branch` / `Dependency` references must be declared | Dangling references |
+| `E106` | The dependency graph must be acyclic | Cyclic dependencies cannot be ordered |
+| `E108` | Block order may not be permuted | Parsing ambiguity |
 
-退出码：`0` = 通过（或仅警告）；`1` = 存在 ERROR；`2` = 用法错误。
+### L2 · Constraints (*2026.md*, lines 44–50)
+
+| Code | Rule | Authority |
+|---|---|---|
+| `E301` | No conclusion-bearing statements | *No conclusions* |
+| `E302` | No recommendation statements | *No recommendations* |
+| `E303` | No scoring, ranking or probability assignment | *No scoring, ranking, or probability assignment* |
+| `E304` | No optimisation or decision guidance | *No optimization or decision guidance* |
+
+> These four rules are **the entire reason this language exists** as distinct from a plain note
+> format. A `.spd` file may be syntactically perfect and still be non-conforming if it contains the
+> phrase "we should adopt" — that is a recommendation.
+
+### L3 · Quality (advisory; warns, does not block)
+
+| Code | Rule | Rationale |
+|---|---|---|
+| `W401` | Assumption contains a vague qualifier (probably / roughly / 可能 / 大约 …) | Insufficient falsifiability |
+| `W402` | Assumption has no observable threshold (neither a number nor a comparison) | Cannot be adjudicated true or false |
+| `W403` | Assumption looks self-evident (too short, or a platitude) | Does not constitute a valid boundary |
+
+### L4 · Dependency semantics
+
+- `requires` — **hard prerequisite**: if B does not hold, A cannot be evaluated.
+- `depends on` — **value coupling**: the degree to which B holds affects the degree to which A holds.
+- Both are semantic markers only. The language itself **does not compute** dependency strength.
 
 ---
 
-## 5. 完整示例
+## 4. Diagnostic code index
 
-### 5.1 规范样本
+| Code | Level | Meaning |
+|---|---|---|
+| `E101` | ERROR | Missing `Decision` block |
+| `E102` | ERROR | Duplicate `Decision` block |
+| `E103` | ERROR | Missing `Assumption` block |
+| `E104` | ERROR | Reference to an undeclared assumption id |
+| `E105` | ERROR | Duplicate id declaration |
+| `E106` | ERROR | Cycle in the dependency graph |
+| `E107` | ERROR | Assumption without a matching `Branch` |
+| `E108` | ERROR | Block order violated |
+| `E201` | ERROR | Unrecognised line (unknown keyword) |
+| `E202` | ERROR | Invalid identifier format |
+| `E203` | ERROR | Empty text |
+| `E204` | ERROR | Missing colon or separator |
+| `E301` | ERROR | Conclusion-bearing statement |
+| `E302` | ERROR | Recommendation statement |
+| `E303` | ERROR | Scoring / ranking / probability assignment |
+| `E304` | ERROR | Optimisation guidance |
+| `W401` | WARN | Assumption contains a vague qualifier |
+| `W402` | WARN | Assumption lacks an observable threshold |
+| `W403` | WARN | Assumption looks self-evident |
+
+Exit codes: `0` = conforming (or warnings only); `1` = at least one ERROR; `2` = usage error.
+
+---
+
+## 5. Worked examples
+
+### 5.1 Conforming sample
 
 ```spd
-# 合规样本 —— 决策结构语言 2026.1
-Decision: 接受张江科学城试点作为本季度唯一并行推进项目
+# Conforming sample — Decision Structure Language 2026.1
+Decision: Accept the Zhangjiang pilot as this quarter's only parallel workstream
 
-Assumption A1: 目标客户的年度 AI 预算 ≥ 500 万元
-Assumption A2: 对方的采购合规审核周期 ≤ 8 周
-Assumption A3: 我方单位算力成本低于对方自建成本 30%
+Assumption A1: The target account's annual AI budget >= CNY 5,000,000
+Assumption A2: Their procurement compliance review cycle <= 8 weeks
+Assumption A3: Our unit compute cost is <= 70% of their self-built alternative
 
 Dependency: A2 requires A1
 Dependency: A3 depends on A1
 
-Branch A1: 预算规模不足，项目降级为单点 PoC，不进入年度框架
-Branch A2: 审核周期超限，交付节点整体后移一级，验证范围收窄至单业务线
-Branch A3: 算力成本优势不成立，成本叙事作废，资源投入上修
+Branch A1: Budget falls short — the project degrades to a single PoC and leaves the annual framework
+Branch A2: Review overruns — delivery milestones shift by one tier and validation narrows to one line
+Branch A3: Cost advantage fails — the cost narrative is voided and resource commitment is revised up
 ```
 
-**逐条对照**：1 条决策 · 3 条前提（均含可观测阈值）· 2 条依赖（无环，均指向 A1 与 A2）· 3 条分支（与前提 ID 一一对应）· 全部文本无结论 / 建议 / 评分词。
+**Field by field:** 1 decision · 3 assumptions (each carrying an observable threshold) · 2
+dependencies (acyclic, both anchored on `A1`/`A2`) · 3 branches (in one-to-one correspondence with
+the assumption ids) · no conclusion, recommendation or ranking terms anywhere.
 
-### 5.2 典型违规
+Source file: [`examples/valid_decision.en.spd`](./examples/valid_decision.en.spd).
 
-完整违规样本见 [`examples/invalid_decision.spd`](./examples/invalid_decision.spd)，核心片段：
+### 5.2 Typical violations
+
+The full violating sample is
+[`examples/invalid_decision.en.spd`](./examples/invalid_decision.en.spd). Core fragment:
 
 ```spd
-Decision: 我们应当采用排名第一的方案 B
+Decision: We should adopt the top-ranked option B
 
-Assumption A1: 客户可能有大预算
+Assumption A1: The client probably has a large budget
 Dependency: A3 requires A1
-Branch A4: 预算不足则缩减范围
+Branch A4: If budget falls short, the scope shrinks
 ```
 
-实测输出（`python dsl.py check examples/invalid_decision.spd`）：
+Observed output (`python dsl.py check examples/invalid_decision.en.spd`), with line numbers
+referring to that sample file:
 
-| 行 | 码 | 命中原因 |
+| Line | Code | Trigger |
 |---|---|---|
-| 4 | `E302` | "应当采用"属建议表述 |
-| 4 | `E303` | "排名"属排序赋值 |
-| 6 | `W401` | "可能"为模糊限定词 |
-| 6 | `W402` | "大预算"无可观测阈值 |
-| 10 | `E104` | 依赖引用了未声明的 `A3` |
-| 12 | `E302` | 分支给出替代方案，属决策引导 |
-| 13 | `E104` | 分支引用了未声明的 `A4` |
+| 4 | `E302` | "should" — recommendation wording |
+| 4 | `E303` | "ranked" — ranking assignment |
+| 6 | `W401` | "probably" — vague qualifier |
+| 6 | `W402` | "a large budget" — no observable threshold |
+| 7 | `W402` | no observable threshold |
+| 7 | `W403` | "This is obvious" — self-evident |
+| 7 | `E107` | `A2` has no matching Branch |
+| 8 | `E105` | duplicate identifier `A2` |
+| 8 | `E107` | `A2` has no matching Branch |
+| 10 | `E104` | dependency references undeclared `A3` |
+| 12 | `E302` | "recommend" — recommendation wording |
+| 13 | `E104` | branch references undeclared `A4` |
 
-> **能力边界（必须明示）**：`E301`–`E304` 基于**词面模式匹配**，不做语义推断。因此"方案 B"这类**隐含**排序不会被自动捕获；工具只保证"出现排序/建议词即拦截"，不保证"穷尽所有排序/建议语义"。这是刻意的取舍——宁可漏报语义，不可把推断冒称为事实节点。
+Result: 8 ERROR / 4 WARN, exit code `1`.
+
+> **Capability boundary (stated explicitly).** `E301`–`E304` are **surface-pattern** matches, not
+> semantic inference. Therefore an *implicit* ranking such as "option B" is not caught automatically.
+> The tool guarantees "a ranking/recommendation term is intercepted when present" — it does **not**
+> guarantee "every ranking/recommendation meaning is exhausted". This is a deliberate trade-off:
+> better to under-report semantics than to pass inference off as a fact node.
 >
-> `E106` 环形依赖同样实测有效：`Dependency: A1 requires A2` 与 `Dependency: A2 requires A1` 并存时，报 `依赖图存在环：A1 → A2 → A1`。
+> `E106` is likewise verified: with both `Dependency: A1 requires A2` and `Dependency: A2 requires A1`
+> present, the tool reports `dependency cycle detected: A1 -> A2 -> A1`.
 
 ---
 
-## 6. 与既有文档的关系
+## 6. Relationship to existing documents
 
-| 文档 | 角色 | 关系 |
+| Document | Role | Relation |
 |---|---|---|
-| `2026.md` | 规范性标准（自然语言） | 本文件的形式化对象 |
-| `全新决策结构语言.md` | 一页纸概要 | 本文件 §0-§1 的简版 |
-| `decision.ebnf` | 机器可读文法 | 本文件 §1 的原文件 |
-| `dsl.py` | 参考工具链 | 本文件 §3-§4 的可执行实现 |
+| `2026.md` | Normative standard (natural language) | The formalisation target of this file |
+| `全新决策结构语言.md` | One-page overview | Condensed form of §0–§1 |
+| `grammar-zh.md` | Chinese edition of this file | Mirrors this document |
+| `decision.ebnf` | Machine-readable grammar | The source file of §1 |
+| `dsl.py` | Reference toolchain | Executable implementation of §3–§4 |
 
-三份文档对同一形式化内核做**不同抽象层次**的投影：一页纸（概览）→ 本文（规范）→ EBNF（形式）→ dsl.py（可执行）。四者必须同步维护；若冲突，以 `2026.md` 为准。
+The documents project one and the same formal kernel at **different levels of abstraction**:
+one-pager (overview) → this file (specification) → EBNF (formalism) → dsl.py (executable). All must
+be kept in sync; where they conflict, `2026.md` prevails.
 
 ---
 
-## 7. 工具链用法
+## 7. Toolchain usage
 
 ```bash
-# 校验单个/多个文件
-python dsl.py check examples/valid_decision.spd
+# Validate one or more files
+python dsl.py check examples/valid_decision.en.spd
 
-# 严格模式：警告也导致退出码非零
-python dsl.py check examples/valid_decision.spd --strict
+# Strict mode: warnings also fail the exit code
+python dsl.py check examples/valid_decision.en.spd --strict
 
-# JSON 输出，便于接入 CI
-python dsl.py check examples/valid_decision.spd --json
+# JSON output, for CI integration
+python dsl.py check examples/valid_decision.en.spd --json
 
-# 造词器：依文法生成形式合法的样本（seed 可复现）
+# Sample generator (seeded, reproducible). --lang en|zh, default en
 python dsl.py gen --seed 2026
-python dsl.py gen --seed 2026 --count 5 --out examples/generated/
+python dsl.py gen --seed 2026 --lang zh
+python dsl.py gen --seed 2026 --count 5 --out examples/generated/ --self-check
 
-# 打印文法 / 错误码说明
+# Print the grammar / look up a diagnostic code
 python dsl.py grammar
 python dsl.py codes E302
 ```
 
+> **Bilingual validation.** The constraint and quality lexicons cover both English and Chinese
+> terms. This is functional data, not documentation prose: a Chinese-language `.spd` file is
+> validated with exactly the same diagnostic codes as an English one. See
+> [`examples/valid_decision.spd`](./examples/valid_decision.spd) (Chinese) and
+> [`examples/valid_decision.en.spd`](./examples/valid_decision.en.spd) (English).
+
 ---
 
-*本语言系统仅用于决策过程中的结构审查与拆解。它不参与决策，也不介入最终决定。作者对任何后续执行结果不承担法律或运营责任。*
+*This language system is used only for structural review and decomposition within a decision
+process. It does not participate in decision-making, nor does it intervene in the final decision.
+The author assumes no legal or operational liability for any subsequent execution results.*

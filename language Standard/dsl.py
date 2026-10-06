@@ -8,29 +8,38 @@ Language Standard 2026.1 · Second Perspective Language
 Grammar   : ./decision.ebnf          Extension : .spd
 Spec doc  : ./grammar.md             Standard  : ./2026.md
 
-本文件一次性交付工艺链的三层能力：
+This file delivers all three layers of the toolchain at once:
 
-    ┌─ ① 文法  ──────────────────────────────────────┐
-    │   decision.ebnf  —— ISO 14977 形式文法           │
-    ├─ ② 校验器  check ───────────────────────────────┤
-    │   词法 → 语法 → 结构校验 → 约束校验 → 质量警告    │
-    ├─ ③ 造词器  gen ─────────────────────────────────┤
-    │   依文法生成「形式合法」的决策记录样本             │
-    └──────────────────────────────────────────────────┘
+    +-- (1) Grammar ---------------------------------+
+    |   decision.ebnf - ISO 14977 formal grammar     |
+    +-- (2) Validator  check ------------------------+
+    |   lexer -> parser -> structural -> constraints |
+    |        -> quality advisories                   |
+    +-- (3) Sample generator  gen -------------------+
+    |   emits FORM-VALID decision records            |
+    +------------------------------------------------+
 
-设计不变式（与 ./2026.md 第 44-50 行 Constraints 段一致）：
+Design invariant (mirrors the Constraints section of ./2026.md):
 
-    本语言只描述结构，不产生执行语义。
-    校验器不放行 结论 / 建议 / 评分 / 优化引导；
-    造词器只造「形式样本」，不造「决定」。
+    This language describes structure only; it carries no execution
+    semantics. The validator rejects conclusions, recommendations,
+    ranking/scoring and optimisation guidance. The generator emits
+    form-valid SAMPLES only -- never ADVICE.
 
-零外部依赖 · 仅标准库 · 确定性（造词器按显式 seed 可复现）
+Zero external dependencies · standard library only · deterministic
+(the generator is reproducible given an explicit seed).
 
-用法：
-    python dsl.py check examples/valid_decision.spd
+NOTE ON BILINGUAL LEXICONS. The constraint and quality lexicons below
+deliberately contain BOTH English and Chinese terms. They are functional
+data, not documentation prose: dropping either language would silently
+disable violation detection for that language's inputs. All human-facing
+text in this file is English; all detection capability is bilingual.
+
+Usage:
+    python dsl.py check examples/valid_decision.en.spd
     python dsl.py check examples/*.spd --json --strict
     python dsl.py gen --seed 2026
-    python dsl.py gen --seed 2026 --count 5 --out examples/generated/
+    python dsl.py gen --seed 2026 --lang zh --count 5 --out samples/
     python dsl.py grammar
     python dsl.py codes E302
 
@@ -51,13 +60,13 @@ from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Tuple
 
 # ──────────────────────────────────────────────────────────────────────
-# 元信息
+# Metadata
 # ──────────────────────────────────────────────────────────────────────
 
 LANG_VERSION = "2026.1"
 EXTENSION = ".spd"
 
-# 规范区块顺序（不可颠倒，见 grammar.md §1.1）
+# Normative block order (see grammar.md §1.1). Permutation raises E108.
 PHASE_ORDER: Dict[str, int] = {
     "Decision": 0,
     "Assumption": 1,
@@ -65,7 +74,7 @@ PHASE_ORDER: Dict[str, int] = {
     "Branch": 3,
 }
 
-# ── 行级词法（行导向：一套正则 = 一个产生式） ──
+# ── Line-level lexer: one regex per production ──
 
 RE_DECISION = re.compile(r"^Decision\s*:\s*(?P<text>.*)$")
 RE_ASSUMPTION = re.compile(r"^Assumption\s+(?P<id>\S+)\s*:\s*(?P<text>.*)$")
@@ -77,103 +86,123 @@ RE_BRANCH = re.compile(r"^Branch\s+(?P<id>\S+)\s*:\s*(?P<text>.*)$")
 # EBNF: id = letter , { letter | digit | "_" }
 RE_ID = re.compile(r"^[A-Za-z][A-Za-z0-9_]*$")
 
-# ── L1 约束词库（Constraints · 2026.md 第 44-50 行）──
-# 每条规则对应标准中的一行禁令；命中即 ERROR。
+# ── L2 constraint lexicon (Constraints, ./2026.md lines 44-50) ──
+# One rule per prohibited line of the standard. A hit is an ERROR.
+# Bilingual by design — see the module docstring.
 
 CONSTRAINT_RULES: List[Tuple[str, str, List[str]]] = [
     (
         "E301",
-        "结论性表述",
+        "conclusion-bearing wording",
         [
+            # Chinese
             r"结论是", r"综上所述", r"综上", r"由此可见",
             r"因此可以(?:断定|认定|确认|得出)", r"说明该", r"证明了", r"已经证实",
+            # English
             r"\bconclusion\b", r"\btherefore\b", r"\bthus proving\b",
-            r"\bit is clear that\b",
+            r"\bit is clear that\b", r"\bthis proves\b",
         ],
     ),
     (
         "E302",
-        "建议 / 推荐表述",
+        "recommendation wording",
         [
+            # Chinese
             r"建议", r"推荐", r"不妨", r"务必",
             r"应当(?:选择|采用|改为|转向)", r"应该(?:选择|采用|改为|转向)",
             r"最好(?:选择|采用|改为)", r"最佳选择",
+            # English
             r"\brecommend", r"\bshould\b", r"\badvise", r"\bbetter to\b",
+            r"\bwe ought to\b", r"\bpreferable to\b",
         ],
     ),
     (
         "E303",
-        "评分 / 排序 / 概率赋值",
+        "ranking / scoring / probability assignment",
         [
+            # Chinese
             r"评分", r"打分", r"得分", r"排名", r"排序第", r"优先级为",
             r"概率(?:为|是)", r"成功概率", r"胜率", r"置信度(?:为|是)",
+            # English
             r"\bscore\b", r"\brank(?:ed|ing)?\b", r"\bprobability\b",
+            r"\bwin rate\b", r"\bconfidence level\b", r"\btop-ranked\b",
         ],
     ),
     (
         "E304",
-        "优化引导",
+        "optimisation guidance",
         [
+            # Chinese
             r"优化方案", r"最优(?:解|方案|选择)", r"最佳实践", r"改进建议",
             r"提升空间", r"更优(?:的)?(?:方案|选择)",
+            # English
             r"\boptimi[sz]e\b", r"\bbest practice\b", r"\bimprovement plan\b",
+            r"\bopportunity for improvement\b",
         ],
     ),
 ]
 
-# ── L3 质量警告词库（只警告，不阻断）──
+# ── L3 quality lexicon (advisory only) ──
 
 VAGUE_MARKERS: List[str] = [
+    # Chinese
     r"可能", r"也许", r"或许", r"大概", r"大约", r"似乎", r"应该是",
     r"估计", r"基本上", r"某种程度上", r"大致",
+    # English
     r"\bmaybe\b", r"\bperhaps\b", r"\bprobably\b", r"\bapproximately\b",
-    r"\blikely\b", r"\bpresumably\b",
+    r"\blikely\b", r"\bpresumably\b", r"\broughly\b", r"\bsomewhat\b",
 ]
 
-# 可观测阈值：必须同时具备「数字」与「比较词」
+# Observable threshold: both a number AND a comparison must be present
 RE_DIGIT = re.compile(r"[0-9]")
 RE_COMPARISON = re.compile(
     r"[≥≤<>＜＞]|不低于|不超过|不少于|不多于|低于|高于|超过|少于|"
-    r"等于|至少|至多|达到|低于|大于|小于|低\s|高\s"
+    r"等于|至少|至多|达到|大于|小于|低\s|高\s|"
+    r"\bno less than\b|\bno more than\b|\bat least\b|\bat most\b|"
+    r"\bgreater than\b|\bless than\b|\bexceeds?\b|\bbelow\b|\babove\b|"
+    r"\bequals?\b|\bwithin\b",
+    re.IGNORECASE,
 )
 
-# 疑似自明：过短，或落入固定句式
-RE_SELF_EVIDENT = re.compile(r"^(?:这是|那是|情况是|事实是|众所周知)")
+# Self-evidence heuristic: too short, or a fixed opening formula
+RE_SELF_EVIDENT = re.compile(
+    r"^(?:this is|that is|it is|这是|那是|情况是|事实是|众所周知)", re.IGNORECASE
+)
 SELF_EVIDENT_MIN_LEN = 8
 
-# ── 错误码说明表 ──
+# ── Diagnostic code index ──
 
 CODE_TABLE: Dict[str, str] = {
-    "E101": "缺少 Decision 块",
-    "E102": "Decision 重复",
-    "E103": "缺少 Assumption 块",
-    "E104": "引用未声明的前提 ID",
-    "E105": "ID 重复声明",
-    "E106": "依赖图存在环",
-    "E107": "前提缺少对应的 Branch",
-    "E108": "区块顺序颠倒",
-    "E201": "行无法识别（未知关键字）",
-    "E202": "ID 格式非法",
-    "E203": "文本为空",
-    "E204": "缺少冒号或分隔符",
-    "E301": "出现结论性表述",
-    "E302": "出现建议 / 推荐表述",
-    "E303": "出现评分 / 排序 / 概率赋值",
-    "E304": "出现优化引导",
-    "W401": "假设含模糊限定词",
-    "W402": "假设缺少可观测阈值",
-    "W403": "假设疑似自明",
+    "E101": "Missing Decision block",
+    "E102": "Duplicate Decision block",
+    "E103": "Missing Assumption block",
+    "E104": "Reference to an undeclared assumption id",
+    "E105": "Duplicate id declaration",
+    "E106": "Cycle in the dependency graph",
+    "E107": "Assumption without a matching Branch",
+    "E108": "Block order violated",
+    "E201": "Unrecognised line (unknown keyword)",
+    "E202": "Invalid identifier format",
+    "E203": "Empty text",
+    "E204": "Missing colon or separator",
+    "E301": "Conclusion-bearing statement",
+    "E302": "Recommendation statement",
+    "E303": "Scoring / ranking / probability assignment",
+    "E304": "Optimisation guidance",
+    "W401": "Assumption contains a vague qualifier",
+    "W402": "Assumption lacks an observable threshold",
+    "W403": "Assumption looks self-evident",
 }
 
 
 # ──────────────────────────────────────────────────────────────────────
-# 数据模型
+# Data model
 # ──────────────────────────────────────────────────────────────────────
 
 
 @dataclass
 class Diagnostic:
-    """单条诊断记录（与插件层 violations 结构对齐）。"""
+    """A single diagnostic record (aligned with the plugin-layer violation shape)."""
 
     code: str
     severity: str  # ERROR | WARN
@@ -215,7 +244,7 @@ class Branch:
 
 @dataclass
 class Document:
-    """一个 .spd 文档的抽象语法结构。"""
+    """Abstract syntax structure of one .spd document."""
 
     decision: Optional[str] = None
     decision_line: int = 0
@@ -235,17 +264,17 @@ class Document:
 
 
 # ──────────────────────────────────────────────────────────────────────
-# ① 词法 + 语法：文本 → Document
+# (1) Lexer + parser: text -> Document
 # ──────────────────────────────────────────────────────────────────────
 
 
 def _normalize_colon(line: str) -> str:
-    """仅把首个全角冒号折半角，避免污染正文中的全角标点。"""
+    """Fold only the first full-width colon, so body punctuation stays intact."""
     return line.replace("：", ":", 1)
 
 
 def _keyword_of(line: str) -> Optional[str]:
-    """精确匹配关键字（大小写敏感），要求后接空白或冒号。"""
+    """Exact keyword match (case-sensitive); requires a trailing space or colon."""
     for kw in PHASE_ORDER:
         if line.startswith(kw):
             rest = line[len(kw):]
@@ -255,7 +284,7 @@ def _keyword_of(line: str) -> Optional[str]:
 
 
 def parse(text: str) -> Tuple[Document, List[Diagnostic]]:
-    """行导向解析。永不抛异常——所有问题以 Diagnostic 形式回报。"""
+    """Line-oriented parse. Never raises — every problem is reported as a Diagnostic."""
     doc = Document()
     diags: List[Diagnostic] = []
 
@@ -268,52 +297,58 @@ def parse(text: str) -> Tuple[Document, List[Diagnostic]]:
         if not line.strip():
             continue
         if line.lstrip().startswith("#"):
-            continue  # 整行注释，非规范内容，不参与约束扫描
+            continue  # whole-line comment: non-normative, excluded from constraint scanning
 
         line = _normalize_colon(line)
         kw = _keyword_of(line)
 
-        # ── 未知关键字 ──
+        # ── Unknown keyword ──
         if kw is None:
             hint = ""
             lowered = line.split(":", 1)[0].strip().lower()
             for known in PHASE_ORDER:
                 if lowered == known.lower():
-                    hint = f"（关键字大小写错误，应为 '{known}'）"
+                    hint = f" (keyword case mismatch — expected '{known}')"
                     break
             diags.append(
-                Diagnostic("E201", "ERROR", lineno, f"行无法识别：{hint or '未知关键字'}", raw)
+                Diagnostic(
+                    "E201", "ERROR", lineno, f"unrecognised line: {hint or 'unknown keyword'}", raw
+                )
             )
             continue
 
         phase = PHASE_ORDER[kw]
 
-        # ── 区块顺序 ──
+        # ── Block order ──
         if phase < max_phase:
             diags.append(
                 Diagnostic(
                     "E108",
                     "ERROR",
                     lineno,
-                    f"区块顺序颠倒：{kw} 不得出现在 {prev_kw} 之后",
+                    f"block order violated: {kw} may not appear after {prev_kw}",
                     raw,
                 )
             )
         max_phase = max(max_phase, phase)
         prev_kw = kw
 
-        # ── 各产生式分派 ──
+        # ── Production dispatch ──
         if kw == "Decision":
             m = RE_DECISION.match(line)
             if not m:
-                diags.append(Diagnostic("E204", "ERROR", lineno, "Decision 缺少冒号", raw))
+                diags.append(Diagnostic("E204", "ERROR", lineno, "Decision is missing ':'", raw))
                 continue
             if decision_seen:
-                diags.append(Diagnostic("E102", "ERROR", lineno, "Decision 重复声明", raw))
+                diags.append(
+                    Diagnostic("E102", "ERROR", lineno, "duplicate Decision block", raw)
+                )
                 continue
             body = m.group("text").strip()
             if not body:
-                diags.append(Diagnostic("E203", "ERROR", lineno, "Decision 文本为空", raw))
+                diags.append(
+                    Diagnostic("E203", "ERROR", lineno, "Decision text is empty", raw)
+                )
                 continue
             doc.decision = body
             doc.decision_line = lineno
@@ -323,18 +358,20 @@ def parse(text: str) -> Tuple[Document, List[Diagnostic]]:
             m = RE_ASSUMPTION.match(line)
             if not m:
                 diags.append(
-                    Diagnostic("E204", "ERROR", lineno, "Assumption 缺少 ID 或冒号", raw)
+                    Diagnostic("E204", "ERROR", lineno, "Assumption is missing an id or ':'", raw)
                 )
                 continue
             aid = m.group("id")
             if not RE_ID.match(aid):
                 diags.append(
-                    Diagnostic("E202", "ERROR", lineno, f"ID 格式非法：'{aid}'", raw)
+                    Diagnostic("E202", "ERROR", lineno, f"invalid identifier: '{aid}'", raw)
                 )
                 continue
             body = m.group("text").strip()
             if not body:
-                diags.append(Diagnostic("E203", "ERROR", lineno, f"前提 {aid} 文本为空", raw))
+                diags.append(
+                    Diagnostic("E203", "ERROR", lineno, f"assumption {aid} text is empty", raw)
+                )
                 continue
             doc.assumptions.append(Assumption(aid, body, lineno))
 
@@ -346,7 +383,7 @@ def parse(text: str) -> Tuple[Document, List[Diagnostic]]:
                         "E204",
                         "ERROR",
                         lineno,
-                        "Dependency 格式应为 'Dependency: A1 requires A2'",
+                        "Dependency must read 'Dependency: A1 requires A2'",
                         raw,
                     )
                 )
@@ -355,7 +392,7 @@ def parse(text: str) -> Tuple[Document, List[Diagnostic]]:
             bad = [x for x in (src, dst) if not RE_ID.match(x)]
             if bad:
                 diags.append(
-                    Diagnostic("E202", "ERROR", lineno, f"ID 格式非法：{bad[0]}", raw)
+                    Diagnostic("E202", "ERROR", lineno, f"invalid identifier: {bad[0]}", raw)
                 )
                 continue
             doc.dependencies.append(
@@ -365,15 +402,21 @@ def parse(text: str) -> Tuple[Document, List[Diagnostic]]:
         elif kw == "Branch":
             m = RE_BRANCH.match(line)
             if not m:
-                diags.append(Diagnostic("E204", "ERROR", lineno, "Branch 缺少 ID 或冒号", raw))
+                diags.append(
+                    Diagnostic("E204", "ERROR", lineno, "Branch is missing an id or ':'", raw)
+                )
                 continue
             bid = m.group("id")
             if not RE_ID.match(bid):
-                diags.append(Diagnostic("E202", "ERROR", lineno, f"ID 格式非法：'{bid}'", raw))
+                diags.append(
+                    Diagnostic("E202", "ERROR", lineno, f"invalid identifier: '{bid}'", raw)
+                )
                 continue
             body = m.group("text").strip()
             if not body:
-                diags.append(Diagnostic("E203", "ERROR", lineno, f"分支 {bid} 文本为空", raw))
+                diags.append(
+                    Diagnostic("E203", "ERROR", lineno, f"branch {bid} text is empty", raw)
+                )
                 continue
             doc.branches.append(Branch(bid, body, lineno))
 
@@ -381,12 +424,12 @@ def parse(text: str) -> Tuple[Document, List[Diagnostic]]:
 
 
 # ──────────────────────────────────────────────────────────────────────
-# ② 校验：结构 + 约束 + 质量
+# (2) Validation: structural + constraints + quality
 # ──────────────────────────────────────────────────────────────────────
 
 
 def _scan_constraints(lineno: int, label: str, body: str) -> List[Diagnostic]:
-    """L1 约束扫描：命中断言/建议/评分/优化引导即 ERROR。"""
+    """L2 scan: a conclusion, recommendation, ranking or optimisation hit is an ERROR."""
     out: List[Diagnostic] = []
     for code, title, patterns in CONSTRAINT_RULES:
         for pat in patterns:
@@ -397,16 +440,16 @@ def _scan_constraints(lineno: int, label: str, body: str) -> List[Diagnostic]:
                         code,
                         "ERROR",
                         lineno,
-                        f"{label}出现{title}：'{m.group()}'（违反 2026.md Constraints）",
+                        f"{label} carries {title}: '{m.group()}' (violates 2026.md Constraints)",
                         body,
                     )
                 )
-                break  # 同一规则同一字段只报一次
+                break  # one report per rule per field
     return out
 
 
 def _scan_quality(assumption: Assumption) -> List[Diagnostic]:
-    """L3 质量警告：只提示，不阻断。"""
+    """L3 advisories: warn only, never block."""
     out: List[Diagnostic] = []
     body = assumption.text
 
@@ -418,7 +461,8 @@ def _scan_quality(assumption: Assumption) -> List[Diagnostic]:
                     "W401",
                     "WARN",
                     assumption.line,
-                    f"前提 {assumption.id} 含模糊限定词：'{m.group()}'，可证伪性不足",
+                    f"assumption {assumption.id} contains a vague qualifier: "
+                    f"'{m.group()}' — not falsifiable",
                     body,
                 )
             )
@@ -430,7 +474,8 @@ def _scan_quality(assumption: Assumption) -> List[Diagnostic]:
                 "W402",
                 "WARN",
                 assumption.line,
-                f"前提 {assumption.id} 缺少可观测阈值（需同时含数字与比较词）",
+                f"assumption {assumption.id} has no observable threshold "
+                f"(needs both a number and a comparison)",
                 body,
             )
         )
@@ -441,7 +486,7 @@ def _scan_quality(assumption: Assumption) -> List[Diagnostic]:
                 "W403",
                 "WARN",
                 assumption.line,
-                f"前提 {assumption.id} 疑似自明，不构成有效边界",
+                f"assumption {assumption.id} looks self-evident — not a valid boundary",
                 body,
             )
         )
@@ -450,7 +495,7 @@ def _scan_quality(assumption: Assumption) -> List[Diagnostic]:
 
 
 def _find_cycles(doc: Document) -> List[List[str]]:
-    """依赖图找环（DFS 三色标记）。"""
+    """Cycle detection over the dependency graph (DFS, three-colour marking)."""
     graph: Dict[str, List[str]] = {}
     for dep in doc.dependencies:
         graph.setdefault(dep.src, []).append(dep.dst)
@@ -483,16 +528,18 @@ def _find_cycles(doc: Document) -> List[List[str]]:
 
 
 def validate(doc: Document, parse_diags: Optional[List[Diagnostic]] = None) -> List[Diagnostic]:
-    """完整校验：结构 (E1xx) → 约束 (E3xx) → 质量 (W4xx)。"""
+    """Full validation: structural (E1xx) -> constraints (E3xx) -> quality (W4xx)."""
     diags: List[Diagnostic] = list(parse_diags or [])
 
-    # ── L1 结构 ──
+    # ── L1 structural ──
     if doc.decision is None:
-        diags.append(Diagnostic("E101", "ERROR", 0, "文档缺少 Decision 块"))
+        diags.append(Diagnostic("E101", "ERROR", 0, "document is missing a Decision block"))
     if not doc.assumptions:
-        diags.append(Diagnostic("E103", "ERROR", 0, "文档至少需要一条 Assumption"))
+        diags.append(
+            Diagnostic("E103", "ERROR", 0, "document requires at least one Assumption")
+        )
 
-    # ID 唯一性
+    # id uniqueness
     seen_ids: Dict[str, int] = {}
     for a in doc.assumptions:
         if a.id in seen_ids:
@@ -501,7 +548,7 @@ def validate(doc: Document, parse_diags: Optional[List[Diagnostic]] = None) -> L
                     "E105",
                     "ERROR",
                     a.line,
-                    f"ID 重复声明：'{a.id}'（首次出现于第 {seen_ids[a.id]} 行）",
+                    f"duplicate identifier: '{a.id}' (first declared on line {seen_ids[a.id]})",
                     a.text,
                 )
             )
@@ -510,7 +557,7 @@ def validate(doc: Document, parse_diags: Optional[List[Diagnostic]] = None) -> L
 
     declared = set(seen_ids)
 
-    # 引用完整性
+    # reference integrity
     branch_ids = set()
     for b in doc.branches:
         branch_ids.add(b.id)
@@ -520,7 +567,7 @@ def validate(doc: Document, parse_diags: Optional[List[Diagnostic]] = None) -> L
                     "E104",
                     "ERROR",
                     b.line,
-                    f"Branch 引用未声明的前提 ID：'{b.id}'",
+                    f"Branch references an undeclared assumption id: '{b.id}'",
                     b.text,
                 )
             )
@@ -532,12 +579,12 @@ def validate(doc: Document, parse_diags: Optional[List[Diagnostic]] = None) -> L
                         "E104",
                         "ERROR",
                         d.line,
-                        f"Dependency 引用未声明的前提 ID：'{endpoint}'",
+                        f"Dependency references an undeclared assumption id: '{endpoint}'",
                         f"{d.src} {d.verb} {d.dst}",
                     )
                 )
 
-    # 覆盖性：每个前提必须有同 ID 分支
+    # coverage: every assumption needs a branch with the same id
     for a in doc.assumptions:
         if a.id not in branch_ids:
             diags.append(
@@ -545,26 +592,26 @@ def validate(doc: Document, parse_diags: Optional[List[Diagnostic]] = None) -> L
                     "E107",
                     "ERROR",
                     a.line,
-                    f"前提 {a.id} 缺少对应的 Branch（断裂点未标注）",
+                    f"assumption {a.id} has no matching Branch (failure path unlabelled)",
                     a.text,
                 )
             )
 
-    # 无环
+    # acyclicity
     for cyc in _find_cycles(doc):
         diags.append(
-            Diagnostic("E106", "ERROR", 0, "依赖图存在环：" + " → ".join(cyc))
+            Diagnostic("E106", "ERROR", 0, "dependency cycle detected: " + " -> ".join(cyc))
         )
 
-    # ── L1 约束（E3xx）──
+    # ── L2 constraints (E3xx) ──
     if doc.decision is not None:
-        diags.extend(_scan_constraints(doc.decision_line, "Decision ", doc.decision))
+        diags.extend(_scan_constraints(doc.decision_line, "Decision", doc.decision))
     for a in doc.assumptions:
-        diags.extend(_scan_constraints(a.line, f"前提 {a.id} ", a.text))
+        diags.extend(_scan_constraints(a.line, f"assumption {a.id}", a.text))
     for b in doc.branches:
-        diags.extend(_scan_constraints(b.line, f"分支 {b.id} ", b.text))
+        diags.extend(_scan_constraints(b.line, f"branch {b.id}", b.text))
 
-    # ── L3 质量（W4xx）──
+    # ── L3 quality (W4xx) ──
     for a in doc.assumptions:
         diags.extend(_scan_quality(a))
 
@@ -577,66 +624,124 @@ def has_errors(diags: Sequence[Diagnostic]) -> bool:
 
 
 # ──────────────────────────────────────────────────────────────────────
-# ③ 造词器：依文法生成形式合法的样本
+# (3) Generator: emits form-valid samples
 # ──────────────────────────────────────────────────────────────────────
 #
-# 边界声明：造词器只组合「形式合法」的结构骨架，所有词条均为
-# 中立描述性短语，不含结论、建议、评分或优化引导——生成物必须能
-# 通过本文件自身的 validate()。这是自洽性约束，由 --self-check 验证。
+# BOUNDARY DECLARATION. The generator only recombines form-valid structural
+# skeletons. Every phrase is a neutral descriptive fragment — no conclusion,
+# recommendation, ranking or optimisation wording. The output MUST pass this
+# file's own validate(). That self-consistency requirement is exercised by
+# --self-check.
+#
+# Two vocabulary sets are provided so the tool can emit either an English or
+# a Chinese sample. Assumption[i] is index-aligned with Branch[i] in both.
 
-_DECISION_TEMPLATES: List[str] = [
-    "接受{target}作为本季度唯一并行推进项目",
-    "将{target}的交付日期锁定在 2026-12-31，不再顺延",
-    "在{target}投入 3 人全职编制，冻结其他新增立项",
-    "以{target}为唯一验证场景，暂停其他方向的投入",
-    "对{target}启用固定报价，不再逐单议价",
-    "把{target}的验收口径固定为 3 项可测指标",
-]
+_VOCAB: Dict[str, Dict[str, object]] = {
+    "en": {
+        "header": [
+            "# Generated by dsl.py sample generator - Language Standard {ver} - seed={seed}",
+            "# Form-valid structural sample only: no conclusions, no recommendations",
+        ],
+        "templates": [
+            "Accept {target} as this quarter's only parallel workstream",
+            "Lock the delivery date for {target} to 2026-12-31 with no slippage",
+            "Commit 3 full-time headcount to {target} and freeze all new initiatives",
+            "Use {target} as the only validation scenario and pause all other directions",
+            "Apply fixed pricing to {target} instead of case-by-case negotiation",
+            "Fix the acceptance criteria for {target} at 3 measurable indicators",
+        ],
+        "targets": [
+            "the Zhangjiang pilot",
+            "the East-China channel pilot",
+            "the self-built inference cluster",
+            "the third-party compliance audit",
+            "the open-source self-hosted option",
+            "the edge inference node",
+        ],
+        "assumptions": [
+            ("The target account's annual AI budget", ">=", "CNY 5,000,000"),
+            ("Their procurement compliance review cycle", "<=", "8 weeks"),
+            ("Our unit compute cost advantage over their self-built option", ">=", "30%"),
+            ("Their existing engineering headcount", ">=", "20 people"),
+            ("Average monthly inference volume during the pilot", ">=", "10 million calls"),
+            ("The depth of their procurement decision chain", "<=", "2 levels"),
+            ("The supplier's on-time delivery rate", ">=", "95%"),
+        ],
+        "branches": [
+            "Budget falls short - the project degrades to a single PoC and leaves the annual framework",
+            "Review overruns - delivery milestones shift by one tier and validation narrows",
+            "Cost advantage fails - the cost narrative is voided and resource commitment is revised up",
+            "Engineering must be backfilled externally - delivery slips by 6 weeks",
+            "Volume misses the threshold - capacity planning rolls back and the cluster is halved",
+            "Decision chain is too deep - the approval node shifts and the pilot becomes an observation window",
+            "On-time delivery misses the threshold - the backup supplier activates and the main route de-rates",
+        ],
+    },
+    "zh": {
+        "header": [
+            "# 由 dsl.py 造词器生成 · Language Standard {ver} · seed={seed}",
+            "# 生成物为形式合法的结构样本，不含结论与推荐类表述",
+        ],
+        "templates": [
+            "接受{target}作为本季度唯一并行推进项目",
+            "将{target}的交付日期锁定在 2026-12-31，不再顺延",
+            "在{target}投入 3 人全职编制，冻结其他新增立项",
+            "以{target}为唯一验证场景，暂停其他方向的投入",
+            "对{target}启用固定报价，不再逐单议价",
+            "把{target}的验收口径固定为 3 项可测指标",
+        ],
+        "targets": [
+            "张江科学城试点",
+            "华东区渠道试点",
+            "自建推理集群",
+            "第三方合规审计",
+            "开源自托管方案",
+            "边缘推理节点",
+        ],
+        "assumptions": [
+            ("目标客户的年度 AI 预算", "≥", "500 万元"),
+            ("对方的采购合规审核周期", "≤", "8 周"),
+            ("我方单位算力成本相对对方自建成本的优势", "≥", "30%"),
+            ("对方现有技术团队规模", "≥", "20 人"),
+            ("试点期内的月均调用量", "≥", "1000 万次"),
+            ("对方的采购决策链长度", "≤", "2 级"),
+            ("供应商的交付准时率", "≥", "95%"),
+        ],
+        "branches": [
+            "预算规模不足，项目降级为单点 PoC，不进入年度框架",
+            "审核周期超限，交付节点整体后移一级，验证范围收窄",
+            "算力成本优势不成立，成本叙事作废，资源投入上修",
+            "技术团队需外部补齐，交付周期上修 6 周",
+            "调用量未达阈值，容量规划回退，集群规模砍半",
+            "决策链过长，立项节点后移，试点改为观察期",
+            "交付准时率不达标，备份供应商启用，主链路降权",
+        ],
+    },
+}
 
-_TARGETS: List[str] = [
-    "张江科学城试点",
-    "华东区渠道试点",
-    "自建推理集群",
-    "第三方合规审计",
-    "开源自托管方案",
-    "边缘推理节点",
-]
 
-# 前提与分支按索引严格对齐：ASSUMPTION[i] ↔ BRANCH[i]
-_ASSUMPTION_POOL: List[Tuple[str, str, str]] = [
-    ("目标客户的年度 AI 预算", "≥", "500 万元"),
-    ("对方的采购合规审核周期", "≤", "8 周"),
-    ("我方单位算力成本相对对方自建成本的优势", "≥", "30%"),
-    ("对方现有技术团队规模", "≥", "20 人"),
-    ("试点期内的月均调用量", "≥", "1000 万次"),
-    ("对方的采购决策链长度", "≤", "2 级"),
-    ("供应商的交付准时率", "≥", "95%"),
-]
-
-_BRANCH_POOL: List[str] = [
-    "预算规模不足，项目降级为单点 PoC，不进入年度框架",
-    "审核周期超限，交付节点整体后移一级，验证范围收窄",
-    "算力成本优势不成立，成本叙事作废，资源投入上修",
-    "技术团队需外部补齐，交付周期上修 6 周",
-    "调用量未达阈值，容量规划回退，集群规模砍半",
-    "决策链过长，立项节点后移，试点改为观察期",
-    "交付准时率不达标，备份供应商启用，主链路降权",
-]
-
-
-def generate_document(seed: int = 2026) -> str:
-    """生成一份形式合法的 .spd 文本（同 seed 完全可复现）。"""
+def generate_document(seed: int = 2026, lang: str = "en") -> str:
+    """Generate one form-valid .spd document (fully reproducible for a given seed)."""
+    vocab = _VOCAB.get(lang) or _VOCAB["en"]
     rng = random.Random(seed)
 
+    templates = vocab["templates"]          # type: ignore[index]
+    targets = vocab["targets"]              # type: ignore[index]
+    pool_assumptions = vocab["assumptions"]  # type: ignore[index]
+    pool_branches = vocab["branches"]        # type: ignore[index]
+
     k = rng.choice([3, 4, 5])
-    picked = rng.sample(range(len(_ASSUMPTION_POOL)), k)
-    decision = rng.choice(_DECISION_TEMPLATES).format(target=rng.choice(_TARGETS))
+    picked = rng.sample(range(len(pool_assumptions)), k)  # type: ignore[arg-type]
+    decision = rng.choice(templates).format(target=rng.choice(targets))  # type: ignore[arg-type]
 
     assumptions = [
-        (f"A{i + 1}", f"{_ASSUMPTION_POOL[j][0]} {_ASSUMPTION_POOL[j][1]} {_ASSUMPTION_POOL[j][2]}")
+        (
+            f"A{i + 1}",
+            f"{pool_assumptions[j][0]} {pool_assumptions[j][1]} {pool_assumptions[j][2]}",  # type: ignore[index]
+        )
         for i, j in enumerate(picked)
     ]
-    branches = [(f"A{i + 1}", _BRANCH_POOL[j]) for i, j in enumerate(picked)]
+    branches = [(f"A{i + 1}", pool_branches[j]) for i, j in enumerate(picked)]  # type: ignore[index]
 
     deps: List[Tuple[str, str, str]] = []
     for i in range(1, k):
@@ -644,12 +749,9 @@ def generate_document(seed: int = 2026) -> str:
             deps.append((f"A{i + 1}", rng.choice(["requires", "depends on"]), "A1"))
 
     lines: List[str] = [
-        f"# 由 dsl.py 造词器生成 · Language Standard {LANG_VERSION} · seed={seed}",
-        "# 生成物为形式合法的结构样本，不含结论与推荐类表述",
-        "",
-        f"Decision: {decision}",
-        "",
+        h.format(ver=LANG_VERSION, seed=seed) for h in vocab["header"]  # type: ignore[union-attr]
     ]
+    lines += ["", f"Decision: {decision}", ""]
     for aid, atext in assumptions:
         lines.append(f"Assumption {aid}: {atext}")
     lines.append("")
@@ -679,7 +781,7 @@ def cmd_check(args: argparse.Namespace) -> int:
     for name in args.files:
         path = Path(name)
         if not path.is_file():
-            print(f"[SKIP] {name} — 文件不存在")
+            print(f"[SKIP] {name} — file not found")
             worst = max(worst, 2)
             continue
 
@@ -712,7 +814,7 @@ def cmd_check(args: argparse.Namespace) -> int:
             loc = f"line {d.line}" if d.line else "doc"
             print(f"       {mark} {d.code}  {loc:<10} {d.message}")
         if not diags:
-            print("       合规：结构完整、无约束冲突、无质量警告")
+            print("       conforming: structure complete, no constraint conflicts, no advisories")
         print()
 
     if args.json:
@@ -723,30 +825,31 @@ def cmd_check(args: argparse.Namespace) -> int:
 
 def cmd_gen(args: argparse.Namespace) -> int:
     if args.count < 1:
-        print("用法错误：--count 必须 ≥ 1")
+        print("usage error: --count must be >= 1")
         return 2
 
-    texts = [generate_document(args.seed + i) for i in range(args.count)]
+    texts = [generate_document(args.seed + i, args.lang) for i in range(args.count)]
 
     if args.count > 1 and args.out:
         out_dir = Path(args.out)
         out_dir.mkdir(parents=True, exist_ok=True)
         written = []
         for i, t in enumerate(texts, start=1):
-            p = out_dir / f"generated_{args.seed + i - 1:04d}{EXTENSION}"
+            p = out_dir / f"generated_{args.lang}_{args.seed + i - 1:04d}{EXTENSION}"
             p.write_text(t, encoding="utf-8")
             written.append(p)
-        print(f"已生成 {len(written)} 份样本 → {out_dir}")
+        print(f"generated {len(written)} sample(s) -> {out_dir}")
         for p in written:
             print(f"  {p}")
     elif args.count > 1:
-        print("用法错误：--count > 1 时必须指定 --out 目录（单文件只允许一条 Decision）")
+        print("usage error: --count > 1 requires --out DIRECTORY "
+              "(a single file may hold only one Decision)")
         return 2
     elif args.out:
         p = Path(args.out)
         p.parent.mkdir(parents=True, exist_ok=True)
         p.write_text(texts[0], encoding="utf-8")
-        print(f"已写入 {p}")
+        print(f"written to {p}")
     else:
         sys.stdout.write(texts[0])
 
@@ -763,7 +866,8 @@ def cmd_gen(args: argparse.Namespace) -> int:
                 for d in ds:
                     print(f"  {d.code} line {d.line}: {d.message}")
         if bad == 0:
-            print(f"[SELF-CHECK PASS] {len(texts)} 份生成物均通过自身校验器（0 error / 0 warning）")
+            print(f"[SELF-CHECK PASS] {len(texts)} generated document(s) cleared by the "
+                  f"validator in this file (0 error / 0 warning)")
         else:
             return 1
 
@@ -775,7 +879,7 @@ def cmd_grammar(_: argparse.Namespace) -> int:
     if ebnf.is_file():
         sys.stdout.write(_read_text(ebnf))
         return 0
-    print(f"未找到文法文件：{ebnf}", file=sys.stderr)
+    print(f"grammar file not found: {ebnf}", file=sys.stderr)
     return 2
 
 
@@ -785,9 +889,9 @@ def cmd_codes(args: argparse.Namespace) -> int:
         if key in CODE_TABLE:
             print(f"{key}  {CODE_TABLE[key]}")
             return 0
-        print(f"未知错误码：{args.code}", file=sys.stderr)
+        print(f"unknown diagnostic code: {args.code}", file=sys.stderr)
         return 2
-    print(f"Decision Structure Language {LANG_VERSION} — 诊断码总表\n")
+    print(f"Decision Structure Language {LANG_VERSION} — diagnostic code index\n")
     for code in sorted(CODE_TABLE):
         level = "ERROR" if code.startswith("E") else "WARN "
         print(f"  {code}  [{level}]  {CODE_TABLE[code]}")
@@ -797,36 +901,42 @@ def cmd_codes(args: argparse.Namespace) -> int:
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="dsl.py",
-        description=f"决策结构语言参考工具链 v{LANG_VERSION}（第二视角语言 · Language Standard 2026）",
+        description=(
+            f"Decision Structure Language reference toolchain v{LANG_VERSION} "
+            f"(Second Perspective Language · Language Standard 2026)"
+        ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=(
-            "示例：\n"
-            "  python dsl.py check examples/valid_decision.spd\n"
+            "Examples:\n"
+            "  python dsl.py check examples/valid_decision.en.spd\n"
             "  python dsl.py check examples/*.spd --json\n"
             "  python dsl.py gen --seed 2026 --count 5 --out examples/generated/ --self-check\n"
+            "  python dsl.py gen --seed 2026 --lang zh\n"
             "  python dsl.py codes E302\n"
         ),
     )
     sub = p.add_subparsers(dest="cmd", required=True)
 
-    pc = sub.add_parser("check", help="校验 .spd 文件的语法、结构与约束合规性")
-    pc.add_argument("files", nargs="+", help="待校验文件")
-    pc.add_argument("--json", action="store_true", help="输出 JSON（便于接入 CI）")
-    pc.add_argument("--strict", action="store_true", help="严格模式：警告也视为失败")
+    pc = sub.add_parser("check", help="validate grammar, structure and constraint conformance")
+    pc.add_argument("files", nargs="+", help="files to validate")
+    pc.add_argument("--json", action="store_true", help="emit JSON (for CI integration)")
+    pc.add_argument("--strict", action="store_true", help="treat warnings as failures")
     pc.set_defaults(func=cmd_check)
 
-    pg = sub.add_parser("gen", help="造词器：依文法生成形式合法的样本")
-    pg.add_argument("--seed", type=int, default=2026, help="随机种子（默认 2026）")
-    pg.add_argument("--count", type=int, default=1, help="生成份数（>1 需 --out 目录）")
-    pg.add_argument("--out", default=None, help="输出文件或目录")
-    pg.add_argument("--self-check", action="store_true", help="生成后立即用自身校验器复检")
+    pg = sub.add_parser("gen", help="sample generator: emit form-valid documents")
+    pg.add_argument("--seed", type=int, default=2026, help="random seed (default 2026)")
+    pg.add_argument("--count", type=int, default=1, help="number of documents (>1 needs --out)")
+    pg.add_argument("--out", default=None, help="output file or directory")
+    pg.add_argument("--lang", choices=["en", "zh"], default="en", help="sample language (default en)")
+    pg.add_argument("--self-check", action="store_true",
+                    help="re-validate the generated output immediately")
     pg.set_defaults(func=cmd_gen)
 
-    pgr = sub.add_parser("grammar", help="打印 EBNF 形式文法")
+    pgr = sub.add_parser("grammar", help="print the EBNF grammar")
     pgr.set_defaults(func=cmd_grammar)
 
-    pcd = sub.add_parser("codes", help="查询诊断码含义")
-    pcd.add_argument("code", nargs="?", help="错误码，省略则打印全表")
+    pcd = sub.add_parser("codes", help="look up a diagnostic code")
+    pcd.add_argument("code", nargs="?", help="diagnostic code; omit to print the whole index")
     pcd.set_defaults(func=cmd_codes)
 
     return p

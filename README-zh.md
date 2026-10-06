@@ -184,10 +184,11 @@ second-perspective/
 │   └── report.py                  #   双语报告渲染器
 ├── language Standard/             # 语言标准 2026
 │   ├── 2026.md                    #   规范性标准（自然语言）
-│   ├── grammar.md                 #   语法规范
+│   ├── grammar.md                 #   语法规范（英文版）
+│   ├── grammar-zh.md              #   语法规范（中文版存档）
 │   ├── decision.ebnf              #   形式文法（ISO/IEC 14977 EBNF）
 │   ├── dsl.py                     #   校验器 + 造词器（零依赖 CLI）
-│   └── examples/                  #   .spd 样本（合规 / 违规 / 生成）
+│   └── examples/                  #   .spd 样本（合规 / 违规 / 生成，中英双语）
 ├── 全新决策结构语言.md            # 决策结构语言一页纸概览
 ├── docs/COMPLIANCE_SHANGHAI.md    # 上海合规说明
 ├── llm_adapters/openai_adapter.py # 可选的 OpenAI 叙述适配器
@@ -209,8 +210,10 @@ python "language Standard/dsl.py" gen --seed 2026 --count 5 --out samples/ --sel
 python "language Standard/dsl.py" codes                                                    # 19 条诊断码
 ```
 
-零外部依赖，仅标准库，确定性（按 seed 可复现）。依标准 *Constraints* 段，校验器**拒绝**结论、
-建议、评分排序与优化引导类表述；造词器因此只产出**形式合法的样本**，不产出任何建议。
+零外部依赖，仅标准库，确定性（按 seed 可复现）。校验器内置**中英双语约束词库**，`gen` 支持
+`--lang en|zh`；文档正文为英文，但中文 `.spd` 记录仍可被完整检出。依标准 *Constraints* 段，
+校验器**拒绝**结论、建议、评分排序与优化引导类表述；造词器因此只产出**形式合法的样本**，
+不产出任何建议。
 
 <p align="center">— ✦ —</p>
 

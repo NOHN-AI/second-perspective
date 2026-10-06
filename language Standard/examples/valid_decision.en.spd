@@ -1,0 +1,15 @@
+# Conforming sample — Decision Structure Language 2026.1
+# Expected: 0 error / 0 warning, exit code 0 (also passes under --strict)
+
+Decision: Accept the Zhangjiang pilot as this quarter's only parallel workstream
+
+Assumption A1: The target account's annual AI budget >= CNY 5,000,000
+Assumption A2: Their procurement compliance review cycle <= 8 weeks
+Assumption A3: Our unit compute cost is <= 70% of their self-built alternative
+
+Dependency: A2 requires A1
+Dependency: A3 depends on A1
+
+Branch A1: Budget falls short — the project degrades to a single PoC and leaves the annual framework
+Branch A2: Review overruns — delivery milestones shift by one tier and validation narrows
+Branch A3: Cost advantage fails — the cost narrative is voided and resource commitment is revised up

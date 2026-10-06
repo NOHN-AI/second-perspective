@@ -1,0 +1,13 @@
+# Violating sample — for diagnostic demonstration only, NOT a writing model
+# Expected: several ERRORs (E104/E105/E107/E302/E303) and WARNs (W401/W402/W403)
+
+Decision: We should adopt the top-ranked option B
+
+Assumption A1: The client probably has a large budget
+Assumption A2: This is obvious
+Assumption A2: Delivery lands within 4 weeks
+
+Dependency: A3 requires A1
+
+Branch A1: We recommend switching to option C
+Branch A4: If budget falls short, the scope shrinks

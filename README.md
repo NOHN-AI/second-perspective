@@ -184,10 +184,11 @@ second-perspective/
 │   └── report.py                  #   Bilingual report renderer
 ├── language Standard/             # Language Standard 2026
 │   ├── 2026.md                    #   Normative standard (natural language)
-│   ├── grammar.md                 #   Grammar specification
+│   ├── grammar.md                 #   Grammar specification (English)
+│   ├── grammar-zh.md              #   Grammar specification (Chinese edition)
 │   ├── decision.ebnf              #   Formal grammar (ISO/IEC 14977 EBNF)
 │   ├── dsl.py                     #   Validator + generator, zero-dependency CLI
-│   └── examples/                  #   .spd samples (valid / invalid / generated)
+│   └── examples/                  #   .spd samples (valid / invalid / generated, EN + ZH)
 ├── 全新决策结构语言.md            # One-page decision-structure language overview
 ├── docs/COMPLIANCE_SHANGHAI.md    # Shanghai compliance note
 ├── llm_adapters/openai_adapter.py # Optional OpenAI narrative adapter
@@ -210,9 +211,11 @@ python "language Standard/dsl.py" gen --seed 2026 --count 5 --out samples/ --sel
 python "language Standard/dsl.py" codes                                                    # 19 diagnostic codes
 ```
 
-Zero external dependencies, stdlib only, deterministic (seeded). Per the standard's *Constraints*,
-the validator **rejects** conclusions, recommendations, ranking/scoring and optimisation guidance;
-the generator accordingly emits *form-valid samples only*, never advice.
+Zero external dependencies, stdlib only, deterministic (seeded). The validator ships a **bilingual
+constraint lexicon** (English + Chinese) and exposes `--lang en|zh` on `gen`; the prose is English,
+but Chinese `.spd` records are still fully checked. Per the standard's *Constraints*, the validator
+**rejects** conclusions, recommendations, ranking/scoring and optimisation guidance; the generator
+accordingly emits *form-valid samples only*, never advice.
 
 <p align="center">— ✦ —</p>
 
