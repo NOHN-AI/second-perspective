@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 import os
 
-from fastapi import Depends, FastAPI, Header, HTTPException, Request, status
+from fastapi import Depends, FastAPI, Header, HTTPException, Request, Response, status
 from pydantic import BaseModel
 
 from ..governance.approval import ApprovalError
@@ -18,9 +18,14 @@ from ..models.schemas import (
     DeviationSignal,
     ReconstructionSession,
 )
+from ..observability import ObservabilityMiddleware, get_metrics
 from ..repository import InMemoryDecisionRepository
+from ..security.kms import get_signer
 from ..service import DecisionNotFoundError, DecisionService
+from ..tenant import TENANT_HEADER, resolve_tenant_from_claims, reset_tenant, set_tenant
 from ..version import VERSION
+from .authz import authz_enforced, require_scope
+from .ratelimit import RateLimitMiddleware, rate_limit_enabled
 from .security import verify_api_key
 
 logger = logging.getLogger(__name__)
@@ -46,6 +51,74 @@ async def log_request_lifecycle(request: Request, call_next):
         response.status_code,
     )
     return response
+
+
+# ── v0.5 enterprise control-plane middleware ──
+
+
+@app.middleware("http")
+async def identity_middleware(request: Request, call_next):
+    """Resolve and stash verified OIDC claims for authorization (opt-in)."""
+    if authz_enforced():
+        authorization = request.headers.get("Authorization", "")
+        _, _, token = authorization.partition(" ")
+        if token and os.getenv("SP_OIDC_ISSUER", "").strip():
+            try:
+                from .security import _get_oidc_config, _verify_oidc_token
+
+                config = _get_oidc_config()
+                if config is not None:
+                    claims = _verify_oidc_token(token, config)
+                    if claims is not None:
+                        request.state.oidc_claims = claims
+            except Exception:
+                pass
+    return await call_next(request)
+
+
+@app.middleware("http")
+async def tenant_middleware(request: Request, call_next):
+    """Resolve the active tenant into a contextvar for the request lifetime."""
+    tenant_id = request.headers.get(TENANT_HEADER)
+    if not tenant_id and authz_enforced():
+        claims = getattr(request.state, "oidc_claims", None)
+        tenant_id = resolve_tenant_from_claims(claims)
+    token = None
+    if tenant_id:
+        token = set_tenant(tenant_id)
+    try:
+        return await call_next(request)
+    finally:
+        if token is not None:
+            reset_tenant(token)
+
+
+_observability = ObservabilityMiddleware(app=None)
+
+
+@app.middleware("http")
+async def observability_middleware(request: Request, call_next):
+    return await _observability(request, call_next)
+
+
+_rl = rate_limit_enabled()
+if _rl > 0:
+    _rate_limiter = RateLimitMiddleware(app=None, rate_per_minute=_rl)
+
+    @app.middleware("http")
+    async def rate_limit_middleware(request: Request, call_next):
+        return await _rate_limiter(request, call_next)
+
+
+# KMS detached-signature helper (no-op until SP_KMS_SECRET is configured).
+_signer = get_signer()
+
+
+def _attach_kms_signature(response: Response, *parts: str) -> None:
+    if not _signer.is_configured():
+        return
+    payload = "::".join(parts).encode("utf-8")
+    response.headers["X-Nomos-Kms-Signature"] = _signer.sign(payload)
 
 
 def _build_service() -> DecisionService:
@@ -143,6 +216,12 @@ def health_check() -> dict[str, str]:
     return {"status": "ok", "version": VERSION}
 
 
+@app.get("/v1/metrics", operation_id="metricsSnapshot")
+def metrics_snapshot() -> dict:
+    """In-process observability snapshot (v0.5)."""
+    return get_metrics().snapshot()
+
+
 @app.get("/v1/auth/me", operation_id="authWhoAmI")
 def auth_me(authorization: str | None = Header(default=None)) -> dict:
     return _build_identity_response(authorization)
@@ -152,10 +231,12 @@ def auth_me(authorization: str | None = Header(default=None)) -> dict:
     "/v1/hub/analyze",
     response_model=HubReport,
     operation_id="analyzeDecisionHub",
-    dependencies=[Depends(verify_api_key)],
+    dependencies=[Depends(verify_api_key), Depends(require_scope("hub:analyze"))],
 )
-def analyze_decision_hub(request: HubAnalysisRequest) -> HubReport:
-    return hub.analyze(request)
+def analyze_decision_hub(request: HubAnalysisRequest, response: Response) -> HubReport:
+    report = hub.analyze(request)
+    _attach_kms_signature(response, report.hub_run_id, report.report_hash)
+    return report
 
 
 @app.get(
@@ -178,10 +259,12 @@ def get_decision_hub_report(hub_run_id: str) -> HubReport:
     "/v1/decisions/evaluate",
     response_model=DecisionRecord,
     operation_id="evaluateDecision",
-    dependencies=[Depends(verify_api_key)],
+    dependencies=[Depends(verify_api_key), Depends(require_scope("decisions:write"))],
 )
-def evaluate_decision(request: DecisionRequest) -> DecisionRecord:
-    return service.evaluate(request)
+def evaluate_decision(request: DecisionRequest, response: Response) -> DecisionRecord:
+    record = service.evaluate(request)
+    _attach_kms_signature(response, record.result.decision_id, record.record_hash)
+    return record
 
 
 @app.get(
@@ -220,14 +303,17 @@ def get_decision_history(decision_id: str) -> list[DecisionRecord]:
     "/v1/decisions/{decision_id}/approval",
     response_model=DecisionRecord,
     operation_id="recordDecisionApproval",
-    dependencies=[Depends(verify_api_key)],
+    dependencies=[Depends(verify_api_key), Depends(require_scope("decisions:approve"))],
 )
 def record_decision_approval(
     decision_id: str,
     approval: ApprovalRequest,
+    response: Response,
 ) -> DecisionRecord:
     try:
-        return service.approve(decision_id, approval)
+        record = service.approve(decision_id, approval)
+        _attach_kms_signature(response, decision_id, record.record_hash)
+        return record
     except DecisionNotFoundError as exc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

@@ -4,12 +4,12 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/python-D4AF37?style=flat-square" alt="python">
-  <img src="https://img.shields.io/badge/framework-v0.4.0-D4AF37?style=flat-square" alt="framework-v0.4.0">
+  <img src="https://img.shields.io/badge/framework-v0.5.0-D4AF37?style=flat-square" alt="framework-v0.5.0">
   <img src="https://img.shields.io/badge/imda-score-95-D4AF37?style=flat-square" alt="imda-score-95">
 </p>
 
 <blockquote align="center">
-  <em>NOMOS · v0.4.0 — Second-Order Causal Decision Framework with LLM Guardrails</em>
+  <em>NOMOS · v0.5.0 — Second-Order Causal Decision Framework with LLM Guardrails</em>
 </blockquote>
 
 <p align="center">
@@ -77,6 +77,19 @@ NOMOS is not a replacement for existing ERP/CRM/risk control/compliance/investme
 
 <p align="center">— ✦ —</p>
 
+## ✦ What's New in v0.5 — Enterprise Control Plane
+
+v0.5 closes the production gaps listed under *Production Boundaries* in v0.4. All additions are **env-gated and off by default**, so existing v0.4 deployments keep working unchanged until an operator opts in.
+
+- **Persistent event store** — append-only, hash-linked `DomainEvent` log on every `evaluate`/`approve` (`persistence/event_store.py`), with a durable `PostgresEventStore`.
+- **Tenant isolation** — `contextvars`-based active tenant resolved from `X-Tenant-Id` (or OIDC `tid`); per-tenant event partitioning. Legacy tables gain prepared `tenant_id` columns via `scripts/migrate.py`.
+- **OIDC + authorization** — opt-in scope enforcement (`SP_AUTHZ_ENFORCE=true`) on write endpoints via `require_scope()`; layered on top of existing auth, inert by default.
+- **KMS signing** — detached HMAC-SHA256 signatures over sealed artifact hashes (`security/kms.py`), surfaced as `X-Nomos-Kms-Signature`; no-op until `SP_KMS_SECRET` is set.
+- **Rate limiting** — opt-in token-bucket middleware (`SP_RATE_LIMIT`).
+- **Observability** — in-process metrics + `X-Process-Time-Ms`, snapshot at `GET /v1/metrics`.
+- **Backups / migrations** — `scripts/migrate.py` (idempotent DDL) and `scripts/backup.py` (JSON export).
+- **Domain control packs** — pluggable `DomainControlPack` protocol + registry; ships `FinanceRiskControlPack`. Packs observe only; they never alter the engine verdict.
+
 ## ✦ What's New in v0.4 — Second-Order Causal Framework
 
 v0.4 is the first release that systematically reasons about <strong>assumption-to-assumption interactions</strong> rather than treating failures as independent events, pins the iterative reconstruction loop to <strong>formally-classified convergence states</strong> (proved, not heuristic), and places LLMs behind a <strong>three-tier permission gate</strong> that provably prevents LLM output from becoming adjudication.
@@ -89,22 +102,10 @@ v0.4 is the first release that systematically reasons about <strong>assumption-t
 - **Formal Convergence Engine** (`convergence/`) — replaces heuristic stop checks with a five-state classification (`FIXED_POINT` / `NO_GAIN` / `BUDGET_EXHAUSTED` / `DIVERGED` / `BLOCKED`) backed by three checkable propositions (P-1 Termination, P-2 Fixed-point, P-3 Effect-boundedness). `is_true_convergence` guards against the classic bug of misclassifying budget exhaustion as convergence.
 - **LLM Compliance Layer** (`llm_compliance/`) — three permission tiers (T1 Annotation / T2 Proposal / T3 Narrative), three invariants (zone isolation, no adjudication, strength stripping), and a provenance-tracked `LLMGate` that strips structural power from every LLM response before it can touch the decision graph.
 - **Core integration** — `DecisionRequest` gains an optional `interaction_declaration` field (default `None`, fully backward compatible); `invalidation_closure_with_interaction()` composes first-order closure with second-order joint effect; the session engine delegates stop-condition checks to the formal `ConvergenceChecker`.
-- **Backward compatibility preserved** — when `interaction_declaration` is not supplied, the engine behaves identically to v0.3. No existing APIs removed or renamed. GCAE audit engine untouched.
+- **Backward compatibility preserved** — when `interaction_declaration` is not supplied, the engine behaves identically to v0.4. No existing APIs removed or renamed. GCAE audit engine untouched.
 
-Tests: 402 passing (added 122), 0 failures. Full change log: [`CHANGELOG.md`](./CHANGELOG.md).
-Architecture: [`docs/INTELLIGENT_DECISION_HUB_V0_4.md`](docs/INTELLIGENT_DECISION_HUB_V0_4.md) (new) · v0.3 archive: [`docs/INTELLIGENT_DECISION_HUB_V0_3.md`](docs/INTELLIGENT_DECISION_HUB_V0_3.md).
-
-### What was new in v0.3
-
-- Hash-chained audit events for every major deterministic operation
-- Explicit operands and outputs for constraint and criterion calculations
-- True candidate re-selection after transmitted assumption failures
-- Stress scenarios declared by the user (failed assumptions, metric overrides)
-- Deterministic cognitive-risk challenge layer that infers no mental states
-- Prioritized information acquisition and review queue
-- An `IntelligentDecisionHub` orchestrator and a sealed `HubReport`
-- Full audit ledger inside both baseline and scenario runs
-- New `POST /v1/hub/analyze`, while retaining every v0.2 endpoint
+Tests: 412 passing (added 132), 0 failures. Full change log: [`CHANGELOG.md`](./CHANGELOG.md).
+Architecture: [`docs/INTELLIGENT_DECISION_HUB_V0_4.md`](docs/INTELLIGENT_DECISION_HUB_V0_4.md).
 
 ## ✦ Three-Layer Causal Reconstruction (Bounded Convergence + Human Gate)
 
@@ -265,7 +266,9 @@ All v0.2 decision requests and endpoints remain valid. Responses add `counterfac
 
 ## ✦ Production Boundaries
 
-v0.4 is a feature-complete <em>deterministic decision framework</em> core — the second-order causal layer, formal convergence, and LLM guardrails are production-grade. It is not yet a full multi-tenant enterprise control plane: the default store remains in-process memory. Production deployments need a persistent event store, OIDC and authorization enforcement, tenant isolation, KMS signing, rate limiting, observability, backups, migrations, and domain control packs.
+v0.5 is a feature-complete <em>deterministic decision framework</em> with an enterprise control plane. The second-order causal layer, formal convergence, and LLM guardrails remain production-grade. The control-plane capabilities listed above (persistent event store, tenant isolation, OIDC + authorization enforcement, KMS signing, rate limiting, observability, backups/migrations, domain control packs) ship in v0.5 and are **opt-in** via environment configuration.
+
+Remaining production hardening (not yet bundled): a shared/cloud rate-limit store (e.g. Redis), envelope encryption via a cloud KMS, document-level (not just event-level) per-tenant partitioning, multi-region HA, and SLA tooling.
 
 Hard boundaries (invariants, not future work):
 - The engine never estimates missing interaction strengths, weights, probabilities, or responsible parties.

@@ -5,6 +5,43 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2026-10-07
+
+### Added — Enterprise Control Plane (closes the v0.4 production gaps)
+
+**Persistent Event Store** (`persistence/event_store.py`)
+- Append-only, hash-linked `DomainEvent` log emitted by `DecisionService` on every `evaluate` / `approve` transition.
+- `InMemoryEventStore` (development) and `PostgresEventStore` (durable, per-tenant) implementations; `last_hash()` supports verifiable chains.
+
+**Tenant Isolation** (`tenant.py`)
+- A `contextvars`-based active-tenant context resolved from the `X-Tenant-Id` header (or OIDC `tid` claim when authorization is enforced).
+- Per-tenant partitioning on the event store; tenant columns prepared on legacy tables via `scripts/migrate.py`.
+
+**OIDC + Authorization Enforcement** (`api/authz.py`)
+- Opt-in scope enforcement (`SP_AUTHZ_ENFORCE=true`) layered on top of existing authentication; `require_scope()` dependency guards write endpoints. Off by default — existing API-key deployments are unchanged.
+
+**KMS Signing** (`security/kms.py`)
+- Detached HMAC-SHA256 signatures over sealed artifact hashes (`LocalKmsSigner`, key from `SP_KMS_SECRET` / `SP_KMS_KEY_FILE`). Transparent no-op until configured; signatures surfaced via `X-Nomos-Kms-Signature` response headers.
+
+**Rate Limiting** (`api/ratelimit.py`)
+- Opt-in token-bucket middleware (`SP_RATE_LIMIT` rps) keyed per client. Disabled by default.
+
+**Observability** (`observability/metrics.py`)
+- In-process per-route request/error counters and latency averages; `ObservabilityMiddleware` stamps `X-Process-Time-Ms`; snapshot served at `GET /v1/metrics`.
+
+**Backups / Migrations** (`scripts/migrate.py`, `scripts/backup.py`)
+- Idempotent DDL migration runner (tenant columns + event store) and a JSON exporter for point-in-time backup.
+
+**Domain Control Packs** (`domain/`)
+- Pluggable `DomainControlPack` protocol + registry; ships `FinanceRiskControlPack` (flags multi-alternative decisions lacking an explicit risk owner). Packs observe only and never alter the engine verdict; `fail_on_domain_violation` is opt-in.
+
+### Backward Compatibility
+- All v0.4 APIs and behaviours are unchanged when the new env-gated features are unset.
+- v0.3 archive documentation removed; baseline compatibility reference is now v0.4.
+- `version.py` corrected to `0.5.0` (was stale at `0.3.0`).
+
+---
+
 ## [0.4.0] - 2026-09-22
 
 ### Added
@@ -51,7 +88,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Backward Compatibility
 - All existing APIs and default behaviours are unchanged.
-- When `interaction_declaration` is not supplied (the default), the engine behaves identically to v0.3.
+- When `interaction_declaration` is not supplied (the default), the engine behaves identically to v0.4.
 - No existing functions or classes were removed or renamed.
 - `Cognitive Audit Engine` (GCAE) was not modified.
 

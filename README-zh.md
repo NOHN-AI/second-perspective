@@ -4,12 +4,12 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/python-D4AF37?style=flat-square" alt="python">
-  <img src="https://img.shields.io/badge/framework-v0.4.0-D4AF37?style=flat-square" alt="framework-v0.4.0">
+  <img src="https://img.shields.io/badge/framework-v0.5.0-D4AF37?style=flat-square" alt="framework-v0.5.0">
   <img src="https://img.shields.io/badge/imda-score-95-D4AF37?style=flat-square" alt="imda-score-95">
 </p>
 
 <blockquote align="center">
-  <em>NOMOS · v0.4.0 —— 带 LLM 护栏的二阶因果决策框架</em>
+  <em>NOMOS · v0.5.0 —— 带 LLM 护栏的二阶因果决策框架</em>
 </blockquote>
 
 <p align="center">
@@ -64,7 +64,7 @@ NOMOS 并非要取代现有的 ERP/CRM/风控/合规/投决/HR/项目审批系�
         │  提交结构化决策请求 + 已声明的交互 + 责任人
         ▼
    ┌─────────────────┐
-   │  NOMOS v0.4     │  ← 确定性决策内核（本仓库）
+   │  NOMOS v0.5     │  ← 确定性决策内核（本仓库）
    │  - 一阶失效     │     输出：候选集 + 反事实 + 审计链 + 收敛状态
    │  - 二阶交互     │
    │  - 三层重建     │     不输出最终结论——结论由人签
@@ -76,6 +76,19 @@ NOMOS 并非要取代现有的 ERP/CRM/风控/合规/投决/HR/项目审批系�
 ```
 
 <p align="center">— ✦ —</p>
+
+## ✦ v0.5 新特性 —— 企业控制平面
+
+v0.5 补齐了 v0.4「生产边界」中列出的全部缺口。所有新增能力均为 <strong>env 门控、默认关闭</strong>，因此既有的 v0.4 部署在相关环境变量未设置时行为完全不变。
+
+- **持久化事件存储** —— 每次 `evaluate`/`approve` 的追加式、哈希链 `DomainEvent` 日志（`persistence/event_store.py`），并提供持久化的 `PostgresEventStore`。
+- **租户隔离** —— 基于 `contextvars` 的活跃租户上下文，由 `X-Tenant-Id`（或 OIDC `tid`）解析；事件按租户分区。遗留表经由 `scripts/migrate.py` 预建 `tenant_id` 列。
+- **OIDC + 授权强制** —— 写端点上的 opt-in 作用域强制（`SP_AUTHZ_ENFORCE=true`），通过 `require_scope()` 实现；构建于既有认证之上，默认不生效。
+- **KMS 签名** —— 对密封产物哈希的分离式 HMAC-SHA256 签名（`security/kms.py`），以 `X-Nomos-Kms-Signature` 响应头返回；在设置 `SP_KMS_SECRET` 之前为透明 no-op。
+- **限流** —— opt-in 令牌桶中间件（`SP_RATE_LIMIT`）。
+- **可观测性** —— 进程内指标 + `X-Process-Time-Ms`，快照见 `GET /v1/metrics`。
+- **备份 / 迁移** —— `scripts/migrate.py`（幂等 DDL）与 `scripts/backup.py`（JSON 导出）。
+- **领域控制包** —— 可插拔的 `DomainControlPack` 协议 + 注册表；内置 `FinanceRiskControlPack`。控制包仅做观测，绝不篡改引擎结论。
 
 ## ✦ v0.4 新特性 —— 二阶因果框架
 
@@ -89,10 +102,10 @@ v0.4 是首个系统性地对<strong>假设与假设之间的交互</strong>进�
 - **形式化收敛引擎**（`convergence/`）—— 以五态分类（`FIXED_POINT` / `NO_GAIN` / `BUDGET_EXHAUSTED` / `DIVERGED` / `BLOCKED`）取代启发式停止判据，并由三条可检验命题（P-1 终止性、P-2 不动点、P-3 效应有界）支撑。`is_true_convergence` 防止将预算耗尽误判为收敛这一经典缺陷。
 - **LLM 合规层**（`llm_compliance/`）—— 三档权限（T1 标注 / T2 提案 / T3 叙述）、三条不变式（区隔离、不裁决、强度剥离），以及一个带溯源追踪的 `LLMGate`，在 LLM 响应触及决策图之前剥离其结构性权力。
 - **核心集成** —— `DecisionRequest` 新增可选字段 `interaction_declaration`（默认 `None`，完全向后兼容）；`invalidation_closure_with_interaction()` 将一阶闭包与二阶联合效应复合；会话引擎将停止条件检查委托给形式化的 `ConvergenceChecker`。
-- **保持向后兼容** —— 未提供 `interaction_declaration` 时，引擎行为与 v0.3 完全一致。未移除或重命名任何既有 API。GCAE 审计引擎未改动。
+- **保持向后兼容** —— 未提供 `interaction_declaration` 时，引擎行为与 v0.4 完全一致。未移除或重命名任何既有 API。GCAE 审计引擎未改动。
 
-测试：402 项通过（新增 122 项），0 失败。完整变更日志：[`CHANGELOG.md`](./CHANGELOG.md)。
-架构：[`docs/INTELLIGENT_DECISION_HUB_V0_4.md`](docs/INTELLIGENT_DECISION_HUB_V0_4.md)（新增）· v0.3 存档：[`docs/INTELLIGENT_DECISION_HUB_V0_3.md`](docs/INTELLIGENT_DECISION_HUB_V0_3.md)。
+测试：412 项通过（新增 132 项），0 失败。完整变更日志：[`CHANGELOG.md`](./CHANGELOG.md)。
+架构：[`docs/INTELLIGENT_DECISION_HUB_V0_4.md`](docs/INTELLIGENT_DECISION_HUB_V0_4.md)。
 
 ### v0.3 新特性
 
@@ -264,7 +277,9 @@ python scripts/export_openapi.py
 
 ## ✦ 生产边界
 
-v0.4 是一个功能完备的<em>确定性决策框架</em>内核 —— 二阶因果层、形式化收敛与 LLM 护栏均已达到生产级。它尚不是完整的多租户企业控制平面：默认存储仍为进程内内存。生产部署需要持久化事件存储、OIDC 与授权强制、租户隔离、KMS 签名、限流、可观测性、备份、迁移与领域控制包。
+v0.5 是一个功能完备的<em>确定性决策框架</em>并附带企业控制平面。二阶因果层、形式化收敛与 LLM 护栏均已达到生产级。上述控制面能力（持久化事件存储、租户隔离、OIDC 与授权强制、KMS 签名、限流、可观测性、备份/迁移、领域控制包）已在 v0.5 中以 opt-in 方式提供。
+
+剩余的生产加固项（尚未捆绑）：共享/云原生限流存储（如 Redis）、基于云 KMS 的信封加密、文档级（而非仅事件级）按租户分区、多区域高可用，以及 SLA 工具。
 
 硬边界（不变式，而非未来工作）：
 
@@ -277,7 +292,7 @@ v0.4 是一个功能完备的<em>确定性决策框架</em>内核 —— 二阶�
 
 ```
 nomos/
-├── pyproject.toml              # 包：nomos-decision-engine v0.4.0
+├── pyproject.toml              # 包：nomos-decision-engine v0.5.0
 ├── CHANGELOG.md                # 版本化变更日志
 ├── src/second_perspective/
 │   ├── cli.py / hub_cli.py     # 演示入口（nomos-demo / nomos-hub-demo）
