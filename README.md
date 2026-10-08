@@ -33,6 +33,56 @@
 
 <p align="center">— ✦ —</p>
 
+## ✦ Architecture (Plain Language)
+
+> **In one sentence:** GCAE is a **neutral auditor for decisions** — you describe a decision you are about to make, and it takes that description apart step by step to show what you quietly assumed and where the weakest link is. It never decides for you.
+
+```mermaid
+flowchart TB
+    IN["📄 A decision you are about to make<br/>your own description — no model code changes"]
+
+    subgraph CORE["🔍 GCAE core — offline · deterministic · 100% neutral"]
+        P1["1 · Narrative Stripping (NS)<br/>delete rhetoric, emotion and vague words —<br/>keep the logical core"]
+        P2["2 · Implicit Assumption (IAP)<br/>surface hidden premises, privilege bypass<br/>and circular reasoning"]
+        P3["3 · Fragility Latch (LCH)<br/>score each assumption's collapse risk ΔD —<br/>find the most fragile variable"]
+        P4["4 · Causal Chain Sync (CCS)<br/>reverse check · counterfactual check ·<br/>information-black-hole detection"]
+        P5["5 · State Anchoring (STATE)<br/>anchor who is responsible<br/>+ SHA-256 audit certificate"]
+    end
+
+    LLM["🤖 Optional LLM narration<br/>off by default · never changes a verdict"]
+    OUT1["🧾 Structural audit conclusion<br/>no advice · no ranking · no score"]
+    OUT2["🔐 SHA-256 audit certificate<br/>reproducible and comparable across machines"]
+    HUMAN["🙋 You still decide<br/>the engine never decides for you"]
+
+    IN --> P1
+    P1 --> P2
+    P2 --> P3
+    P3 --> P4
+    P4 --> P5
+    P5 --> OUT1
+    P5 --> OUT2
+    P5 -.-> LLM
+    OUT1 --> HUMAN
+    OUT2 --> HUMAN
+
+    classDef cIn fill:#E8F0FE,stroke:#4285F4,stroke-width:1px,color:#173A66
+    classDef cOp fill:#FFF8E1,stroke:#C9A96E,stroke-width:1px,color:#5B4614
+    classDef cOut fill:#E6F4EA,stroke:#34A853,stroke-width:1px,color:#14512B
+    classDef cLlm fill:#F3E8FD,stroke:#8E44AD,stroke-width:1px,color:#4A235A
+    class IN cIn
+    class P1,P2,P3,P4,P5 cOp
+    class LLM cLlm
+    class OUT1,OUT2,HUMAN cOut
+```
+
+**How to read it**
+
+1. **Five operators, always in order.** NS cleans the language, IAP exposes the hidden premises, LCH finds the fragile one, CCS checks the chain backwards, STATE pins responsibility and seals a certificate.
+2. **The output is deliberately modest.** No advice, no ranking, no score — only "this structure is / is not rationally consistent", which is why a third party can rely on it.
+3. **The LLM is optional decoration.** It is off by default and can only phrase the narrative; it never touches the verdict.
+
+📖 Every term explained in one plain sentence → [Glossary](./GLOSSARY.md)
+
 ## ✦ Live Demo
 
 <div style="max-width:880px;margin:0 auto;padding:0 16px">

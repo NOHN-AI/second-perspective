@@ -33,6 +33,56 @@
 
 <p align="center">— ✦ —</p>
 
+## ✦ 系统架构（人话版）
+
+> **一句话：** GCAE 是一台**中立的决策体检机**——你描述一个即将做的决策，它把这个描述一步步拆开，告诉你「你悄悄假设了什么」以及「最脆弱的那一环在哪」。它从不替你做决定。
+
+```mermaid
+flowchart TB
+    IN["📄 你即将做的一个决策<br/>由你自己描述 —— 无需改动任何模型代码"]
+
+    subgraph CORE["🔍 GCAE 内核 —— 离线 · 确定性 · 100% 中立"]
+        P1["1 · 叙事剥离（NS）<br/>删掉修辞、情绪与模糊限定词 ——<br/>只留逻辑主干"]
+        P2["2 · 隐含假设透视（IAP）<br/>翻出未说出口的预设、越权前提<br/>与循环论证"]
+        P3["3 · 脆弱性闩锁（LCH）<br/>给每个假设算坍塌概率 ΔD ——<br/>找出最脆弱的变量"]
+        P4["4 · 因果链同步（CCS）<br/>反向验证 · 反事实验证 ·<br/>信息黑洞检测"]
+        P5["5 · 状态锚定（STATE）<br/>锚定责任人<br/>+ SHA-256 审计证书"]
+    end
+
+    LLM["🤖 可选的 LLM 叙述适配器<br/>默认关闭 · 永不改变任何判定"]
+    OUT1["🧾 结构审计结论<br/>不给建议 · 不给排名 · 不给评分"]
+    OUT2["🔐 SHA-256 审计证书<br/>跨机器可复现、可比对"]
+    HUMAN["🙋 决定权仍在你手上<br/>引擎绝不替你做决定"]
+
+    IN --> P1
+    P1 --> P2
+    P2 --> P3
+    P3 --> P4
+    P4 --> P5
+    P5 --> OUT1
+    P5 --> OUT2
+    P5 -.-> LLM
+    OUT1 --> HUMAN
+    OUT2 --> HUMAN
+
+    classDef cIn fill:#E8F0FE,stroke:#4285F4,stroke-width:1px,color:#173A66
+    classDef cOp fill:#FFF8E1,stroke:#C9A96E,stroke-width:1px,color:#5B4614
+    classDef cOut fill:#E6F4EA,stroke:#34A853,stroke-width:1px,color:#14512B
+    classDef cLlm fill:#F3E8FD,stroke:#8E44AD,stroke-width:1px,color:#4A235A
+    class IN cIn
+    class P1,P2,P3,P4,P5 cOp
+    class LLM cLlm
+    class OUT1,OUT2,HUMAN cOut
+```
+
+**这张图怎么看**
+
+1. **五个算子，顺序固定。** NS 清洗语言 → IAP 翻出隐藏预设 → LCH 找出最脆弱的一环 → CCS 反向校验因果链 → STATE 锚定责任并封出证书。
+2. **输出刻意「克制」。** 不给建议、不给排名、不给评分，只回答「这个结构是否理性自洽」——这正是第三方可以放心引用的原因。
+3. **大模型只是可选装饰。** 默认关闭，且只能负责措辞叙述，永远碰不到判定本身。
+
+📖 每个术语都用一句人话解释 → [术语表 GLOSSARY](./GLOSSARY.md)
+
 ## ✦ 在线演示
 
 <div style="max-width:880px;margin:0 auto;padding:0 16px">
