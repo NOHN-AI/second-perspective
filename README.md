@@ -108,11 +108,18 @@ git clone https://github.com/nohn3043-arch/second-perspective.git
 # Mirror: Gitee (this repository)
 # git clone https://gitee.com/nohn-ecosystem/second-perspective.git
 cd second-perspective
-pip install -r requirements.txt          # Core dependencies
+# Core is zero-dependency (Python 3.10+ stdlib only; no pip install needed)
 # Optional: pip install -r requirements-openai.txt   # OpenAI narrative adapter
 
-# Run the five-operator end-to-end demo
+# 1) Five-operator end-to-end demo
 python demo_audit.py
+
+# 2) Independent verification suite (zero-dependency, 11 checks, CI-friendly exit code)
+python verify.py
+python verify.py --root    # print only the chain root, for cross-machine comparison
+
+# 3) Self-verification & evaluation-design guide (verify the engine + design your own evaluation)
+#    See TESTING.md — the single entry point (Chinese edition: TESTING-zh.md)
 ```
 
 <p align="center">— ✦ —</p>
@@ -175,6 +182,9 @@ The optional narrative generation adapter is at [`llm_adapters/openai_adapter.py
 second-perspective/
 ├── Cognitive Audit Engine.py      # Core engine (space-separated naming by design)
 ├── demo_audit.py                  # Five-operator end-to-end demo
+├── verify.py                      # Independent verification suite (11 checks, zero-dep)
+├── TESTING.md                     # Self-verification & evaluation-design guide (single entry)
+├── TESTING-zh.md                  # Chinese edition of the guide
 ├── plugins/                       # Five operators as plugins
 │   ├── ns.py                      #   Narrative Stripping
 │   ├── iap.py                     #   Implicit Assumption Perspective

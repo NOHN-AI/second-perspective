@@ -108,11 +108,18 @@ git clone https://github.com/nohn3043-arch/second-perspective.git
 # 镜像：Gitee（本仓库）
 # git clone https://gitee.com/nohn-ecosystem/second-perspective.git
 cd second-perspective
-pip install -r requirements.txt          # 核心依赖
+# 核心零依赖（仅需 Python 3.10+ 标准库，无需 pip install）
 # 可选：pip install -r requirements-openai.txt   # OpenAI 叙述适配器
 
-# 运行五算子端到端演示
+# ① 五算子端到端演示
 python demo_audit.py
+
+# ② 独立验证套件（零依赖 · 11 项检查 · 退出码可接 CI）
+python verify.py
+python verify.py --root    # 只打印链根，供跨机比对
+
+# ③ 自验与评测设计指导（怎么核验引擎 + 怎么设计你自己的评测）
+#    见 TESTING-zh.md —— 唯一测试入口（English: TESTING.md）
 ```
 
 <p align="center">— ✦ —</p>
@@ -175,6 +182,9 @@ from plugins import (
 second-perspective/
 ├── Cognitive Audit Engine.py      # 核心引擎（有意采用带空格的文件名）
 ├── demo_audit.py                  # 五算子端到端演示
+├── verify.py                      # 独立验证套件（零依赖，11 项检查）
+├── TESTING.md                     # 自验与评测设计指导（English · 主版）
+├── TESTING-zh.md                  # 自验与评测设计指导（中文版 · 镜像）
 ├── plugins/                       # 五个算子插件
 │   ├── ns.py                      #   叙事剥离
 │   ├── iap.py                     #   内隐假设透视
