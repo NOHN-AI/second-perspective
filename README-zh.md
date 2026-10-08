@@ -31,6 +31,14 @@
 
 </div>
 
+## ✦ 引用
+
+方法以公开技术报告（Version 1.0，2026）为准，引用格式：
+
+> Ji, Zhichen. *Structural Auditing of Decision Claims: A Deterministic Offline Method and Its Reproducible Evidence Chain.* Zenodo, 2026. DOI: [10.5281/zenodo.23244508](https://doi.org/10.5281/zenodo.23244508)
+
+存缴包——报告、Markdown 源、验证日志与完整源码快照——镜像于 [`docs/zenodo/deposit/`](./docs/zenodo/deposit/)。
+
 <p align="center">— ✦ —</p>
 
 ## ✦ 系统架构

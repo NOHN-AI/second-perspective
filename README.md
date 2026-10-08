@@ -31,6 +31,14 @@
 
 </div>
 
+## ✦ Citation
+
+The method is specified in the public technical report (Version 1.0, 2026). Cite it as:
+
+> Ji, Zhichen. *Structural Auditing of Decision Claims: A Deterministic Offline Method and Its Reproducible Evidence Chain.* Zenodo, 2026. DOI: [10.5281/zenodo.23244508](https://doi.org/10.5281/zenodo.23244508)
+
+The deposit — report, Markdown source, verification log, and the complete source snapshot — is mirrored in [`docs/zenodo/deposit/`](./docs/zenodo/deposit/).
+
 <p align="center">— ✦ —</p>
 
 ## ✦ Architecture

@@ -1,0 +1,145 @@
+========================================================================
+GCAE v2.0.0 — verification log for the Zenodo deposit
+Paper: Structural Auditing of Decision Claims (Version 1.0, 2026-10-09)
+Snapshot: working tree of git HEAD a71f4c6d4124f180f14cbf9aa64dbb3b4dc108cd (2026-10-09)
+Environment: Python 3.13.14 · Windows (AMD64)
+Package: second-perspective-2026-10-09.zip (same tree as this log)
+========================================================================
+
+### Command 1: python verify.py
+
+====================================================================
+GCAE 独立验证套件 / Independent Verification Suite
+目标: C:\Users\q3265\Documents\github\second-perspective\Cognitive Audit Engine.py
+====================================================================
+  [PASS]  V1  零依赖离线装载 (stdlib only)
+          引擎装载成功；五个算子插件注册成功；全程未使用 requirements.txt
+  [PASS]  V2  审计链根可复现 (3 次一致)
+          root = f5713f49481a80f82356ba1255c0292d
+          三次运行结果: 一致
+  [PASS]  V3  输入敏感性 (改输入必改链根)
+          base = f5713f49481a80f82356ba1255c0292d
+          narrative 加入主观修饰词        -> 86dbbe59961186a7888c988f8f79d07f
+          删除 evidence              -> 02a1426489660627de47b5cd3ef0e569
+  [WARN]  V3b  证书是否绑定原始输入
+          输入大幅改动（conclusions 与 alternatives 全部替换）后：
+            链根是否仍相同 = True
+          
+          解读 A（隐私设计）: 报告只存派生结论，敏感决策数据不落库 —— 合规友好。
+          解读 B（验证缺口）: 证书无法独立证明「审计的正是这一份输入」。
+          
+          修法（若需可验证）: 在 audit() 中把 decision_context 的规范化摘要
+          并入报告并参与 report_hash，使证书同时覆盖输入与输出。
+          对外表述建议: 主动声明证书覆盖范围，不要让对方默认它覆盖输入。
+  [PASS]  V4  未篡改链路校验通过
+          valid=True events=1 root=f5713f49481a80f82356ba1255c0292d
+  [PASS]  V5  篡改可检出 (payload/type/prev_hash)
+          篡改 payload     -> valid=False   (已检出)
+          篡改 event_type  -> valid=False   (已检出)
+          篡改 prev_hash   -> valid=False   (已检出)
+  [PASS]  V6  阻断能力 (缺责任人即 BLOCKED)
+          owner=None  -> BLOCKED
+          owner 已设 -> 不再阻断
+  [PASS]  V7  DSL 同 seed 复现
+          seed=2026 count=5
+          run1 = 41ae73c0d223cf716342229c1586c901
+          run2 = 41ae73c0d223cf716342229c1586c901
+  [PASS]  V7b  DSL 样本校验退出码
+          valid_decision.spd exit=0
+  [PASS]  V8  依赖清单与内核一致
+          依赖清单干净
+  [WARN]  V9  默认路径可复现 (无 nonce 固定)
+          即使固定了 clock，默认路径仍不可复现:
+            run1 nonce=4adf27b4 root=e985409c8927fb1f729e544d
+            run2 nonce=cf405dbe root=7548d39a931a33869771373c
+          根因: ResponsibilityAccount.__post_init__ 用 uuid.uuid4() 生成 nonce，
+                而 audit_id 与链事件均含该 nonce。
+          影响: 验证脚本必须显式固定 nonce，README 需说明。
+          修法: 将 uuid4() 改为按 account 字段做 sha256 确定性推导。
+====================================================================
+合计: PASS 9 · FAIL 0 · WARN 2
+结论: 全部硬性检查通过。
+====================================================================
+
+### Command 2: python verify.py --root   (cross-machine reproducibility reference)
+
+f5713f49481a80f82356ba1255c0292ddb0d17a235a35348bcff0eef49d6a801
+
+### Command 3: python demo_audit.py   (end-to-end demonstration)
+
+======================================================================
+测试 1: 叙事粉饰 + 隐假设 + 无分支响应
+======================================================================
+
+--- 最终裁定 ---
+Level: AUDIT_HALT
+Summary: 审计阻断: 2 项致命违规
+HALT items: 2
+WARN items: 3
+
+--- 审计证书 ---
+Audit ID: SPL-b4425f20-1791479728
+Signature: 644e4ecdb43410d231abe18fcda41a90...
+
+--- NS (叙事剥离) ---
+Pass: False
+Violations: 6
+Logical Core: ，项目X应该立即批准上线。，用户需求已经充分验证，技术方案完全可行。的是，市场前景非常广阔，竞争对手不会跟进。我们一直以来都是行业领先者，这个决定是正确的。...
+
+--- IAP (隐假设透视) ---
+Pass: True
+Flags: 0
+
+--- LCH (脆弱性对冲) ---
+Pass: False
+System Delta D: 0.7
+Weakest: A1 = '用户需求大概稳定' → ΔD=0.7
+
+--- CCS (因果同步) ---
+Pass: False
+  [HALT] inverse: 决策 '批准项目X上线' 无分支响应(ΔD) — 非P 场景下系统将无回退路径，系统性崩塌
+  [WARN] counterfactual: 无反事实场景 — 非P 下 Q 会怎样未被显式考虑
+  [PASS] chain_integrity: 因果链完整: P → A → Q
+  [PASS] blackhole: 无信息黑洞 — 所有关键变量(P/A/Q)均在位
+
+--- STATE (责任锚定) ---
+Anchor: ANCHORED
+Org: 测试组织 / Role: third_party_auditor / Nonce: b4425f20
+
+======================================================================
+测试 2: 干净的决策（应 PASS）
+======================================================================
+
+Verdict: AUDIT_WARN
+Summary: 审计警告: 1 项需关注
+
+======================================================================
+✅ 五算子管线验证通过：脏数据被 HALT，干净数据 PASS/WARN（无致命违规）
+======================================================================
+
+======================================================================
+双语外壳渲染演示（外壳双语 / 证据正文保原文）
+======================================================================
+[zh] 标题: 认知审计报告
+[en] 标题: Cognitive Audit Report
+
+--- 英文外壳 (en) 前 10 行 ---
+Cognitive Audit Report
+========================================
+Disclaimer: 本审计报告由 SPL Cognitive Audit Engine 生成，仅用于结构性审计，不替代人类判断。
+
+Responsibility Account
+  Organization: 测试组织
+  Role: third_party_auditor
+  Stage: review
+  owner: None
+  Nonce: b4425f20
+
+[证据正文-原文] NS logical_core: ，项目X应该立即批准上线。，用户需求已经充分验证，技术方案完全可行。的是，市场前景非常广阔，竞争对手不会跟进。我们一直以...
+
+========================================================================
+Expected results (as reported in the paper, §6 and §7):
+  verify suite : 11 checks — 9 PASS, 0 FAIL, 2 disclosed limitations (V3b, V9)
+  chain root   : f5713f49481a80f82356ba1255c0292ddb0d17a235a35348bcff0eef49d6a801
+  The two WARN entries are the pre-registered disclosures, not failures.
+========================================================================
