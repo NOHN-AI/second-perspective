@@ -4,6 +4,25 @@ CCS — Causal Chain Sync Plugin
 
 反事实校验与逆反验证。
 
+输入契约（decision_context 中本算子读取的键，全部可选）
+------------------------------------------------
+  decision     str        别名 p / premise / action     —— 因果链的 P
+  assumptions  list[str]  别名 premises / hypotheses     —— 因果链的 A
+  outcome      str        别名 q / result / consequence —— 因果链的 Q
+  branches     list[dict] 别名 branch_responses / failure_paths
+                            [{"assumption": "A1", "delta_d": "回滚"}]
+
+P / A / Q 任一缺失都会被 _blackhole_check 判为 HALT（信息黑洞），
+这是本算子的核心约束：**缺关键变量就中断，不做推测性补全**。
+
+已知弱点（读结果前请先知道）
+------------------------------
+_inverse_check 的覆盖率是 len(branches) / len(assumptions)，
+它数的是「有几个分支」而不是「分支是否真的对得上前提」，
+因此 N 条分支配 M≤N 条前提时必定判 PASS，哪怕分支与前提毫无对应关系。
+严格按前提身份匹配的版本在 LCH._check_branch_coverage；
+两处判定口径不一致，读 inverse 的 PASS 时请记得这一条。
+
 当推演 P → Q 时，强制执行：
   1. 逆反校验: 若 非P 成立，系统稳态是回退收敛还是系统性崩溃？
   2. 反事实校验: 非P 场景下 Q 会怎样？
@@ -121,7 +140,7 @@ class CausalChainSyncPlugin:
                 "result": "SYSTEM_COLLAPSE",
             }
 
-        # 检查分支响应是否覆盖了核心前提
+        # 注意这里是数分支条数，不是校验分支与前提的对应关系（见模块头说明）。
         covered = len(branches)
         total_assumptions = len(assumptions) if assumptions else 1
         coverage = covered / total_assumptions if total_assumptions > 0 else 0
@@ -160,7 +179,8 @@ class CausalChainSyncPlugin:
                 "result": "SKIP",
             }
 
-        # 检查是否存在与 P 相反的场景描述
+        # 判定方式：在分支描述里找「非 / 若 / not / if」这类反事实信号词。
+        # 这是纯字面匹配，不理解语义——写了反事实句式但内容空泛也会算 PASS。
         has_counterfactual = any(
             "非" in str(b.get("assumption", b.get("premise", "")))
             or "not" in str(b.get("assumption", b.get("premise", ""))).lower()
@@ -204,7 +224,8 @@ class CausalChainSyncPlugin:
                 "result": "BROKEN",
             }
 
-        # 检查链路完整性: P → A → Q
+        # 只检查 P/A/Q 三个节点的在位情况，不校验它们之间的语义连贯性。
+        # 「有 P 有 A 有 Q」在此即视为链路完整。
         has_p = bool(decision)
         has_a = len(assumptions) > 0
         has_q = bool(outcome)

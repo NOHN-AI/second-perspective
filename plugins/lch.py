@@ -5,6 +5,43 @@ LCH — Fragility Latch Plugin
 脆弱性对冲：定位逻辑链中最脆弱的隐性变量 A。
 计算当 非A（变量缺失或失效）发生时，整体决策的崩塌概率 Delta D。
 
+命名对照
+--------
+代码标识是 LCH / FragilityLatchPlugin（脆弱性*闩锁*，见 README-zh.md 表格），
+本算子的中文职责名是「脆弱性*对冲*」，引擎侧函数名是 _assess_vulnerability。
+三者指同一个算子，检索时三种拼写都试。
+
+输入契约（decision_context 中本算子读取的键，全部可选）
+------------------------------------------------
+  assumptions   list[str]   别名 premises / hypotheses / core_assumptions
+                             待审计的前提 A1..An；也接受单个字符串
+  dependencies  dict        别名 dependency_graph / deps
+                             {"A1": ["A2","A3"]} 表示 A1 依赖 A2、A3
+  branches      list[dict]  别名 branch_responses / failure_paths / delta_d
+                             [{"assumption": "A1", "delta_d": "回滚上一版本"}]
+                             语义是「若 A1 失效，则执行 ΔD」
+
+全部缺失时不报错、不猜测，直接返回 _empty_result()。
+
+Delta D 计算式
+--------------
+  Delta D = 0.30                 基础值：一个尚无任何信息的前提
+          + 0.30   若无分支响应   ¬A 成立时没有回退路径
+          - 0.10   若有分支响应   回退路径的存在本身就是减损
+          + 0.15 × N              N = 被它支撑的前提个数；它失效则下游同时失效
+          + 0.10 × M              M = 模糊限定词个数（可能/大概/应该/通常…）
+          + 0.25   若不可证伪     总是/永远/必然 一类表述，失效时无预警手段
+  最后 clamp 到 [0, 1]
+
+阈值 0.7 的来历
+----------------
+最常见的失效组合「无分支响应 + 不可证伪」= 0.30+0.30+0.25 = 0.85 > 0.7，
+判不通过（pass=False）。若已有分支响应，则为 0.30-0.10+0.25 = 0.45 < 0.7。
+也就是说这条线实质上在区分一件事：**为这个前提有没有准备回退路径**。
+
+这些权重是确定性常数，不是概率估计，也没有经过统计拟合。
+改动权重会直接改变判定结果，属设计变更而非参数调优。
+
 输出：
   - 脆弱变量列表（按 Delta D 降序）
   - 每个变量的依赖链路径
@@ -107,10 +144,14 @@ class FragilityLatchPlugin:
         branches: List[Dict[str, Any]],
     ) -> Dict[str, Any]:
         """评估单个前提的脆弱性。"""
-        # 基础 Delta D
+        # 因素 0：基础值。假定这条前提本身成立，但尚不知道它是否有回退路径，
+        # 也不做任何有利假设，因此给一个中等偏上的起点。
         delta_d = 0.3  # 基础值
 
-        # 因素 1: 无分支响应 → 脆弱性增加
+        # 因素 1：分支响应（ΔD）是否存在。
+        # 这是权重最大的一项（±0.3），因为「假设失效时有没有退路」
+        # 直接决定崩塌是系统性的还是可收敛的。
+        # 匹配同时接受两种写法：写全称文本，或写编号 A1/A2/…
         has_branch = any(
             b.get("assumption", b.get("premise", "")) == assumption
             or b.get("assumption", b.get("premise", "")) == f"A{index+1}"
@@ -121,7 +162,10 @@ class FragilityLatchPlugin:
         else:
             delta_d -= 0.1
 
-        # 因素 2: 被其他前提依赖 → 脆弱性增加（关键节点）
+        # 因素 2：依赖图的入度。它被多少条前提支撑？
+        # 入度越高越是关键节点——它一失效，下游成片失效。
+        # 0.15/个 的设定使「被 3 条依赖」时该项累计 +0.45，
+        # 足以单独把一个本来合格的前提推过 0.7 阈值。
         dependents = [
             a for a, deps in dependencies.items()
             if assumption in deps or f"A{index+1}" in deps
@@ -129,18 +173,23 @@ class FragilityLatchPlugin:
         if dependents:
             delta_d += 0.15 * len(dependents)
 
-        # 因素 3: 模糊表述 → 脆弱性增加
+        # 因素 3：模糊限定词。中英各 8 个，可叠加计数。
+        # 「需求大概稳定」比「需求稳定」多 0.1——
+        # 限定词越多，前提越难被证伪，也就越难及时发现它已失效。
         vague_markers = ["可能", "大概", "也许", "或许", "通常", "一般", "应该",
                          "maybe", "probably", "usually", "generally", "should"]
         lower_assumption = assumption.lower() if isinstance(assumption, str) else ""
         vague_count = sum(1 for m in vague_markers if m in lower_assumption)
         delta_d += 0.1 * vague_count
 
-        # 因素 4: 不可证伪 → 脆弱性极高
+        # 因素 4：不可证伪表述。这是与前几项性质不同的一类风险——
+        # 前几项是「失效了会怎样」，这一项是「失效了你也不会知道」。
+        # 没有检测手段的假设，即使后果不严重，也应按高脆弱处理。
         if not FragilityLatchPlugin._is_falsifiable(assumption):
             delta_d += 0.25
 
-        # Clamp
+        # 各项叠加可能越界，统一夹到 [0, 1]：
+        # Delta D 是概率量，超出该区间的值没有意义，也会破坏下游比较。
         delta_d = max(0.0, min(1.0, delta_d))
 
         return {

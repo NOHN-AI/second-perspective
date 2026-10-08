@@ -44,7 +44,20 @@ GCAE_VERSION = "2.0.0"
 
 
 class ConvergenceState(str, Enum):
-    """形式化收敛五状态分类。"""
+    """形式化收敛五状态分类。
+
+    BLOCKED          本轮出现阻断项（必需输入缺失等），立即终止，不算收敛
+    BUDGET_EXHAUSTED 跑满 max_rounds 仍未收敛 —— 预算耗尽，**不是**收敛
+    FIXED_POINT      相邻两轮的风险集合完全相同 —— 不动点，收敛
+    NO_GAIN          风险集合清空且无未决假设 —— 无残留风险，收敛
+    DIVERGED         仍有风险或未决假设，且与上轮不同 —— 发散，需人工介入
+
+    FIXED_POINT 与 NO_GAIN 都算真收敛，区别在于「停在哪」：
+      NO_GAIN      = 停在一片干净的风险区（风险清零）
+      FIXED_POINT  = 停在某个风险上不再变化（风险有界但不为零）
+    只有 BUDGET_EXHAUSTED 是「跑完了但没跑到」——所以 is_true_convergence
+    特意把它排除在外，防止把「时间到了」误当成「想通了」。
+    """
     FIXED_POINT = "FIXED_POINT"
     NO_GAIN = "NO_GAIN"
     BUDGET_EXHAUSTED = "BUDGET_EXHAUSTED"
@@ -55,6 +68,24 @@ class ConvergenceState(str, Enum):
     def is_true_convergence(self) -> bool:
         return self in (ConvergenceState.FIXED_POINT, ConvergenceState.NO_GAIN)
 
+
+# ---------------------------------------------------------------------------
+# 关于 T1 / T2 / T3：本文件同时存在两套互不相干的 T1/T2/T3 命名，
+# 这是本引擎最容易被误读的地方。它们之间没有任何对应关系，不要混用。
+#
+#   PluginTier（下方）—— 约束「确定性算子插件」能做什么
+#       T1_STRUCTURAL   可产出 BLOCKED/CRITICAL，能真正阻断一次审计
+#       T2_SIGNAL       只能产出 WARNING/HIGH_RISK；发阻断会被强制降级
+#       T3_NARRATIVE    只能出文字；输出里的 status 会被剥离
+#
+#   LLMPermissionTier —— 约束「LLM」能做什么，与 PluginTier 毫无关系
+#       T1_ANNOTATION   附加批注
+#       T2_PROPOSAL     提出建议
+#       T3_NARRATIVE    只写叙述文字（默认值，最保守）
+#
+# 两套唯一的共同点是：数字越小，权限越大。
+# 判定 LLM 输出是否越权，看的是 FORBIDDEN_LLM_KEYS，与 PluginTier 无关。
+# ---------------------------------------------------------------------------
 
 class PluginTier(str, Enum):
     T1_STRUCTURAL = "T1_STRUCTURAL"   # 可出 BLOCKED（阻断）
@@ -85,6 +116,12 @@ class ResponsibilityAccount:
     nonce: Optional[str] = None
 
     def __post_init__(self) -> None:
+        # 未显式传入 nonce 时用 uuid4 随机生成，保证每次审计的身份唯一。
+        # 代价：默认配置下审计 ID 与哈希链根**不可复现**——
+        #       同一输入两次运行会得到不同的 audit_id 与 chain_root_hash。
+        # 需要复现（对外披露校验、回归比对、第三方重算）时，
+        # 必须显式传入固定 nonce，并配合 engine.set_clock() 一起用。
+        # 参考 verify.py 里的 FIXED_NONCE / FIXED_CLOCK 用法。
         if not self.nonce:
             self.nonce = uuid.uuid4().hex[:8]
 
@@ -124,6 +161,9 @@ class OpenAIProvider:
         import urllib.error
         import urllib.request
 
+        # 注意：下面把异常**转成字符串返回**而不是向上抛。
+        # 因为叙述层是可选增强，它挂掉不应让整次审计失败——
+        # 调用方拿到 "[LLM Error] ..." 字符串即可，核心五算子不受影响。
         temperature = kwargs.get("temperature", 0.3)
         max_tokens = kwargs.get("max_tokens", 4096)
         body = json.dumps({
@@ -153,6 +193,18 @@ class OpenAIProvider:
 
 @dataclass
 class LLMCallRecord:
+    """一次 LLM 调用的留痕。
+
+    permission_tier  当时生效的权限层级
+    prompt_hash      prompt 的 SHA-256 前 16 位——**只存哈希不存原文**：
+                     既能证明用了哪个 prompt，又避免把决策数据写进日志
+    response_excerpt 剥离裁决字段后的响应摘要（最多 400 字）
+    stripped         是否发生过字段剥离
+    adjudicated      恒为 False。按护栏 L-1..L-3，LLM 永不参与裁决；
+                     这个字段存在的意义就是在审计记录里显式证明这一点，
+                     任何人翻到报告都能看到「LLM 没有裁决权」
+    """
+
     permission_tier: LLMPermissionTier
     purpose: str
     prompt_hash: str
@@ -178,6 +230,17 @@ class AuditEvent:
 
     @property
     def hash(self) -> str:
+        """本事件的链上哈希。三个 json 参数都有讲究，不能随手改：
+
+        sort_keys=True     键序不影响结果，字典构造顺序无关紧要
+        ensure_ascii=False 中文按原字符参与哈希，避免编码路径差异
+        default=str        datetime 之类不可序列化的对象退化为字符串，
+                         宁可损失精度也不让整条链崩掉
+
+        注意：这个属性是**实时重算**的，任何事后修改都会改变它的返回值。
+        因此 verify_chain 不拿它当基准，而拿 _append_event 时写下的
+        sealed_hash 当基准——否则比对恒成立，篡改检测形同虚设。
+        """
         blob = json.dumps({
             "event_type": self.event_type,
             "payload": self.payload,
@@ -215,6 +278,17 @@ class ConvergenceChecker:
         has_blocking: bool,
         has_unresolved_assumptions: bool,
     ) -> ConvergenceState:
+        # 判定是一张**优先级链**，从上到下第一个命中即返回，顺序不可调换：
+        #   1. has_blocking                → BLOCKED
+        #   2. round_idx >= max_rounds     → BUDGET_EXHAUSTED
+        #   3. 与上轮风险集合同样且无未决 → FIXED_POINT
+        #   4. 风险清空且无未决            → NO_GAIN
+        #   5. 其余                        → DIVERGED
+        #
+        # 为什么阻断排在最前：必需输入缺失时，后面任何「看起来收敛了」
+        # 的信号都不可信——风险集清零可能只是因为算子根本没拿到输入。
+        #
+        # 第 3 条要求 round_idx > 0：首轮没有「上轮」可比，必须落到后面几条。
         if has_blocking:
             return ConvergenceState.BLOCKED
         if round_idx >= max_rounds:
@@ -227,6 +301,10 @@ class ConvergenceChecker:
 
     @staticmethod
     def extract_risk_set(report: Dict[str, Any]) -> Tuple[frozenset, bool]:
+        # 风险键的构成是 (插件名, status, 结果的规范化 JSON)。
+        # 必须把整个结果序列化进去，只比较 status 会漏掉
+        # 「同一个 WARNING 但内容变了」这种情况——
+        # 而那恰恰是 FIXED_POINT 需要识别的变化。
         risks = set()
         has_blocking = False
         for pname, result in report.get("analysis", {}).items():
@@ -260,6 +338,13 @@ class AuditConfigLoader:
 class CognitiveAuditEngine:
     """GCAE v2.0 规范参考内核。"""
 
+    # LLM 护栏 L-1..L-3：LLM 可以说话，但不能影响结构判定。
+    # 这些键一旦出现在 LLM 输出里会被剥离并标记 _tier_violation，
+    # 覆盖三类越权：
+    #   状态裁决  status / converged / is_converged / blocked / adjudicated
+    #   权重排序  weight / score / rank
+    #   结论判断  verdict / decision
+    # 换句话说：即便模型照着提示词返回了裁决字段，也进不了结构判定。
     FORBIDDEN_LLM_KEYS = {
         'status', 'converged', 'is_converged', 'blocked',
         'adjudicated', 'weight', 'score', 'rank', 'verdict', 'decision',
@@ -275,6 +360,9 @@ class CognitiveAuditEngine:
         self._prev_event_hash: str = 'ROOT'
         self._clock: Optional[float] = None
 
+        # 阶段白名单：config['allowed_stages'] 非空时，account.stage 必须落在其中，
+        # 否则构造直接失败。这是第一道闸——责任节点本身就不合规时，
+        # 没必要再跑算子。注意与 plugins/ 各算子内部的阶段判断是两回事。
         allowed_stages = self.config.get('allowed_stages', [])
         if allowed_stages and account.stage not in allowed_stages:
             raise ValueError(f'Unsupported stage: {account.stage}')
@@ -301,6 +389,15 @@ class CognitiveAuditEngine:
         '''
         self._clock = t
 
+    # 五算子的权限分配，以及每一条的理由：
+    #   NS    T3 —— 只输出剥离后的文本骨架，本就不参与判定
+    #   IAP   T2 —— 发现隐含假设是「提示」，不足以单独阻断
+    #   LCH   T2 —— 脆弱性是量化信号，但权重未经统计校准，
+    #               不足以独自判一条决策死刑，只能提示
+    #   CCS   T1 —— 信息黑洞属「必需输入缺失」，可以且必须阻断
+    #   STATE T1 —— 汇总裁定，本身就是阻断的出口
+    #
+    # 一句话概括：只有「结构性缺失」才能阻断，「量化意见」不能。
     CORE_PLUGIN_TIERS: Dict[str, 'PluginTier'] = {
         'NS': PluginTier.T3_NARRATIVE,      # 纯文本骨架，不产出 status
         'IAP': PluginTier.T2_SIGNAL,        # 只出风险信号，不得阻断
@@ -364,13 +461,28 @@ class CognitiveAuditEngine:
 
     @property
     def chain_root_hash(self) -> str:
+        """链根哈希，即最后一个事件的 sealed_hash；空链时为哨兵值「ROOT」。
+
+        这是整个审计的唯一指纹。要对外披露校验凭据，披露的应该是它，
+        并且这个值必须存在报告之外的地方（落盘后与报告分离保存）——
+        与报告放在一起就等于没有锚点。
+        """
         return self._prev_event_hash if self.event_chain else 'ROOT'
 
     # -------- 五步算子①：叙事剥离 --------
 
     @staticmethod
     def _strip_narrative(ctx: Dict[str, Any]) -> Dict[str, Any]:
-        """去除修辞/主观修饰词，仅标记不删除原字段。"""
+        """剥离主观修饰词。
+
+        只做**标记**不做**删除**：原文完整保留在 out 里，
+        命中情况单独记进 _narrative_stripped.flagged_fields。
+        因为审计的对象是「这句话说了什么」，不是「这句话该被改成什么」——
+        改写原文会破坏证据链，也会让调用方无法核对原文。
+
+        注意：本算子只认 narrative/background/summary/description 四个键，
+        且要求值为 str。其他位置出现主观词不会被记录。
+        """
         SUBJECTIVE_WORDS = {
             '显然', '毫无疑问', '必然', '肯定', '理所应当', '不言而喻',
             'obviously', 'clearly', 'certainly', 'undoubtedly', 'naturally',
@@ -389,7 +501,19 @@ class CognitiveAuditEngine:
 
     @staticmethod
     def _surface_implicit_assumptions(ctx: Dict[str, Any]) -> Dict[str, Any]:
-        """决定论规则挖掘未声明预设，不猜。"""
+        """决定论规则挖掘未声明预设。三条规则，全部是纯结构判断：
+
+          MISSING_CRITERIA        有 alternatives 却无 criteria
+          WEIGHTS_NOT_NORMALIZED  criteria 权重之和 != 1.0（容差 1e-6）
+          CONCLUSION_WITHOUT_EVIDENCE  有 conclusions 却无 evidence
+
+        关键区别在 missing_required 这个标志，只有前三条中的第 1、3 条会置真，
+        权重未归一**不置真**。理由：权重不对只是口径问题，可以修正；
+        而"给了备选却不给评估标准"和"下了结论却没证据"是结构性缺陷，
+        修正不了——这正是算子③ 把崩塌等级直接顶到 HIGH 的依据。
+
+        另注意 conclusions 也接受 recommendation 作为别名。
+        """
         flags: List[Dict[str, Any]] = []
         missing_required = False
 
@@ -425,7 +549,19 @@ class CognitiveAuditEngine:
 
     @staticmethod
     def _assess_vulnerability(ctx: Dict[str, Any]) -> Dict[str, Any]:
-        """定位最脆弱变量并给出崩塌等级（HIGH/MEDIUM/LOW）。"""
+        """定位最脆弱变量并给出崩塌等级（HIGH/MEDIUM/LOW）。
+
+        等级只能**单向上升**，不能回退：
+          missing_required 为真          → 直接 HIGH，后面的规则不看
+          否则遇 WEIGHTS_NOT_NORMALIZED  → MEDIUM
+          否则叙述含主观修饰词           → LOW 提到 weakest，但等级仍为 LOW
+
+        最后一条是有意为之：叙述带修辞是**观察**，不是结构性缺陷，
+        不足以把等级抬起来；它只负责指出最脆弱变量在哪。
+
+        weakest 用 `weakest or ...` 串联，因此报告里看到的永远是**第一个**
+        触发的原因，不是最后命中的那个。
+        """
         implicit = ctx.get('_implicit_assumptions', {})
         flags = implicit.get('flags', [])
         level = CollapseLevel.LOW
@@ -457,7 +593,19 @@ class CognitiveAuditEngine:
     # -------- LLM 护栏 --------
 
     def _strip_llm_output(self, parsed: Any, tier: LLMPermissionTier) -> Tuple[Dict[str, Any], bool]:
-        """剥离 LLM 输出中能影响结构判定的字段。返回 (stripped, violated)。"""
+        """剥离 LLM 输出中能影响结构判定的字段。返回 (stripped, violated)。
+
+        violated 表示「LLM 确实越权过」，无论剥离是否成功都会在
+        LLMCallRecord.response_excerpt 上打上 [VIOLATION STRIPPED] 前缀。
+
+        T3_NARRATIVE 层的处理更严格：整个返回被压缩成**只有** narrative
+        一个键（依次尝试 narrative / overall_assessment / reasoning，
+        都没有就把剩余内容整体 JSON 化）。也就是说 T3 连自己新造的字段都
+        带不出去——它只能贡献一段文字。
+
+        非 dict 输入（模型没按要求返回 JSON）统一降级为 str 塞进 narrative，
+        不会抛错。
+        """
         violated = False
         if not isinstance(parsed, dict):
             return {'narrative': str(parsed)}, violated
@@ -505,6 +653,16 @@ class CognitiveAuditEngine:
     # -------- 插件权限强制 --------
 
     def _enforce_plugin_tier(self, plugin: AuditPlugin, result: Any) -> Any:
+        """在插件结果进入报告前强制其权限层，越权即降级。
+
+        T3 发了 status   → 剥掉 status，记 _tier_violation
+        T2 发了 BLOCKED  → 降级为 WARNING，记 _tier_violation
+        T1 不受限
+
+        这是护栏的**执行点**：CORE_PLUGIN_TIERS 只是声明，实际约束在这里。
+        违规不会抛异常，只会被改写并在报告里留痕——
+        报告要如实反映插件确实越权过，沉默地修正等于掩盖问题。
+        """
         if not isinstance(result, dict):
             return result
         status = result.get('status')
@@ -526,6 +684,36 @@ class CognitiveAuditEngine:
         save_log: bool = False,
         log_dir: str = 'logs',
     ) -> Dict[str, Any]:
+        """执行一次静态结构审计。
+
+        decision_context 的输入契约（所有键均为可选）：
+
+          narrative    str        别名 background / summary / description
+                                   含修辞的决策陈述，NS 从中剥离主观修饰词
+          decision     str        别名 p / premise / action       —— 因果链的 P
+          assumptions  list[str]  别名 premises / hypotheses       —— 因果链的 A
+          outcome      str        别名 q / result / consequence   —— 因果链的 Q
+          branches     list[dict] 别名 branch_responses / failure_paths / delta_d
+                                   [{"assumption": "A1", "delta_d": "回滚"}]
+                                   语义：¬A ⇒ ΔD
+          dependencies dict        别名 dependency_graph / deps
+                                   {"A1": ["A2"]}；缺失时按无依赖处理
+          criteria     dict       {维度名: {"weight": w}}；权重之和须为 1.0，
+                                   否则 IAP 报 WEIGHTS_NOT_NORMALIZED
+          evidence     list[str]  支撑结论的证据标识；缺失时 IAP 报
+                                   CONCLUSION_WITHOUT_EVIDENCE
+          conclusions  str        待审计的结论文本
+
+        最小可用输入：{"decision": ..., "assumptions": [...], "outcome": ...}
+        完整示例见 demo_audit.py。各算子的别名表见各自模块头。
+
+        返回 report dict：analysis（五算子结果）、implicit_assumptions、
+        vulnerability、responsibility_account。责任人未闭环时
+        analysis.RESPONSIBILITY_CLOSURE.status 为 BLOCKED。
+        """
+        # ---------- 第一阶段：三个静态算子先把 ctx 加工一遍 ----------
+        # 顺序有依赖：② 要写 _implicit_assumptions，③ 要读它，所以不能换。
+        # 这一阶段只往 ctx 里塞 _开头的派生字段，原始输入一律不改动。
         ctx = self._strip_narrative(decision_context)
         ctx = self._surface_implicit_assumptions(ctx)
         ctx = self._assess_vulnerability(ctx)
@@ -555,6 +743,9 @@ class CognitiveAuditEngine:
         prior: Dict[str, Any] = {}
         run_ctx['_prior_audit_results'] = prior
 
+        # 插件执行顺序 = (是否 STATE, 权限层级)。两个维度都要：
+        #   - STATE 排最后，因为它要汇总前四者的结果（读 _prior_audit_results）
+        #   - 同一层级内 T1 先于 T2，阻断项应当先于信号项被看到
         def tier_key(p: AuditPlugin) -> int:
             return {PluginTier.T1_STRUCTURAL: 0,
                     PluginTier.T2_SIGNAL: 1,
@@ -565,6 +756,8 @@ class CognitiveAuditEngine:
             try:
                 result = plugin.analyze_func(run_ctx)
             except Exception as e:
+                # 插件抛异常**不算通过**，一律记 BLOCKED。
+                # 理由：审计失败和审计通过同样不能被当成「没问题」。
                 result = {'status': 'BLOCKED', 'reason': 'PLUGIN_EXCEPTION', 'message': str(e)}
             result = self._enforce_plugin_tier(plugin, result)
             report['analysis'][plugin.name] = result
@@ -585,6 +778,8 @@ class CognitiveAuditEngine:
                 report['analysis']['llm_narrative'] = stripped
                 report['llm_calls'].append(asdict(record))
 
+        # 事件里只放**派生摘要**（报告哈希、脆弱性、是否有阻断），
+        # 不放完整报告，也不放原始决策数据——链上不落敏感数据。
         self._append_event('AUDIT', {
             'report_hash': hashlib.sha256(
                 json.dumps(report, sort_keys=True, ensure_ascii=False, default=str).encode('utf-8')
@@ -601,6 +796,12 @@ class CognitiveAuditEngine:
         return report
 
     def _write_log(self, report: Dict[str, Any], log_dir: str) -> str:
+        # 落盘三件事，缺一不可：
+        #   audit_id         人类可读的审计编号（nonce + 时间戳）
+        #   chain_root_hash  链根指纹——**这是唯一的对外校验凭据**
+        #   完整 report      派生结论，不含原始决策数据
+        # 注意：日志文件必须与报告分开保存。若校验凭据和被校验对象放在一起，
+        # 任何人都能同时改掉两者，验证就失去意义了。
         os.makedirs(log_dir, exist_ok=True)
         audit_id = f'SPL-{self.account.nonce}-{int(self._clock if self._clock is not None else time.time())}'
         report['chain_root_hash'] = self.chain_root_hash
