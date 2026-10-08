@@ -1,3 +1,15 @@
-kivy==2.3.0
-buildozer==1.5.0
-cython==0.29.37
+# GCAE 全局认知审计引擎 —— 核心零依赖
+#
+# 五个因果算子（NS / IAP / LCH / CCS / STATE）、决策结构语言校验器
+# （language Standard/dsl.py）与审计证书链均只使用 Python 标准库，
+# 无需安装任何第三方包即可运行：
+#
+#     python demo_audit.py                                        # 五算子端到端演示
+#     python verify.py                                             # 独立验证套件
+#     python "language Standard/dsl.py" check <file.spd>           # 结构校验
+#
+# 本文件保留，仅为兼容既有文档中 `pip install -r requirements.txt` 的引用；
+# 执行该命令不会安装任何东西。
+#
+# 可选增强（叙述适配器，核心审计不需要）：
+#     pip install -r requirements-openai.txt
