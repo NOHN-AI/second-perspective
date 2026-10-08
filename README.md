@@ -147,6 +147,61 @@ A `DeltaVar` path may take three forms: `"A2"` (falsify an assumption, propagate
 
 ## ✦ Architecture
 
+> **In one sentence:** NOMOS sits behind your existing business systems as a **deterministic decision kernel** — it turns a structured request into ranked candidates with a verifiable audit trail, and always leaves the final verdict to a human.
+
+```mermaid
+flowchart TB
+    UP["🏢 Upstream business systems<br/>ERP · CRM · risk · compliance · HR · approvals"]
+
+    subgraph CORE["⚙️ NOMOS deterministic decision kernel — never guesses, never learns"]
+        K1["1 · Structure &amp; evidence audit"]
+        K2["2 · Hard + soft constraint evaluation"]
+        K3["3 · Causal invalidation (first-order)"]
+        K4["4 · Assumption interaction (second-order)<br/>synergy · redundancy · amplification<br/>must be declared by a responsible party"]
+        K5["5 · Three-layer reconstruction<br/>forward · backward · delta"]
+        K6["6 · Formal convergence check<br/>fixed-point / no-gain / budget / diverged / blocked"]
+    end
+
+    subgraph GATE["🛡️ LLM guardrails — three permission tiers"]
+        G["T1 annotate · T2 propose · T3 narrate<br/>an LLM can never adjudicate"]
+    end
+
+    OUT1["📦 Candidates + counterfactuals"]
+    OUT2["🧾 Hash-chained audit trail"]
+    HUMAN["✍️ A human signs the final verdict<br/>always outside the algorithm"]
+
+    UP --> K1
+    K1 --> K2
+    K2 --> K3
+    K3 --> K4
+    K4 --> K5
+    K5 --> K6
+    K6 --> G
+    G --> OUT1
+    K6 --> OUT2
+    OUT1 --> HUMAN
+    OUT2 --> HUMAN
+
+    classDef cIn fill:#E8F0FE,stroke:#4285F4,stroke-width:1px,color:#173A66
+    classDef cCore fill:#FFF8E1,stroke:#C9A96E,stroke-width:1px,color:#5B4614
+    classDef cGate fill:#F3E8FD,stroke:#8E44AD,stroke-width:1px,color:#4A235A
+    classDef cOut fill:#E6F4EA,stroke:#34A853,stroke-width:1px,color:#14512B
+    class UP cIn
+    class K1,K2,K3,K4,K5,K6 cCore
+    class G cGate
+    class OUT1,OUT2,HUMAN cOut
+```
+
+**How to read it**
+
+1. **It is a kernel, not a replacement.** Your ERP / CRM / risk systems keep running; NOMOS only answers "here are the candidates, here is why".
+2. **Steps 1–6 all come from declared inputs.** No step invents a weight, a probability or an interaction strength — anything not declared is simply missing.
+3. **The LLM sits in a cage.** It may annotate, propose or narrate, but it can never flip a status or change a ranking. The final call is a human signature.
+
+📖 Every term explained in one plain sentence → [Glossary](./GLOSSARY.md)
+
+**The full pipeline, in detail**
+
 ```text
 HubAnalysisRequest (+ optional InteractionDeclaration)
   -> Decision Core

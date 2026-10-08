@@ -160,6 +160,61 @@ print(session.session_root_hash)
 
 ## ✦ 架构
 
+> **一句话：** NOMOS 以**确定性决策内核**的身份嵌在你现有业务系统背后——把一个结构化请求变成带审计链的候选方案，而最终结论永远留给人来签。
+
+```mermaid
+flowchart TB
+    UP["🏢 上游业务系统<br/>ERP · CRM · 风控 · 合规 · HR · 项目审批"]
+
+    subgraph CORE["⚙️ NOMOS 确定性决策内核 —— 不猜、不学"]
+        K1["1 · 结构 / 证据审计"]
+        K2["2 · 硬约束 + 软约束评估"]
+        K3["3 · 因果失效（一阶）"]
+        K4["4 · 假设交互（二阶）<br/>协同 · 冗余 · 放大<br/>必须由责任人声明，引擎绝不估算"]
+        K5["5 · 三层因果重建<br/>前向 · 后向 · 增量"]
+        K6["6 · 形式化收敛判定<br/>定点 / 无增益 / 预算耗尽 / 发散 / 阻塞"]
+    end
+
+    subgraph GATE["🛡️ 大模型护栏 —— 三档权限"]
+        G["T1 批注 · T2 提议 · T3 叙述<br/>LLM 永远不能裁决"]
+    end
+
+    OUT1["📦 候选集 + 反事实"]
+    OUT2["🧾 哈希链审计报告"]
+    HUMAN["✍️ 最终结论由人签字<br/>永远留在算法之外"]
+
+    UP --> K1
+    K1 --> K2
+    K2 --> K3
+    K3 --> K4
+    K4 --> K5
+    K5 --> K6
+    K6 --> G
+    G --> OUT1
+    K6 --> OUT2
+    OUT1 --> HUMAN
+    OUT2 --> HUMAN
+
+    classDef cIn fill:#E8F0FE,stroke:#4285F4,stroke-width:1px,color:#173A66
+    classDef cCore fill:#FFF8E1,stroke:#C9A96E,stroke-width:1px,color:#5B4614
+    classDef cGate fill:#F3E8FD,stroke:#8E44AD,stroke-width:1px,color:#4A235A
+    classDef cOut fill:#E6F4EA,stroke:#34A853,stroke-width:1px,color:#14512B
+    class UP cIn
+    class K1,K2,K3,K4,K5,K6 cCore
+    class G cGate
+    class OUT1,OUT2,HUMAN cOut
+```
+
+**这张图怎么看**
+
+1. **它是内核，不是替代品。** 你的 ERP / CRM / 风控系统照常运行；NOMOS 只回答「候选有哪些、为什么是这些」。
+2. **第 1–6 步全部来自已声明的输入。** 没有任何一步会凭空造出权重、概率或交互强度——没声明的东西就是缺失。
+3. **大模型被关在笼子里。** 它可以批注、提议、叙述，但不能翻转状态、不能改排名；最终拍板永远是人签字。
+
+📖 每个术语都用一句人话解释 → [术语表 GLOSSARY](./GLOSSARY.md)
+
+**完整决策流水线（详细版）**
+
 ```text
 HubAnalysisRequest（+ 可选 InteractionDeclaration）
   -> 决策内核

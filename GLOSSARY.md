@@ -1,0 +1,52 @@
+<div align="center">
+
+# 📖 术语表 · Glossary
+
+**NOMOS · Second-Perspective**
+
+*每个词都用一句人话解释 · Every term explained in one plain sentence*
+
+</div>
+
+---
+
+> 英文术语保留原样，方便你对照 README、文档与代码。
+> The English term is kept as-is so you can match it against the README, the docs and the code.
+
+| 术语 Term | 中文 | 一句话人话 · Plain meaning |
+|---|---|---|
+| **NOMOS** | 决策中枢 | 一个「不猜、不学」的确定性决策内核——它给候选，不给结论。 |
+| **IMDA AI Verify** | 新加坡 AI 合规评估 | 官方测试框架；NOMOS 在因果审计赛道拿到 95/100。 |
+| **Deterministic** | 确定性 | 同样的输入永远给同样的输出，没有随机、没有学习。 |
+| **First-order invalidation** | 一阶失效 | 某个假设被推翻后向前传播，丢掉依赖它的那些备选方案。 |
+| **Second-order interaction** | 二阶交互 | 假设与假设之间的相互影响，而不把失败当成互不相干的独立事件。 |
+| **Synergy / Redundancy / Amplification** | 协同 / 冗余 / 放大 | 多个假设一起失效时，效果比简单相加更强、更弱、或不成比例。 |
+| **Δ (interaction strength)** | 交互强度 | 二阶影响的大小，**必须由责任人显式声明**，引擎绝不估算也绝不学习。 |
+| **I-1 … I-4** | 四条不变量 | 非臆测 · 阶数守恒 · 效应有界 · 单调——约束二阶交互不许乱来。 |
+| **Three-layer reconstruction** | 三层因果重建 | 前向失效传播 + 后向根因追溯 + 增量重建；一轮跑一层。 |
+| **DeltaVar** | 修正变量 | 由人声明的修正项，引擎逐字照做，绝不自行发明修正。 |
+| **ConvergenceChecker** | 收敛判定器 | 用五个状态正式判定「到底收敛了没有」，而不是靠启发式猜测。 |
+| **FIXED_POINT / NO_GAIN** | 定点 / 无增益 | 真正收敛的两种状态。 |
+| **BUDGET_EXHAUSTED** | 预算耗尽 | 预算用完 **≠** 收敛，绝不允许被当成收敛上报。 |
+| **DIVERGED / BLOCKED** | 发散 / 阻塞 | 仍在变化，或撞上结构性问题、必须由人介入。 |
+| **P-1 / P-2 / P-3** | 三条命题 | 终止性 · 不动点 · 效应有界——收敛判定背后的数学依据。 |
+| **session_root_hash** | 会话根哈希 | 把整轮会话串成一条哈希链的根；改任何一个字都对不上。 |
+| **Human gate** | 人工闸门 | 每轮只推进一步就停下，必须由人签字才能进入下一轮。 |
+| **LLM Gate (T1/T2/T3)** | 大模型护栏 | 批注 / 提议 / 叙述三档权限；LLM 永远不能裁决，也不能翻转状态或排名。 |
+| **Provenance-tracked** | 可溯源 | 每条 LLM 输出都带来源标记，并被剥离了结构权力。 |
+| **Counterfactual re-selection** | 反事实重选 | 「如果当时不是这样，结果会怎样」的重新演算。 |
+| **Pareto / weight sensitivity** | 帕累托 / 权重敏感度 | 看哪个指标或权重一变，就会改变排序结果。 |
+| **DecisionRecord** | 决策记录 | 只追加的决策档案，配合哈希链可被独立复验。 |
+| **Domain control pack** | 领域控制包 | 可插拔的行业规则包（如金融风控）——只观察，绝不改判。 |
+| **Tenant isolation** | 租户隔离 | 多租户数据互不可见，按 `X-Tenant-Id` 分区。 |
+| **KMS signing** | 密钥托管签名 | 用 KMS 给产出物盖上 HMAC-SHA256 签章，防篡改。 |
+
+---
+
+<div align="center">
+
+[← 返回 README](./README.md) &nbsp;·&nbsp; [中文说明](./README-zh.md)
+
+<sub>NOHN AI · NOMOS</sub>
+
+</div>
