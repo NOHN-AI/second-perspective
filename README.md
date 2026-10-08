@@ -33,53 +33,61 @@
 
 <p align="center">— ✦ —</p>
 
-## ✦ Architecture (Plain Language)
+## ✦ Architecture
 
-> **In one sentence:** GCAE is a **neutral auditor for decisions** — you describe a decision you are about to make, and it takes that description apart step by step to show what you quietly assumed and where the weakest link is. It never decides for you.
+> **In one sentence:** GCAE is a **neutral auditor for decisions** — you describe a decision, and a chain of named modules takes it apart step by step, then hands you a structural verdict. It never decides for you.
 
 ```mermaid
 flowchart TB
-    IN["📄 A decision you are about to make<br/>your own description — no model code changes"]
+    IN["💬 Input — a decision you are about to make<br/>described in your own words · no model code changes"]
 
-    subgraph CORE["🔍 GCAE core — offline · deterministic · 100% neutral"]
-        P1["1 · Narrative Stripping (NS)<br/>delete rhetoric, emotion and vague words —<br/>keep the logical core"]
-        P2["2 · Implicit Assumption (IAP)<br/>surface hidden premises, privilege bypass<br/>and circular reasoning"]
-        P3["3 · Fragility Latch (LCH)<br/>score each assumption's collapse risk ΔD —<br/>find the most fragile variable"]
-        P4["4 · Causal Chain Sync (CCS)<br/>reverse check · counterfactual check ·<br/>information-black-hole detection"]
-        P5["5 · State Anchoring (STATE)<br/>anchor who is responsible<br/>+ SHA-256 audit certificate"]
-    end
+    E1["🧠 Cognitive Audit Engine.py · ResponsibilityAccount<br/>anchor organisation / role / stage"]
+    E2["⚙️ AuditConfigLoader → load_core_plugins()<br/>load allowed stages + disclaimer,<br/>then register the five operators"]
 
-    LLM["🤖 Optional LLM narration<br/>off by default · never changes a verdict"]
-    OUT1["🧾 Structural audit conclusion<br/>no advice · no ranking · no score"]
-    OUT2["🔐 SHA-256 audit certificate<br/>reproducible and comparable across machines"]
-    HUMAN["🙋 You still decide<br/>the engine never decides for you"]
+    A1["① plugins/ns.py<br/>Narrative Stripping — delete rhetoric, keep the logical core"]
+    A2["② plugins/iap.py<br/>Implicit Assumption — surface undeclared premises and privilege bypass"]
+    A3["③ plugins/lch.py<br/>Fragility Latch — score each assumption's collapse risk ΔD"]
+    A4["④ plugins/ccs.py<br/>Causal Chain Sync — reverse check · counterfactual · black-hole detection"]
+    A5["⑤ plugins/state.py<br/>State Anchoring — pin responsibility + seal a SHA-256 certificate"]
 
-    IN --> P1
-    P1 --> P2
-    P2 --> P3
-    P3 --> P4
-    P4 --> P5
-    P5 --> OUT1
-    P5 --> OUT2
-    P5 -.-> LLM
-    OUT1 --> HUMAN
-    OUT2 --> HUMAN
+    R["🧾 plugins/report.py<br/>render the bilingual report"]
+    RC["🔁 engine.reconstruct(delta_vars = …)<br/>inject declared corrections and test convergence"]
+
+    SIDE["Optional side tools<br/>language Standard/dsl.py + decision.ebnf — .spd structural checks<br/>llm_adapters/openai_adapter.py — narration only, off by default"]
+
+    OUT["📄 Output — structural verdict + audit certificate<br/>no advice · no ranking · no score"]
+    HUMAN["👤 You still decide — the engine never decides for you"]
+
+    IN --> E1
+    E1 --> E2
+    E2 --> A1
+    A1 --> A2
+    A2 --> A3
+    A3 --> A4
+    A4 --> A5
+    A5 --> R
+    R --> RC
+    RC --> OUT
+    OUT --> HUMAN
+    A5 -.-> SIDE
 
     classDef cIn fill:#E8F0FE,stroke:#4285F4,stroke-width:1px,color:#173A66
-    classDef cOp fill:#FFF8E1,stroke:#C9A96E,stroke-width:1px,color:#5B4614
+    classDef cEng fill:#FFF8E1,stroke:#C9A96E,stroke-width:1px,color:#5B4614
+    classDef cOp fill:#FFF3E0,stroke:#E67E22,stroke-width:1px,color:#7A3E00
+    classDef cSide fill:#F3E8FD,stroke:#8E44AD,stroke-width:1px,color:#4A235A
     classDef cOut fill:#E6F4EA,stroke:#34A853,stroke-width:1px,color:#14512B
-    classDef cLlm fill:#F3E8FD,stroke:#8E44AD,stroke-width:1px,color:#4A235A
     class IN cIn
-    class P1,P2,P3,P4,P5 cOp
-    class LLM cLlm
-    class OUT1,OUT2,HUMAN cOut
+    class E1,E2,R,RC cEng
+    class A1,A2,A3,A4,A5 cOp
+    class SIDE cSide
+    class OUT,HUMAN cOut
 ```
 
 **How to read it**
 
-1. **Five operators, always in order.** NS cleans the language, IAP exposes the hidden premises, LCH finds the fragile one, CCS checks the chain backwards, STATE pins responsibility and seals a certificate.
-2. **The output is deliberately modest.** No advice, no ranking, no score — only "this structure is / is not rationally consistent", which is why a third party can rely on it.
-3. **The LLM is optional decoration.** It is off by default and can only phrase the narrative; it never touches the verdict.
+1. **Top to bottom is one audit run.** Your own description goes in; a structural verdict plus a certificate comes out — nothing else.
+2. **Every step names the module that does it** (`plugins/ns.py` … `plugins/state.py`), so you can read the diagram and the source side by side. The five operators always run in this fixed order.
+3. **The output is deliberately modest, and the side tools are optional.** No advice, no ranking, no score — and the DSL checker and the LLM narration adapter sit outside the main chain; the narration adapter is off by default and can never change a verdict.
 
 📖 Every term explained in one plain sentence → [Glossary](./GLOSSARY.md)
 
