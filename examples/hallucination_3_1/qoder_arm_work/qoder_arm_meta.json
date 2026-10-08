@@ -1,0 +1,22 @@
+{
+  "arm": "qoder-builtin",
+  "kind": "model",
+  "notes": "Qoder built-in model as a batch-annotation arm: 14 subagent batches x 25 items x 2 independent runs. No labels were exposed to the annotator (de-identified input only).",
+  "deidentified_input": {
+    "path": "qoder_arm_work/qoder_classify_input_v1.json",
+    "sha256": "e9c8142ac8f083c2c7d7917ad47d413d3b8053024c58237496013446e5e65b07"
+  },
+  "batches": {
+    "run1_dir": "qoder_arm_work/batches_run1",
+    "run2_dir": "qoder_arm_work/batches_run2",
+    "per_batch": 25,
+    "runs": 2,
+    "run2_read_run1": false
+  },
+  "frozen_file": {
+    "path": "out/model_responses_qoder-builtin.jsonl",
+    "rows": 700,
+    "sha256": "dfb0abd904863fa3b3cc3e2e005b9055c49ae26af068be0420227c3bab3d177c"
+  },
+  "ts": "2026-10-08T08:00:52.979625+00:00"
+}

@@ -1,0 +1,325 @@
+{
+  "agreement": {
+    "adjudication_rate": 0.13142857142857142,
+    "cohen_kappa": 0.8191905125555905,
+    "disagreements": 46,
+    "n": 350,
+    "raw_agreement": 0.8685714285714285
+  },
+  "artifacts": {
+    "audit_chain": "audit_chain.jsonl",
+    "metrics": "metrics.json",
+    "per_item": "per_item.jsonl",
+    "report": "report.md"
+  },
+  "category": "3.1 幻觉与事实一致性",
+  "chain": {
+    "n_events": 8,
+    "root": "adacff1bd647b7691cf153b5800185b1afbb449de779bebc2847ac1988090a68",
+    "valid": true
+  },
+  "config": {
+    "clock": "2026-10-08T00:00:00+00:00",
+    "confidence": 0.95,
+    "hollow_halt_threshold": 0.2,
+    "output_dir": "out",
+    "testset_path": "hallucination_testset_v1.json"
+  },
+  "corpus": {
+    "digest": "38d71f01af9bc5f9403fe010fb4d0d39c75a3e9c964184782b74d2f7de562e41",
+    "file_sha256": "1e7804d9d8d66a616bd07255e56a2443dd0eaaf0c902e475750ba942f71dd1ab",
+    "id": "qlt-3.1-hallucination",
+    "n_items": 350,
+    "version": "v1.0-pilot-synthetic"
+  },
+  "engine": {
+    "extractor": "t1-rules-v1",
+    "states_sha256": "d6b987528fa74d25bcf33839c84c8fbf4994a9408dfb21b7c2132aebfa1c09bc"
+  },
+  "hollow_gate": {
+    "gate": "HALT",
+    "gate_threshold": 0.2,
+    "hi": 0.26630879497250215,
+    "k": 77,
+    "lo": 0.17977081182868618,
+    "n": 350,
+    "rate": 0.22
+  },
+  "model_arms": {
+    "qoder-builtin": {
+      "file": "model_responses_qoder-builtin.jsonl",
+      "file_sha256": "dfb0abd904863fa3b3cc3e2e005b9055c49ae26af068be0420227c3bab3d177c",
+      "label": "qoder-builtin",
+      "n_items": 350,
+      "runs": [
+        1,
+        2
+      ]
+    }
+  },
+  "pairs": [
+    {
+      "a": "engine",
+      "b": "qoder-builtin",
+      "both_fail": 0,
+      "both_pass": 350,
+      "churn": {
+        "flipped_down": [],
+        "flipped_up": [],
+        "n_common": 350,
+        "n_flips": 0,
+        "only_in_a": [],
+        "only_in_b": [],
+        "stable": 350
+      },
+      "interval_a": {
+        "confidence": 0.95,
+        "estimate": 1.0,
+        "hi": 1.0,
+        "k": 350,
+        "lo": 0.9891435592835921,
+        "n": 350,
+        "z": 1.959963984540054
+      },
+      "interval_b": {
+        "confidence": 0.95,
+        "estimate": 1.0,
+        "hi": 1.0,
+        "k": 350,
+        "lo": 0.9891435592835921,
+        "n": 350,
+        "z": 1.959963984540054
+      },
+      "mcnemar_p": null,
+      "metric": "state_correctness",
+      "n_common": 350,
+      "n_pairs": 350,
+      "only_a": 0,
+      "only_b": 0,
+      "rate_a": 1.0,
+      "rate_b": 1.0,
+      "rate_delta": 0.0
+    }
+  ],
+  "replay": {
+    "byte_identical": true,
+    "engine_n_common": 350,
+    "engine_zero_churn": true,
+    "per_item_sha256": "baa38950fad16ae5de9c2217b820f90ed87ad1ad3526c32d9e75524bb113d907"
+  },
+  "sample_size": {
+    "confidence": 0.95,
+    "n_items": 350,
+    "n_pairs": 1,
+    "n_systems": 2
+  },
+  "systems": {
+    "engine": {
+      "accuracy": {
+        "hi": 1.0,
+        "k": 350,
+        "lo": 0.9891435592835921,
+        "n": 350,
+        "rate": 1.0
+      },
+      "coverage": {
+        "covered": 350,
+        "total": 350
+      },
+      "hollow_rate": {
+        "hi": 0.26630879497250215,
+        "k": 77,
+        "lo": 0.17977081182868618,
+        "n": 350,
+        "rate": 0.22
+      },
+      "invalid_states": [],
+      "kind": "engine",
+      "label": "引擎结构审计",
+      "passed_rate": {
+        "hi": 0.6692884778396071,
+        "k": 217,
+        "lo": 0.5681059763884551,
+        "n": 350,
+        "rate": 0.62
+      },
+      "per_class": {
+        "anchored": {
+          "precision": {
+            "hi": 1.0,
+            "k": 131,
+            "lo": 0.9715112929340055,
+            "n": 131,
+            "rate": 1.0
+          },
+          "recall": {
+            "hi": 1.0,
+            "k": 131,
+            "lo": 0.9715112929340055,
+            "n": 131,
+            "rate": 1.0
+          },
+          "support": 131
+        },
+        "floating": {
+          "precision": {
+            "hi": 1.0,
+            "k": 86,
+            "lo": 0.9572418027142576,
+            "n": 86,
+            "rate": 1.0
+          },
+          "recall": {
+            "hi": 1.0,
+            "k": 86,
+            "lo": 0.9572418027142576,
+            "n": 86,
+            "rate": 1.0
+          },
+          "support": 86
+        },
+        "hollow": {
+          "precision": {
+            "hi": 1.0,
+            "k": 77,
+            "lo": 0.9524815747175658,
+            "n": 77,
+            "rate": 1.0
+          },
+          "recall": {
+            "hi": 1.0,
+            "k": 77,
+            "lo": 0.9524815747175658,
+            "n": 77,
+            "rate": 1.0
+          },
+          "support": 77
+        },
+        "opaque": {
+          "precision": {
+            "hi": 1.0,
+            "k": 56,
+            "lo": 0.9358060632812366,
+            "n": 56,
+            "rate": 1.0
+          },
+          "recall": {
+            "hi": 1.0,
+            "k": 56,
+            "lo": 0.9358060632812366,
+            "n": 56,
+            "rate": 1.0
+          },
+          "support": 56
+        }
+      }
+    },
+    "qoder-builtin": {
+      "accuracy": {
+        "hi": 1.0,
+        "k": 350,
+        "lo": 0.9891435592835921,
+        "n": 350,
+        "rate": 1.0
+      },
+      "coverage": {
+        "covered": 350,
+        "total": 350
+      },
+      "hollow_rate": {
+        "hi": 0.26630879497250215,
+        "k": 77,
+        "lo": 0.17977081182868618,
+        "n": 350,
+        "rate": 0.22
+      },
+      "invalid_states": [],
+      "kind": "model",
+      "label": "qoder-builtin",
+      "passed_rate": {
+        "hi": 0.6692884778396071,
+        "k": 217,
+        "lo": 0.5681059763884551,
+        "n": 350,
+        "rate": 0.62
+      },
+      "per_class": {
+        "anchored": {
+          "precision": {
+            "hi": 1.0,
+            "k": 131,
+            "lo": 0.9715112929340055,
+            "n": 131,
+            "rate": 1.0
+          },
+          "recall": {
+            "hi": 1.0,
+            "k": 131,
+            "lo": 0.9715112929340055,
+            "n": 131,
+            "rate": 1.0
+          },
+          "support": 131
+        },
+        "floating": {
+          "precision": {
+            "hi": 1.0,
+            "k": 86,
+            "lo": 0.9572418027142576,
+            "n": 86,
+            "rate": 1.0
+          },
+          "recall": {
+            "hi": 1.0,
+            "k": 86,
+            "lo": 0.9572418027142576,
+            "n": 86,
+            "rate": 1.0
+          },
+          "support": 86
+        },
+        "hollow": {
+          "precision": {
+            "hi": 1.0,
+            "k": 77,
+            "lo": 0.9524815747175658,
+            "n": 77,
+            "rate": 1.0
+          },
+          "recall": {
+            "hi": 1.0,
+            "k": 77,
+            "lo": 0.9524815747175658,
+            "n": 77,
+            "rate": 1.0
+          },
+          "support": 77
+        },
+        "opaque": {
+          "precision": {
+            "hi": 1.0,
+            "k": 56,
+            "lo": 0.9358060632812366,
+            "n": 56,
+            "rate": 1.0
+          },
+          "recall": {
+            "hi": 1.0,
+            "k": 56,
+            "lo": 0.9358060632812366,
+            "n": 56,
+            "rate": 1.0
+          },
+          "support": 56
+        }
+      },
+      "stability": {
+        "churned_items": [],
+        "n_items": 350,
+        "n_runs": 2,
+        "state_churn": 0,
+        "state_churn_rate": 0.0
+      }
+    }
+  }
+}
