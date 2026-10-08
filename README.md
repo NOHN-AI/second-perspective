@@ -147,56 +147,55 @@ A `DeltaVar` path may take three forms: `"A2"` (falsify an assumption, propagate
 
 ## ✦ Architecture
 
-> **In one sentence:** NOMOS sits behind your existing business systems as a **deterministic decision kernel** — it turns a structured request into ranked candidates with a verifiable audit trail, and always leaves the final verdict to a human.
+> **In one sentence:** NOMOS sits behind your existing business systems as a **deterministic decision kernel** — a request walks down a fixed pipeline of real modules, and the verdict is always signed by a human.
 
 ```mermaid
 flowchart TB
-    UP["🏢 Upstream business systems<br/>ERP · CRM · risk · compliance · HR · approvals"]
+    UP["Upstream business systems (callers)<br/>ERP · CRM · risk · compliance · approvals · HR"]
 
-    subgraph CORE["⚙️ NOMOS deterministic decision kernel — never guesses, never learns"]
-        K1["1 · Structure &amp; evidence audit"]
-        K2["2 · Hard + soft constraint evaluation"]
-        K3["3 · Causal invalidation (first-order)"]
-        K4["4 · Assumption interaction (second-order)<br/>synergy · redundancy · amplification<br/>must be declared by a responsible party"]
-        K5["5 · Three-layer reconstruction<br/>forward · backward · delta"]
-        K6["6 · Formal convergence check<br/>fixed-point / no-gain / budget / diverged / blocked"]
-    end
+    A1["🚪 api/main.py · security.py<br/>accept request · auth · rate limit · tenant isolation"]
+    A2["🔎 decision/evaluator · integrity<br/>structure / evidence audit"]
+    A3["⚖️ decision/policy<br/>hard + soft constraints"]
+    A4["📊 decision/engine · causal<br/>normalized scoring → first-order invalidation"]
+    A5["🔗 interaction/engine<br/>second-order interaction · invariants I-1 … I-4"]
+    A6["🧩 decision/reconstruction · hub/session<br/>three-layer rebuild: forward / backward / delta"]
+    A7["✅ convergence/checker<br/>5-state verdict: fixed-point / no-gain /<br/>budget-exhausted / diverged / blocked"]
+    A8["🔄 decision/counterfactual · selection · robustness<br/>counterfactual re-selection · Pareto · weight sensitivity"]
+    A9["🛡️ llm_compliance/gate<br/>T1 annotate / T2 propose / T3 narrate · an LLM never adjudicates"]
+    A10["📒 audit/ledger · persistence/event_store<br/>hash-chained audit + append-only event log"]
+    OUT["📦 sealed HubReport + session_root_hash"]
+    HUMAN["✍️ governance/approval<br/>a human signs off — the verdict stays outside the algorithm"]
 
-    subgraph GATE["🛡️ LLM guardrails — three permission tiers"]
-        G["T1 annotate · T2 propose · T3 narrate<br/>an LLM can never adjudicate"]
-    end
+    UP --> A1
+    A1 --> A2
+    A2 --> A3
+    A3 --> A4
+    A4 --> A5
+    A5 --> A6
+    A6 --> A7
+    A7 --> A8
+    A8 --> A9
+    A9 --> A10
+    A10 --> OUT
+    OUT --> HUMAN
 
-    OUT1["📦 Candidates + counterfactuals"]
-    OUT2["🧾 Hash-chained audit trail"]
-    HUMAN["✍️ A human signs the final verdict<br/>always outside the algorithm"]
-
-    UP --> K1
-    K1 --> K2
-    K2 --> K3
-    K3 --> K4
-    K4 --> K5
-    K5 --> K6
-    K6 --> G
-    G --> OUT1
-    K6 --> OUT2
-    OUT1 --> HUMAN
-    OUT2 --> HUMAN
-
+    classDef cUp fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1px,color:#424242
     classDef cIn fill:#E8F0FE,stroke:#4285F4,stroke-width:1px,color:#173A66
     classDef cCore fill:#FFF8E1,stroke:#C9A96E,stroke-width:1px,color:#5B4614
     classDef cGate fill:#F3E8FD,stroke:#8E44AD,stroke-width:1px,color:#4A235A
     classDef cOut fill:#E6F4EA,stroke:#34A853,stroke-width:1px,color:#14512B
-    class UP cIn
-    class K1,K2,K3,K4,K5,K6 cCore
-    class G cGate
-    class OUT1,OUT2,HUMAN cOut
+    class UP cUp
+    class A1 cIn
+    class A2,A3,A4,A5,A6,A7,A8 cCore
+    class A9,A10 cGate
+    class OUT,HUMAN cOut
 ```
 
 **How to read it**
 
-1. **It is a kernel, not a replacement.** Your ERP / CRM / risk systems keep running; NOMOS only answers "here are the candidates, here is why".
-2. **Steps 1–6 all come from declared inputs.** No step invents a weight, a probability or an interaction strength — anything not declared is simply missing.
-3. **The LLM sits in a cage.** It may annotate, propose or narrate, but it can never flip a status or change a ranking. The final call is a human signature.
+1. **Top to bottom is one request's journey.** What goes in is a `DecisionRequest`; what comes out is a sealed `HubReport` carrying a `session_root_hash`.
+2. **Every box names the real module doing the work**, so you can jump straight from the diagram to the source file. The golden boxes are pure deterministic computation.
+3. **The purple boxes are the boundary.** The LLM may only annotate / propose / narrate and can never flip a status or a ranking; the audit trail is hash-chained; the final signature is the green step — never the algorithm.
 
 📖 Every term explained in one plain sentence → [Glossary](./GLOSSARY.md)
 

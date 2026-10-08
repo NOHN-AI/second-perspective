@@ -160,56 +160,55 @@ print(session.session_root_hash)
 
 ## ✦ 架构
 
-> **一句话：** NOMOS 以**确定性决策内核**的身份嵌在你现有业务系统背后——把一个结构化请求变成带审计链的候选方案，而最终结论永远留给人来签。
+> **一句话：** NOMOS 以**确定性决策内核**的身份嵌在你现有业务系统背后——一个请求会沿着固定管线走完一串真实模块，而最终结论永远是人签的。
 
 ```mermaid
 flowchart TB
-    UP["🏢 上游业务系统<br/>ERP · CRM · 风控 · 合规 · HR · 项目审批"]
+    UP["上游业务系统（调用方）<br/>ERP · CRM · 风控 · 合规 · 投决 · HR"]
 
-    subgraph CORE["⚙️ NOMOS 确定性决策内核 —— 不猜、不学"]
-        K1["1 · 结构 / 证据审计"]
-        K2["2 · 硬约束 + 软约束评估"]
-        K3["3 · 因果失效（一阶）"]
-        K4["4 · 假设交互（二阶）<br/>协同 · 冗余 · 放大<br/>必须由责任人声明，引擎绝不估算"]
-        K5["5 · 三层因果重建<br/>前向 · 后向 · 增量"]
-        K6["6 · 形式化收敛判定<br/>定点 / 无增益 / 预算耗尽 / 发散 / 阻塞"]
-    end
+    A1["🚪 api/main.py · security.py<br/>收请求 · 鉴权限流 · 租户隔离"]
+    A2["🔎 decision/evaluator · integrity<br/>结构 / 证据审计"]
+    A3["⚖️ decision/policy<br/>硬约束 + 软约束"]
+    A4["📊 decision/engine · causal<br/>归一化评分 → 一阶因果失效传播"]
+    A5["🔗 interaction/engine<br/>二阶交互 · 不变量 I-1 … I-4"]
+    A6["🧩 decision/reconstruction · hub/session<br/>三层重建：前向 / 后向 / 增量"]
+    A7["✅ convergence/checker<br/>五态判定：定点 / 无增益 /<br/>预算耗尽 / 发散 / 阻塞"]
+    A8["🔄 decision/counterfactual · selection · robustness<br/>反事实重选 · 帕累托 · 权重敏感度"]
+    A9["🛡️ llm_compliance/gate<br/>T1 批注 / T2 提议 / T3 叙述 · LLM 永不裁决"]
+    A10["📒 audit/ledger · persistence/event_store<br/>哈希链算法审计 + 只追加事件流"]
+    OUT["📦 封存 HubReport + session_root_hash"]
+    HUMAN["✍️ governance/approval<br/>人工签批 —— 最终结论留在算法之外"]
 
-    subgraph GATE["🛡️ 大模型护栏 —— 三档权限"]
-        G["T1 批注 · T2 提议 · T3 叙述<br/>LLM 永远不能裁决"]
-    end
+    UP --> A1
+    A1 --> A2
+    A2 --> A3
+    A3 --> A4
+    A4 --> A5
+    A5 --> A6
+    A6 --> A7
+    A7 --> A8
+    A8 --> A9
+    A9 --> A10
+    A10 --> OUT
+    OUT --> HUMAN
 
-    OUT1["📦 候选集 + 反事实"]
-    OUT2["🧾 哈希链审计报告"]
-    HUMAN["✍️ 最终结论由人签字<br/>永远留在算法之外"]
-
-    UP --> K1
-    K1 --> K2
-    K2 --> K3
-    K3 --> K4
-    K4 --> K5
-    K5 --> K6
-    K6 --> G
-    G --> OUT1
-    K6 --> OUT2
-    OUT1 --> HUMAN
-    OUT2 --> HUMAN
-
+    classDef cUp fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1px,color:#424242
     classDef cIn fill:#E8F0FE,stroke:#4285F4,stroke-width:1px,color:#173A66
     classDef cCore fill:#FFF8E1,stroke:#C9A96E,stroke-width:1px,color:#5B4614
     classDef cGate fill:#F3E8FD,stroke:#8E44AD,stroke-width:1px,color:#4A235A
     classDef cOut fill:#E6F4EA,stroke:#34A853,stroke-width:1px,color:#14512B
-    class UP cIn
-    class K1,K2,K3,K4,K5,K6 cCore
-    class G cGate
-    class OUT1,OUT2,HUMAN cOut
+    class UP cUp
+    class A1 cIn
+    class A2,A3,A4,A5,A6,A7,A8 cCore
+    class A9,A10 cGate
+    class OUT,HUMAN cOut
 ```
 
 **这张图怎么看**
 
-1. **它是内核，不是替代品。** 你的 ERP / CRM / 风控系统照常运行；NOMOS 只回答「候选有哪些、为什么是这些」。
-2. **第 1–6 步全部来自已声明的输入。** 没有任何一步会凭空造出权重、概率或交互强度——没声明的东西就是缺失。
-3. **大模型被关在笼子里。** 它可以批注、提议、叙述，但不能翻转状态、不能改排名；最终拍板永远是人签字。
+1. **从上往下读，就是一个请求的一生。** 进来的是 `DecisionRequest`，出去的是带 `session_root_hash` 的封存 `HubReport`。
+2. **每个框都写了真正干活的模块路径**，可以顺着图直接翻到源码文件。金色框是纯确定性计算。
+3. **紫色两步是边界。** 大模型只能批注 / 提议 / 叙述，不能翻转状态或排名；留痕用哈希链；最终签字是绿色那步——永远不是算法。
 
 📖 每个术语都用一句人话解释 → [术语表 GLOSSARY](./GLOSSARY.md)
 
