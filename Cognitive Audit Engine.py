@@ -171,6 +171,10 @@ class AuditEvent:
     prev_hash: str
     timestamp: float = field(default_factory=time.time)
     nonce: str = field(default_factory=lambda: uuid.uuid4().hex[:8])
+    # 封存哈希：在 _append_event 时一次性写入。其后任何对 payload / event_type /
+    # timestamp / nonce 的改动都会使 hash 与 sealed_hash 不一致，从而被 verify_chain 检出。
+    # 为 None 表示该事件未经封存，内容不可验证。
+    sealed_hash: Optional[str] = None
 
     @property
     def hash(self) -> str:
@@ -352,8 +356,10 @@ class CognitiveAuditEngine:
             timestamp=ts,
             nonce=nonce,
         )
+        # 封存：自此刻起，内容若被改动即与封存值不符。
+        ev.sealed_hash = ev.hash
         self.event_chain.append(ev)
-        self._prev_event_hash = ev.hash
+        self._prev_event_hash = ev.sealed_hash
         return ev
 
     @property
@@ -759,16 +765,29 @@ class CognitiveAuditEngine:
     # -------- 审计链验证 --------
 
     def verify_chain(self) -> Dict[str, Any]:
-        """独立验证哈希链完整性。返回 {valid, last_valid_idx, total, root_hash}。"""
+        """独立验证哈希链的链接完整性与内容封存状态。
+
+        校验三类破坏：
+          1. 链接破坏 —— prev_hash 与前序链根不符               -> LINK_BROKEN
+          2. 内容篡改 —— hash 重算值与封存值 sealed_hash 不符   -> CONTENT_TAMPERED
+             覆盖 payload / event_type / timestamp / nonce 的事后改动
+          3. 未经封存 —— sealed_hash 为 None                   -> EVENT_NOT_SEALED
+
+        返回 {valid, last_valid_idx, total, root_hash}。
+        """
         prev = 'ROOT'
         last_valid = -1
         for i, ev in enumerate(self.event_chain):
             if ev.prev_hash != prev:
                 return {'valid': False, 'last_valid_idx': last_valid,
                         'total': len(self.event_chain), 'broken_at': i,
+                        'reason': 'LINK_BROKEN',
                         'root_hash': self.chain_root_hash}
-            expected = ev.hash
-            # recompute
+            if ev.sealed_hash is None:
+                return {'valid': False, 'last_valid_idx': last_valid,
+                        'total': len(self.event_chain), 'broken_at': i,
+                        'reason': 'EVENT_NOT_SEALED',
+                        'root_hash': self.chain_root_hash}
             blob = json.dumps({
                 'event_type': ev.event_type,
                 'payload': ev.payload,
@@ -777,11 +796,12 @@ class CognitiveAuditEngine:
                 'nonce': ev.nonce,
             }, sort_keys=True, ensure_ascii=False, default=str)
             actual = hashlib.sha256(blob.encode('utf-8')).hexdigest()
-            if actual != expected:
+            if actual != ev.sealed_hash:
                 return {'valid': False, 'last_valid_idx': last_valid,
                         'total': len(self.event_chain), 'broken_at': i,
+                        'reason': 'CONTENT_TAMPERED',
                         'root_hash': self.chain_root_hash}
-            prev = expected
+            prev = ev.sealed_hash
             last_valid = i
         return {'valid': True, 'last_valid_idx': last_valid,
                 'total': len(self.event_chain), 'root_hash': self.chain_root_hash}
