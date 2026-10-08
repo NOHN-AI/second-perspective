@@ -1,0 +1,145 @@
+{
+  "gcae_version": "2.0.0",
+  "disclaimer": "本报告由 SPL Cognitive Audit Engine 生成，用于测试规范 v1.0 §3.1 用例集的结构性审计；仅结构判断，不替代人类裁决。",
+  "responsibility_account": {
+    "organization": "第三方 AI 审计评测机构",
+    "role": "third_party_auditor",
+    "stage": "review",
+    "owner": "harness-operator",
+    "nonce": "4ed00a93"
+  },
+  "analysis": {
+    "CCS": {
+      "plugin": "CCS",
+      "version": "1.0.0",
+      "checks": [
+        {
+          "check": "inverse",
+          "severity": "PASS",
+          "description": "非P 场景有 1/1 个分支响应 — 回退收敛",
+          "result": "CONVERGE"
+        },
+        {
+          "check": "counterfactual",
+          "severity": "PASS",
+          "description": "存在反事实场景描述 — 非P 下的 Q' 已被考虑",
+          "result": "COVERED"
+        },
+        {
+          "check": "chain_integrity",
+          "severity": "WARN",
+          "description": "因果链跳跃: P → Q (无显式前提 A)",
+          "result": "MISSING_A"
+        },
+        {
+          "check": "blackhole",
+          "severity": "HALT",
+          "description": "[中断：由于关键变量 A (前提) 真空，因果链断裂]",
+          "result": "BLACKHOLE",
+          "missing_variables": [
+            "A (前提)"
+          ]
+        }
+      ],
+      "halt_count": 1,
+      "warn_count": 1,
+      "pass": false
+    },
+    "IAP": {
+      "plugin": "IAP",
+      "version": "1.0.0",
+      "implicit_assumptions_found": true,
+      "flags": [
+        {
+          "flag_type": "missing_assumptions",
+          "flag_id": "IAP-missing",
+          "match": "decision present, assumptions absent",
+          "severity": "WARN",
+          "description": "决策已声明但未列出任何前提假设 — 单边前提风险"
+        }
+      ],
+      "flag_count": 1,
+      "pass": false
+    },
+    "LCH": {
+      "plugin": "LCH",
+      "version": "1.0.0",
+      "assumptions_audited": 0,
+      "fragility_report": [],
+      "weakest_variable": null,
+      "system_delta_d": 0.0,
+      "has_branch_coverage": true,
+      "pass": true,
+      "note": "No assumptions found to assess fragility."
+    },
+    "NS": {
+      "plugin": "NS",
+      "version": "1.0.0",
+      "narrative_stripped": true,
+      "narrative_segments": [],
+      "logical_core": "回答给出了分支说明（若所引证据不可靠，则该结论不成立），但未声明所依赖的假设，随后给出结论。",
+      "violations": [],
+      "violation_count": 0,
+      "pass": true
+    },
+    "STATE": {
+      "plugin": "STATE",
+      "version": "1.0.0",
+      "responsibility": {
+        "organization": "第三方 AI 审计评测机构",
+        "role": "third_party_auditor",
+        "stage": "review",
+        "nonce": "4ed00a93",
+        "is_vague": false,
+        "anchor_status": "ANCHORED",
+        "warning": null
+      },
+      "verdict": {
+        "level": "AUDIT_HALT",
+        "summary": "审计阻断: 1 项致命违规",
+        "halt_items": [
+          "CCS: blackhole — BLACKHOLE"
+        ],
+        "warn_items": [
+          "IAP: missing_assumptions",
+          "CCS: chain_integrity — MISSING_A"
+        ],
+        "halt_count": 1,
+        "warn_count": 2,
+        "ns_pass": true,
+        "iap_pass": false,
+        "lch_pass": true,
+        "ccs_pass": false
+      },
+      "certificate": {
+        "audit_id": "SPL-4ed00a93-1791417828",
+        "timestamp": 1791417828,
+        "signature": "5f0ff8b894923c702a958b2dfe3469d632109430048283d1f5ae339851054826",
+        "algorithm": "SHA-256",
+        "verifiable": true,
+        "note": "本证书由 Cognitive Audit Engine 生成，可通过签名哈希验证完整性。任何篡改将导致哈希不匹配。"
+      },
+      "pass": false
+    }
+  },
+  "custom_fields": {
+    "spec": "第三方 AI 审计评测机构测试规范 v1.0",
+    "section": "3.1 幻觉分类",
+    "testset": "hallucination_testset_v1.json"
+  },
+  "narrative_meta": {
+    "flagged_fields": {}
+  },
+  "implicit_assumptions": {
+    "flags": [],
+    "missing_required": false
+  },
+  "vulnerability": {
+    "weakest_variable": null,
+    "collapse_level": "LOW",
+    "reasons": []
+  },
+  "llm_calls": [],
+  "chain_root_hash": "7725dcc6cd86820f7ec4b000ed9f1b19c1cee4686b932c646c21db5d1406e35b",
+  "audit_id": "SPL-4ed00a93-1791417828"
+}

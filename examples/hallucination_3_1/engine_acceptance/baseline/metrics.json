@@ -1,0 +1,199 @@
+{
+  "artifacts": {
+    "per_item_jsonl_sha256": "a983dacb68b5efe59d775c16963b5aac892b41c509cc820cf19e77fdf5837897"
+  },
+  "determinism": {
+    "chain_equal": true,
+    "chain_root_pass1": "5f538ef5bf9c9533d2a680a43d0ed35203651018f21a3ce9a1c1d2f1cdc14a13",
+    "chain_root_pass2": "5f538ef5bf9c9533d2a680a43d0ed35203651018f21a3ce9a1c1d2f1cdc14a13",
+    "n_compared": 350,
+    "passes_identical": true,
+    "per_item_sha256": "bd333f8f95fb09b450e2762de01d073bad116c39387b1d87b0417f247a267e59"
+  },
+  "engine": {
+    "ccs_blackhole_by_class": {
+      "anchored": {
+        "CLEAR": 131
+      },
+      "floating": {
+        "CLEAR": 86
+      },
+      "hollow": {
+        "BLACKHOLE": 77
+      },
+      "opaque": {
+        "BLACKHOLE": 56
+      }
+    },
+    "ccs_counterfactual_by_class": {
+      "anchored": {
+        "COVERED": 131
+      },
+      "floating": {
+        "UNCOVERED": 86
+      },
+      "hollow": {
+        "UNCOVERED": 77
+      },
+      "opaque": {
+        "COVERED": 56
+      }
+    },
+    "ccs_inverse_by_class": {
+      "anchored": {
+        "CONVERGE": 131
+      },
+      "floating": {
+        "SYSTEM_COLLAPSE": 86
+      },
+      "hollow": {
+        "SYSTEM_COLLAPSE": 77
+      },
+      "opaque": {
+        "CONVERGE": 56
+      }
+    },
+    "certificates": {
+      "n": 350,
+      "n_unique_audit_ids": 350
+    },
+    "chain": {
+      "last_valid_idx": 349,
+      "root_hash": "5f538ef5bf9c9533d2a680a43d0ed35203651018f21a3ce9a1c1d2f1cdc14a13",
+      "total": 350,
+      "valid": true
+    },
+    "iap_missing_by_class": {
+      "anchored": 0,
+      "floating": 0,
+      "hollow": 77,
+      "opaque": 56
+    },
+    "lch": {
+      "max_delta_d": 0.6,
+      "min_delta_d": 0.0,
+      "n_delta_d_ge_0.7": 0
+    },
+    "responsibility_control": {
+      "ok": true,
+      "owner": null,
+      "reason": "RESPONSIBILITY_NOT_CLOSED",
+      "status": "BLOCKED"
+    },
+    "signals_compliance": {
+      "anchored": {
+        "n": 131,
+        "ok": 131,
+        "violating_ids": [],
+        "violations": []
+      },
+      "floating": {
+        "n": 86,
+        "ok": 86,
+        "violating_ids": [],
+        "violations": []
+      },
+      "hollow": {
+        "n": 77,
+        "ok": 77,
+        "violating_ids": [],
+        "violations": []
+      },
+      "opaque": {
+        "n": 56,
+        "ok": 56,
+        "violating_ids": [],
+        "violations": []
+      }
+    },
+    "verdict_by_class": {
+      "anchored": {
+        "AUDIT_HALT": 0,
+        "AUDIT_PASS": 131,
+        "AUDIT_WARN": 0
+      },
+      "floating": {
+        "AUDIT_HALT": 86,
+        "AUDIT_PASS": 0,
+        "AUDIT_WARN": 0
+      },
+      "hollow": {
+        "AUDIT_HALT": 77,
+        "AUDIT_PASS": 0,
+        "AUDIT_WARN": 0
+      },
+      "opaque": {
+        "AUDIT_HALT": 56,
+        "AUDIT_PASS": 0,
+        "AUDIT_WARN": 0
+      }
+    }
+  },
+  "extraction": {
+    "confusion": {
+      "anchored": {
+        "anchored": 131,
+        "floating": 0,
+        "hollow": 0,
+        "opaque": 0
+      },
+      "floating": {
+        "anchored": 0,
+        "floating": 86,
+        "hollow": 0,
+        "opaque": 0
+      },
+      "hollow": {
+        "anchored": 0,
+        "floating": 0,
+        "hollow": 77,
+        "opaque": 0
+      },
+      "opaque": {
+        "anchored": 0,
+        "floating": 0,
+        "hollow": 0,
+        "opaque": 56
+      }
+    },
+    "states_sha256": "d6b987528fa74d25bcf33839c84c8fbf4994a9408dfb21b7c2132aebfa1c09bc",
+    "vs_adjudicated": {
+      "ci95": [
+        0.9891435592835921,
+        0.9999999999999999
+      ],
+      "k": 350,
+      "n": 350,
+      "rate": 1.0
+    },
+    "vs_annotator_a": {
+      "ci95": [
+        0.9100215510837733,
+        0.9604247810857878
+      ],
+      "k": 329,
+      "n": 350,
+      "rate": 0.94
+    },
+    "vs_annotator_b": {
+      "ci95": [
+        0.8770227539582954,
+        0.9369010891093462
+      ],
+      "k": 319,
+      "n": 350,
+      "rate": 0.9114285714285715
+    }
+  },
+  "meta": {
+    "account_nonce": "4ed00a93",
+    "clock_base": 1791417600.0,
+    "engine_file": "Cognitive Audit Engine.py",
+    "engine_sha256": "f7bd8bf17bfd40b3802d12f8baf1c7c84ed5e01816b1be579b70f4f4cb23b474",
+    "extractor": "t1-rules-v1",
+    "gcae_version": "2.0.0",
+    "n_items": 350,
+    "testset": "evaluation/3_1-hallucination/hallucination_testset_v1.json",
+    "testset_sha256": "1e7804d9d8d66a616bd07255e56a2443dd0eaaf0c902e475750ba942f71dd1ab"
+  }
+}
