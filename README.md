@@ -235,6 +235,53 @@ Human adjudication goes through `approve_evolution_proposal()`, which **only kee
 
 <p align="center">— ✦ —</p>
 
+## ✦ Capability Boundary (what it blocks · what it does not)
+
+<div style="max-width:880px;margin:0 auto;padding:0 16px">
+
+This engine **makes no guarantees — it verifies structure**. The boundary therefore has to be
+written down: presenting what it does *not* block as if it did is the fastest way to fail on delivery.
+
+### 1. What it blocks (hard mechanisms, not rhetoric)
+
+| Mechanism | What it blocks | Severity |
+|---|---|---|
+| **LLM never adjudicates** | Any `status` / `converged` / `verdict` / `weight` / `rank` in model output is **stripped and traced**; no LLM output can flip an assumption's state or an option's ranking | structural |
+| **I-1 no guessing** | Missing facts / weights / thresholds / owners are **not estimated** — the audit halts and lists what must be supplied | `BLOCKED` |
+| ⊕ IAP assumption mining | undeclared premises, privilege bypass, circular reasoning | signal |
+| BFC binary fact check | evidence vacuum · mutually negating evidence · falsified premise still in use | `BLOCKED` |
+| ⇄ GRF reality feedback | reality already falsified an assumption while **no fallback path ΔD** exists; no rollout ladder | `BLOCKED` / warning |
+| ⊞ TPG topology checks | identity conflicts, out-of-range parameters (fatal); dangling node/edge, causal paradox (result void) | fatal / warning |
+| Chain-internal time order (axiom 5) | inverted order; one node pair with multiple edges (a fork); unassignable order from a cycle | warning, result void |
+| ⊚ STATE responsibility anchoring | missing owner; vague responsible party | `BLOCKED` |
+| **Reproducible certificate** | same input + same nonce + same clock → **same chain root**, recomputable on another machine, bound to no model vendor | verifiable |
+
+### 2. What it does NOT block (explicit non-commitments)
+
+| Not committed | Why |
+|---|---|
+| **It does not detect "bias"** | no statistical fairness test, no group-difference metric, no training-data audit. What it blocks is bias's **structural expression**: undeclared premises and unfalsifiable assumptions |
+| **It does not make the model correct** | it does not judge whether the model reasoned well; it checks whether **something without evidence was used as evidence** |
+| **It makes no professional judgement** | it does not read medical records, review content, explain models, or issue legal / medical / financial / security conclusions |
+| **It does not provide runtime safety** | unrelated to flight control, dispatch commands, toolchains or network defence |
+| **It does not turn an unsolvable problem into a solvable one** | it supplies no new knowledge, no missing information, no value trade-off. It **sharpens** "unsolvable" into "stuck at which link, missing what" |
+| **It does not decide for you** | `AWAITING_HUMAN` is the normal state; the engine **never invents corrections** — inventing one is exactly how "unsolvable" gets laundered into "solved", and **that is how hallucination is produced** |
+
+### 3. How to cite it
+
+> ❌ **Do not say**: this engine detects AI bias · guarantees content safety · stops the model from
+> being wrong · solves unsolvable problems
+>
+> ✅ **Do say**: it keeps the unverifiable outside the decision structure · a conclusion cannot land
+> without passing structural verification · it moves you from "I don't know where it is stuck" to
+> "I know which link is stuck"
+
+**Positioning line**: `Second Perspective Engine (structural verification · does not guarantee model correctness)`
+
+</div>
+
+<p align="center">— ✦ —</p>
+
 ## ✦ ∞ Infinite Causal Reconstruction
 
 `limit_reconstruct()` is the implementation of "infinite causal reconstruction": **no ceiling on
