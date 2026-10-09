@@ -173,14 +173,14 @@ def test_build_gcae_context_structure(make_request, make_result):
 def test_run_gcae_audit_returns_typed_report(make_request, make_result):
     report, raw = run_gcae_audit(make_request(), make_result(), HubPolicy())
     assert report.total_findings == len(report.findings)
-    assert report.scanner_version == "GCAE-1.0.0"
+    assert report.scanner_version == "GCAE-1.1.0"
     assert raw["analysis"]["STATE"]["pass"] in (True, False)
 
 
 def test_cognitive_risk_scanner_scan(make_request, make_result):
     scanner = CognitiveRiskScanner(HubPolicy())
     report = scanner.scan(make_request(), make_result())
-    assert report.scanner_version == "GCAE-1.0.0"
+    assert report.scanner_version == "GCAE-1.1.0"
 
 
 def test_engine_audit_missing_analysis_is_handled():

@@ -123,6 +123,36 @@ class StateAnchorPlugin:
             elif check.get("severity") == "WARN":
                 warns.append(f"CCS: {check.get('check', 'unknown')} — {check.get('result', '')}")
 
+        # ── 通用扫描：所有带 status 的算子统一映射 ──
+        # 少了这一步，新增算子的 BLOCKED 会被静默吞掉：⊙ORI / ⊞TPG / BFC /
+        # ⇄GRF 都不在上面四条专用摘录里，而「新算子没被计入」恰恰是最危险的
+        # 那种失效 —— 报告看起来一切正常，阻断其实已经发生了。
+        BLOCKING = {"BLOCKED", "CRITICAL"}
+        RISKY = {"HIGH_RISK", "WARNING"}
+        operator_statuses: Dict[str, str] = {}
+        extra_halts: List[str] = []
+        extra_warns: List[str] = []
+        for name in sorted(prior):
+            result = prior.get(name)
+            if not isinstance(result, dict):
+                continue
+            status = result.get("status")
+            if status is None:
+                continue
+            operator_statuses[name] = str(status)
+            label = f"{name}: {result.get('reason', status)}"
+            if status in BLOCKING:
+                extra_halts.append(label)
+            elif status in RISKY:
+                extra_warns.append(label)
+
+        # 只有通用扫描真的有内容时才合并（专用摘录在前，通用扫描在后）。
+        # 于是「只跑原五算子子集」的调用方拿到的 verdict 与扩展前逐字节一致 ——
+        # 兼容不是靠解释，是靠不写入空字段。
+        if extra_halts or extra_warns:
+            halts = list(dict.fromkeys(halts + extra_halts))
+            warns = list(dict.fromkeys(warns + extra_warns))
+
         # 最终裁定
         if halts:
             level = "AUDIT_HALT"

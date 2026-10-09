@@ -1,7 +1,7 @@
 """NOMOS Hub CLI — nomos-hub-demo entry point.
 
 Demonstrates the Intelligent Decision Hub with two stress scenarios and the
-GCAE-backed cognitive audit pipeline (NS/IAP/LCH/CCS/STATE).
+GCAE-backed cognitive audit pipeline (NS/IAP/LCH/TPG/BFC/CCS/META/STATE).
 """
 
 from __future__ import annotations

@@ -221,6 +221,60 @@ class InteractionDeclaration(StrictModel):
         return self
 
 
+class ResourceBudget(StrictModel):
+    """单项资源预算：budget = 可用额度，used = 已承诺/已耗。
+
+    对应 ⊙ORI 的「能量守恒」检查：gap = budget - used 为负即违反守恒。
+    两者都为 None 时 ORI 会记「缺少可用/已承诺字段」而不做估算——
+    缺就是缺，不补默认值。
+    """
+
+    name: str = Field(min_length=1)
+    budget: float | None = None
+    used: float | None = None
+    unit: str | None = None
+
+
+class DecisionOrigin(StrictModel):
+    """本次决策的原点事件——「为什么是现在要决策」。
+
+    企业语义：立项申请 / 预算请求 / 风险事件 / 董事会决议 / 客户投诉 / 系统告警。
+    它是 ⊙ORI 的输入。不声明则 ORI 不参与审计（见 adapter 的条件注册），
+    因为「NOMOS 无法表达原点」与「这次决策真的没有原点」是两件不同的事，
+    不该由审计算子去猜。
+    """
+
+    trigger: str = Field(min_length=1, description="触发本次决策的具体事件")
+    source: str | None = Field(default=None, description="触发来源：谁或哪个系统提出的")
+    event_time: datetime | None = None
+    resources: list[ResourceBudget] = Field(default_factory=list)
+
+
+class RolloutStage(StrictModel):
+    """灰度阶梯中的一档。ratio 为该档的放量比例（0..1）。"""
+
+    name: str = Field(min_length=1)
+    ratio: float = Field(ge=0.0, le=1.0)
+    gate: str | None = Field(default=None, description="进入下一档的前置条件")
+
+
+class DecisionRollout(StrictModel):
+    """放量阶梯与现实反馈——「怎么落地、落地后现实怎么说」。
+
+    企业语义：试点 → 分批 → 全量。它是 ⇄GRF 的输入。
+    注意并非所有决策都有阶梯：一次性决策（批准/否决一笔预算）本来就没有，
+    此时不声明本字段，GRF 也就不会去报一个假阳性。
+    """
+
+    stages: list[RolloutStage] = Field(default_factory=list)
+    current_ratio: float | None = Field(default=None, ge=0.0, le=1.0,
+                                        description="当前放量比例")
+    feedback: dict[str, str] = Field(
+        default_factory=dict,
+        description="现实反馈：假设（或前置因）-> 观测结论",
+    )
+
+
 class DecisionRequest(StrictModel):
     decision_id: str | None = Field(default=None, pattern=r"^DEC-[0-9A-Za-z_-]+$")
     objective: str = Field(min_length=1)
@@ -239,6 +293,16 @@ class DecisionRequest(StrictModel):
     interaction_declaration: InteractionDeclaration | None = Field(
         default=None,
         description="可选：假设交互声明。不传则为一阶失效（v0.3 行为）。",
+    )
+    origin: DecisionOrigin | None = Field(
+        default=None,
+        description="可选：本次决策的原点事件。声明后 ⊙ORI 算子参与审计；"
+                    "不声明则 ORI 不注册（无法表达 ≠ 真的没有）。",
+    )
+    rollout: DecisionRollout | None = Field(
+        default=None,
+        description="可选：放量阶梯与现实反馈。声明后 ⇄GRF 算子参与审计；"
+                    "一次性决策本就没有阶梯，不声明即不审。",
     )
     metadata: dict[str, Any] = Field(default_factory=dict)
 

@@ -44,7 +44,7 @@ def test_analyze_full_pipeline_seals_report(make_request):
     hub = IntelligentDecisionHub()
     report = hub.analyze(request)
     assert report.hub_run_id.startswith("HUB-")
-    assert report.hub_version == "0.5.0"
+    assert report.hub_version == "0.6.0"
     assert report.decision_record.revision == 1
     assert verify_hub_report(report)
     assert report.algorithm_audit_verified is True
