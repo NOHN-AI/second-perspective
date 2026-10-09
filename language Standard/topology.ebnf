@@ -1,0 +1,295 @@
+(* ==================================================================
+   De-semantic Causal Topology — Formal Grammar
+   Second Perspective Engine · Topology Layer (拓扑层)
+   ------------------------------------------------------------------
+   Version        : 2026.3  — EXTENSION to Language Standard 2026.1
+   Notation       : ISO/IEC 14977 (Extended BNF)
+   Normative ref  : 《SPL因果论 · 无语义拓扑语法规范》
+   Related        : decision.ebnf (upper layer, .spd records)
+   File extension : .tpg
+   ------------------------------------------------------------------
+   DECLARATION OF EXTENSION (语法扩展声明)
+   This grammar does NOT replace decision.ebnf.  The two live on
+   different layers and must not be mixed:
+
+       .spd   upper layer  — Decision / Assumption / Dependency / Branch
+                             describes, for humans, within which boundary
+                             a decision holds.  Carries no execution
+                             semantics (E301-E304 enforced by dsl.py).
+       .tpg   topology     — □ / → / ⦿ plus relative labels △ / ◇.
+                             The compile-level substrate the ten
+                             operators act upon.  No semantics at all.
+
+   Symbols introduced by this extension, beyond the五算子 already
+   mapped in the normative reference:
+       ⊙   origin anchor        (operator ORI)
+       ⊞   topology construction (operator TPG)
+       ⇄   reality feedback     (operator GRF)
+       ↻   spiral superposition (orchestrator spiral)
+       ⊛∞  evolution scan       (orchestrator evolve — proposals only)
+       BFC binary fact check    (operator BFC — letter code, no new glyph;
+                                 deliberately avoids a symbol so that the
+                                 binary verdict never reads as a third value)
+       META meta-causal ledger  (operator META — letter code, for the same
+                                 reason: a ledger of measures must never be
+                                 mistakable for an adjudication)
+
+   CHANGE LOG
+       2026.2  topological substrate: □/→/⦿, relative labels △/◇,
+               operators ⊙ ORI · ⊞ TPG · ⇄ GRF · ↻ spiral · BFC
+       2026.3  axiom 5 made load-bearing:
+                 · edge parameter t — chain-internal time order
+                 · process 4 of parallel checking — time order
+                 · T305 fork · T307 inverted order · T308 unassignable
+                 · meta-causal metrics A6 (narrative entropy) and
+                   A10 (audit entropy) become reportable ledger fields
+                 · evolution rules R-EVO-* (propose, never self-apply)
+
+   DESIGN INVARIANT
+   Symbols carry no semantics; semantics is produced by operators.
+   No field in a .tpg record may express a conclusion, a
+   recommendation, a ranking, a score, or an assigned probability.
+   The labels △ / ◇ are RELATIVE and MUST NOT participate in
+   adjudication — they exist for output mapping only.
+   ================================================================== *)
+
+
+(* ==================================================================
+   1. DOCUMENT — top-level shape and block ordering
+   ------------------------------------------------------------------
+   Exactly one origin, at least one node, at least one edge,
+   zero or more axioms.
+   Block order is normative: Origin < Node < Edge < Axiom.
+   Comment lines may appear anywhere.
+   ================================================================== *)
+
+topology        = { comment } , origin_block ,
+                  { comment } , nodes_block ,
+                  { comment } , edges_block ,
+                  { comment } , [ axioms_block ] ,
+                  { comment } ;
+
+origin_block    = "Origin" , colon , text ;
+
+nodes_block     = node , { { comment } , node } ;
+
+edges_block     = edge , { { comment } , edge } ;
+
+axioms_block    = axiom , { { comment } , axiom } ;
+
+
+(* ==================================================================
+   2. CORE PRODUCTIONS
+   ------------------------------------------------------------------
+   origin  — the first origin event: the chain has no beginning
+             without it; every later node owes its order to it.
+   node    — □ an entity node.  No intrinsic attribute whatsoever.
+             Delete every incident edge and the node disappears.
+   edge    — → a causal directed edge with optional constraint
+             parameters.  Direction determines the relative labels.
+   axiom   — ⦿ a global constraint.  Immutable, globally in force.
+   ================================================================== *)
+
+node            = "Node" , space , id , [ colon , text ] ;
+
+edge            = "Edge" , colon , space , id , space , arrow , space , id ,
+                  [ params ] ;
+
+axiom           = "Axiom" , space , id , colon , kind , [ params ] ;
+
+params          = space , "[" , param , { comma , param } , "]" ;
+
+param           = ( "w" | "weight" )     , eq , number
+                | ( "v" | "validity" )   , eq , text
+                | ( "f" | "falsifiable" ), eq , boolean
+                | ( "d" | "delta" )      , eq , text
+                | ( "t" | "time" )       , eq , integer ;
+
+(* --- t : chain-internal time order (axiom 5) -----------------------
+   Optional.  Absent means "not declared", and the engine then derives
+   the order by longest path — a pure function of the structure, so
+   omitting t never changes a topology fingerprint.
+
+   When declared it MUST satisfy   t(src) <= t < t(dst)  :
+   a preceding cause precedes its succeeding effect.  A declared value
+   violating this range is T307 (order inverted).
+
+   t is a cardinal, never a timestamp: the grammar has no clock.
+   Time here is "the order of a chain", not "a moment in the world". *)
+integer         = [ "-" ] , digit , { digit } ;
+
+
+(* ==================================================================
+   3. LEXICAL ELEMENTS
+   ================================================================== *)
+
+(* --- direction: ASCII and the normative Unicode arrow are equal --- *)
+
+arrow           = "->" | "→" ;
+
+(* --- axiom kinds: only three are admitted at this version ------- *)
+(*     weight_range      [lo=0.0, hi=1.0]                           *)
+(*     max_out_degree    [max=4]                                   *)
+(*     required_param    [param=weight]                            *)
+
+kind            = "weight_range" | "max_out_degree" | "required_param" ;
+
+boolean         = "true" | "false" ;
+
+number          = [ "-" ] , digit , { digit } , [ "." , digit , { digit } ] ;
+
+id              = letter , { letter | digit | "_" } ;
+
+text            = { space } , nonspace , { graphic | space } ;
+
+comment         = "#" , { graphic | space } ;
+
+colon           = ":" | "：" ;
+comma           = "," ;
+eq              = "=" ;
+space           = " " ;
+letter          = upper | lower ;
+upper           = ? U+0041 .. U+005A , i.e. "A" to "Z" ? ;
+lower           = ? U+0061 .. U+007A , i.e. "a" to "z" ? ;
+digit           = ? U+0030 .. U+0039 , i.e. "0" to "9" ? ;
+nonspace        = ? any Unicode character except U+0009, U+000A, U+000D, U+0020 ? ;
+graphic         = ? any Unicode character except U+0009, U+000A, U+000D ? ;
+newline         = ? U+000A | U+000D U+000A ? ;
+
+
+(* ==================================================================
+   4. RELATIVE LABELS (advisory surface only, never adjudicated)
+   ------------------------------------------------------------------
+   Theorem of relative labels:
+     1. A node that is ◇ on the chain A→B is △ on the chain B→C.
+        No node owns a label.
+     2. A c↔d double-constraint edge is legal: c and d are each
+        other's assumption and output.
+     3. Labels are stripped before any structural computation;
+        removing them changes no result.
+   ================================================================== *)
+
+upstream_label   = "△" | "@in" ;
+downstream_label = "◇" | "@out" ;
+
+
+(* ==================================================================
+   5. CONDITIONAL / SEMANTIC RULES
+   ------------------------------------------------------------------
+   Not expressible in pure EBNF and therefore enforced by the
+   topology validator (inlined in Second Perspective Engine.py,
+   Zone ② — TopologyValidator).  Normative, not
+   advisory.  Severity follows the normative reference:
+   consistency / constraint checks are FATAL (halt the derivation,
+   produce no result); closure and time-order checks are WARNINGS
+   (may be forced through, but the result is void).
+
+   The four processes run in parallel, with no serial waiting.
+   Time order is a process of its own rather than part of closure,
+   because they ask different questions and may fail independently:
+      closure      is the graph self-consistent
+      time order   is this graph still *a chain*
+
+   -- process 1 · consistency (FATAL) --
+   T101  node identities MUST be globally unique, and no (src,dst)
+         pair MAY carry two mutually contradictory relations
+   T102  duplicate edges with the same (src,dst,relation) MUST
+         carry identical parameters
+   -- process 2 · constraint satisfaction (FATAL) --
+   T201  every edge weight MUST lie inside the ⦿ weight_range
+   T202  every parameter declared required by ⦿ MUST be present
+   T203  out-degree MUST NOT exceed the ⦿ max_out_degree
+   -- process 3 · closure (WARNING, result void) --
+   T301  every edge endpoint MUST be a declared node
+   T302  every declared node SHOULD be touched by at least one edge
+   T303  the directed graph MUST be acyclic — a cycle A→B→C→¬A is
+         a causal paradox, for time order is absolute and chains
+         cannot fold back onto themselves
+   -- layer rule (operator level, not grammar level) --
+   R-ORIGIN  the origin MUST NOT drift across spiral layers
+   R-STACK   the frozen subgraph MUST grow monotonically: a node
+             declared converged may not vanish in a later layer
+   -- binary fact check (operator level, not grammar level) --
+   R-FACT-1  every fact under check MUST carry both a claim and evidence;
+             an evidence vacuum halts the derivation
+   R-FACT-2  mutually negating evidence on one claim halts the derivation;
+             the layer does not pick a side
+   R-FACT-3  a claim already verified false MUST NOT remain in the
+             assumption set
+   R-FACT-4  the layer admits true or false ONLY.  A claim whose truth
+             value is not declared yields a status (VERDICT_UNDECLARED),
+             never a third truth value — "unknown" is not an answer
+   -- process 4 · time order (WARNING, result void; axiom 5) --
+   T305  one (src,dst) pair MUST NOT be declared more than once.
+         "Parallel" is several chains each ordered on its own;
+         "branch" is one chain splitting its future, and SPL is
+         strongly deterministic — it admits the former only
+   T307  a declared t MUST lie in [ t(src), t(dst) - 1 ] :
+         a preceding cause precedes its succeeding effect
+   T308  a monotone assignment MUST exist.  A directed cycle leaves
+         the order unassignable, and without order there is no chain
+   NOTE  multiple roots are LEGAL — that IS "parallel".  Only a
+         repeated (src,dst) pair is a violation, never a wide fan-out.
+   -- meta-causal ledger (operator META · T2 — never blocking) --
+   A6    narrative entropy = masked characters / total characters.
+         A rational number, never a probability.  It measures the
+         degree of occlusion, nothing else: 「随机」不在混沌之中，
+         只在观测者的知识缺口之中 — attributing an unresolved
+         antecedent to chance is the error this metric exposes
+   A10   audit entropy = provenance entries per layer, the discrete
+         form of d(version)/dt.  A bounded A10 is the arithmetic
+         precondition for evolution to converge to S* (天道)
+   R-META-1  META MUST NOT block.  A measure is not a missing input,
+             and only missing inputs halt a derivation (I-1 非猜测)
+   -- evolution (orchestrator evolve · never self-applying) --
+   R-EVO-1  evolve() MAY emit proposals; it MUST NOT apply them.
+            Three identities, invariantly:
+                applies_automatically = false
+                requires_human         = true
+                auto_applied           = 0
+   R-EVO-2  any change to the operator set requires an explicit,
+            named human approval.  That approval is RECORDED, and the
+            engine's adjudication rules are NOT modified by it:
+            applied_to_code = false, requires_code_change = true
+   R-EVO-3  the lineage (generation · operator-set hash · pipeline
+            order) MUST be carried by the report and the chain, so
+            that an older generation's chain root stays recomputable.
+            This is precisely why evolution and reproducibility can
+            coexist instead of excluding each other
+   R-EVO-4  halting is the minimal fixed point g_{n+1} == g_n
+            (graph isomorphism), not "the budget ran out"
+   ================================================================== *)
+
+
+(* ==================================================================
+   6. WORKED EXAMPLE — .tpg
+   ------------------------------------------------------------------
+Origin: 2026Q1 试点立项
+
+Node: n0
+Node: nD
+Node: nQ
+Node: nA1
+Node: nA2
+
+Edge: n0 -> nD [w=1.0]
+Edge: nD -> nQ [w=1.0 t=1]
+Edge: nA1 -> nD [f=false]
+Edge: nA2 -> nD [f=false]
+
+Axiom: w1: weight_range [lo=0.0, hi=1.0]
+Axiom: d1: max_out_degree [max=4]
+
+   (Validated output: ✅ consistency · ✅ constraint · ✅ closure
+    · ✅ time_order.
+    Derived order by longest path: n0=0, nA1=0, nA2=0, nD=1, nQ=2.
+    Roots {n0, nA1, nA2} = three chains running in parallel — legal.
+    Writing n0 -> nD twice would emit T305 (fork).
+    Writing n0 -> nD -> n0 would emit T303 and leave the order
+    unassignable (T308); the same graph written nA1 → nD → n0 as a
+    cycle would do the same.)
+   ================================================================== *)
+
+(* ==================================================================
+   END OF GRAMMAR — Topology Layer 2026.3
+   ================================================================== *)

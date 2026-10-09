@@ -6,7 +6,7 @@
 </p>
 
 <blockquote align="center">
-  <em>Global Cognitive Audit Engine (GCAE) · Second-Perspective Language</em>
+  <em>Global Cognitive Audit Engine (GCAE) · Second Perspective Engine 1.0 · Second-Perspective Language</em>
 </blockquote>
 
 <p align="center">
@@ -49,33 +49,49 @@ The deposit — report, Markdown source, verification log, and the complete sour
 flowchart TB
     IN["💬 Input — a decision you are about to make<br/>described in your own words · no model code changes"]
 
-    E1["🧠 Cognitive Audit Engine.py · ResponsibilityAccount<br/>anchor organisation / role / stage"]
-    E2["⚙️ AuditConfigLoader → load_core_plugins()<br/>load allowed stages + disclaimer,<br/>then register the five operators"]
+    E1["🧠 Second Perspective Engine.py · ResponsibilityAccount<br/>anchor organisation / role / stage"]
+    E2["⚙️ AuditConfigLoader → load_core_plugins()<br/>load allowed stages + disclaimer,<br/>then register the ten operators"]
 
-    A1["① plugins/ns.py<br/>Narrative Stripping — delete rhetoric, keep the logical core"]
-    A2["② plugins/iap.py<br/>Implicit Assumption — surface undeclared premises and privilege bypass"]
-    A3["③ plugins/lch.py<br/>Fragility Latch — score each assumption's collapse risk ΔD"]
-    A4["④ plugins/ccs.py<br/>Causal Chain Sync — reverse check · counterfactual · black-hole detection"]
-    A5["⑤ plugins/state.py<br/>State Anchoring — pin responsibility + seal a SHA-256 certificate"]
+    A0["⊙ Zone ③ · ORI<br/>Origin Anchor — origin event · target state · energy constraints"]
+    A1["⊗ Zone ③ · NS<br/>Narrative Stripping — delete rhetoric, keep the logical core"]
+    A2["⊕ Zone ③ · IAP<br/>Implicit Assumption — surface undeclared premises and privilege bypass"]
+    A3["⊿ Zone ③ · LCH<br/>Fragility Latch — score each assumption's collapse risk ΔD"]
+    A6["⊞ Zone ③ · TPG<br/>Rule-Free Thinking Topology — build □/→/⦿ + four parallel checks"]
+    A8["BFC Zone ③ · BFC<br/>Binary Fact Check — reduce a claim to true/false, never a third value"]
+    A4["⚙️ Zone ③ · CCS<br/>Causal Chain Sync — reverse check · counterfactual · black-hole detection"]
+    A7["⇄ Zone ③ · GRF<br/>Gray Feedback — rollout ladder + reality falsification alignment"]
+    A9["META Zone ③ · META<br/>Meta-Causal Ledger — chaos / wuji / illusion A6 / tiandao A10 / lunhui (measures only, never blocks)"]
+    A5["⊚ Zone ③ · STATE<br/>State Anchoring — pin responsibility + seal a SHA-256 certificate"]
 
-    R["🧾 plugins/report.py<br/>render the bilingual report"]
-    RC["🔁 engine.reconstruct(delta_vars = …)<br/>inject declared corrections and test convergence"]
+    R["🧾 Zone ⑤ · ReportRenderer<br/>render the bilingual report"]
+    RC["↻ engine.spiral(approved_deltas = …)<br/>superimposed spiral: freeze converged subgraph + detect origin drift"]
+    RC2["⊛ engine.reconstruct(delta_vars = …)<br/>linear reconstruction (single layer, overwrite, v1-compatible)"]
+    RC3["⊛∞ engine.evolve(…)<br/>autonomous evolution: emit proposals for discovered gaps,<br/>never rewrite its own adjudication rules"]
 
-    SIDE["Optional side tools<br/>language Standard/dsl.py + decision.ebnf — .spd structural checks<br/>llm_adapters/openai_adapter.py — narration only, off by default"]
+    SIDE["Optional side tools<br/>language Standard/dsl.py + decision.ebnf + topology.ebnf — .spd / .tpg checks (the only toolchain outside the engine)"]
 
     OUT["📄 Output — structural verdict + audit certificate<br/>no advice · no ranking · no score"]
     HUMAN["👤 You still decide — the engine never decides for you"]
 
     IN --> E1
     E1 --> E2
-    E2 --> A1
+    E2 --> A0
+    A0 --> A1
     A1 --> A2
     A2 --> A3
-    A3 --> A4
-    A4 --> A5
+    A3 --> A6
+    A6 --> A8
+    A8 --> A4
+    A4 --> A7
+    A7 --> A9
+    A9 --> A5
     A5 --> R
     R --> RC
+    R --> RC2
+    R --> RC3
     RC --> OUT
+    RC2 --> OUT
+    RC3 --> OUT
     OUT --> HUMAN
     A5 -.-> SIDE
 
@@ -85,8 +101,8 @@ flowchart TB
     classDef cSide fill:#F3E8FD,stroke:#8E44AD,stroke-width:1px,color:#4A235A
     classDef cOut fill:#E6F4EA,stroke:#34A853,stroke-width:1px,color:#14512B
     class IN cIn
-    class E1,E2,R,RC cEng
-    class A1,A2,A3,A4,A5 cOp
+    class E1,E2,R,RC,RC2,RC3 cEng
+    class A0,A1,A2,A3,A4,A5,A6,A7,A8,A9 cOp
     class SIDE cSide
     class OUT,HUMAN cOut
 ```
@@ -94,8 +110,9 @@ flowchart TB
 **How to read it**
 
 1. **Top to bottom is one audit run.** Your own description goes in; a structural verdict plus a certificate comes out — nothing else.
-2. **Every step names the module that does it** (`plugins/ns.py` … `plugins/state.py`), so you can read the diagram and the source side by side. The five operators always run in this fixed order.
-3. **The output is deliberately modest, and the side tools are optional.** No advice, no ranking, no score — and the DSL checker and the LLM narration adapter sit outside the main chain; the narration adapter is off by default and can never change a verdict.
+2. **Every step names the operator that does it** (Zone ③, `ORI` through `STATE`), so you can read the diagram and the source side by side. The ten operators always run in the order fixed by `PIPELINE_ORDER`. `META` sits between `GRF` and `STATE`: it needs all four upstream results before it can settle the five meta-bases.
+3. **Three exits, and their semantics never interfere.** `spiral()` superimposes layers, freezes the converged subgraph and detects origin drift; `reconstruct()` keeps the v1 linear overwrite semantics; `evolve()` only emits proposals and bumps the generation — it **never touches the adjudication rules**.
+4. **The output is deliberately modest, and the side tools are optional.** No advice, no ranking, no score — the `.spd` / `.tpg` checker sits outside the engine, and the narration layer is off by default and can never change a verdict.
 
 📖 Every term explained in one plain sentence → [Glossary](./GLOSSARY.md)
 
@@ -103,7 +120,7 @@ flowchart TB
 
 <div style="max-width:880px;margin:0 auto;padding:0 16px">
 
-Experience the full five-operator causal audit pipeline directly in your browser — zero installation, zero upload, fully deterministic:
+Experience the full causal audit pipeline directly in your browser — zero installation, zero upload, fully deterministic:
 
 🌐 **Live demo**: [https://nohnlins.com/audit/](https://nohnlins.com/audit/)
 
@@ -113,21 +130,184 @@ Experience the full five-operator causal audit pipeline directly in your browser
 
 <p align="center">— ✦ —</p>
 
-## ✦ Five Operators
+## ✦ Ten Operators
 
 <div style="max-width:880px;margin:0 auto;padding:0 16px">
 
-Each operator ships as a plugin under `plugins/`:
+All ten operators are inlined in **Zone ③** of the engine — there is no `plugins/` package
+in this repository. The first five carry over from Standard 2026.1; the next four are the
+2026.2 topology layer; the last one, META, is the **2026.3 meta-causal layer** —
+an explicit **grammar extension 2026.3**, declared in `language Standard/topology.ebnf`:
 
-| Operator | Plugin | Description |
+| Operator | Symbol | Class in engine | Description |
+|---|---|---|---|
+| Origin Anchor (ORI) | ⊙ | `OriginAnchorPlugin` | Anchor origin event / target state / energy constraints; an origin vacuum blocks |
+| Narrative Stripping (NS) | ⊗ | `NarrativeStripPlugin` | Strip rhetoric, emotion, and vague quantifiers; extract the logical core |
+| Implicit Assumption (IAP) | ⊕ | `ImplicitAssumptionPlugin` | Reveal hidden assumptions, privilege bypass, and circular reasoning |
+| Fragility Latch (LCH) | ⊿ | `FragilityLatchPlugin` | Compute the ΔD collapse probability of each assumption; find the most fragile variable |
+| Rule-Free Thinking Topology (TPG) | ⊞ | `TopologyGraphPlugin` | Build the de-semantic □/→/⦿ topology; run **four** parallel checks |
+| Binary Fact Check (BFC) | — (letter code) | `BinaryFactCheckPlugin` | Reduce a claim to **true / false**; an evidence vacuum or contradiction blocks, never a third value |
+| Causal Chain Sync (CCS) | ⚙ | `CausalChainSyncPlugin` | Reverse verification + counterfactual validation + black-hole detection |
+| Gray Feedback (GRF) | ⇄ | `GrayFeedbackPlugin` | Rollout ladder + reality falsification alignment; falsified with no branch blocks |
+| Meta-Causal Ledger (META) | — (letter code) | `MetaCausalLedgerPlugin` | Chaos / Wuji / Illusion A6 / Tiandao A10 / Lunhui — five meta-bases as ledgers; **never blocks** |
+| State Anchoring (STATE) | ⊚ | `StateAnchorPlugin` | Responsibility anchoring + SHA-256 audit certificate |
+
+**Why META gets a letter code and not a glyph**: it is a **ledger of measures**, placed on the
+`T2_SIGNAL` tier, so it is structurally incapable of flipping a verdict. Giving it a symbol like
+⦿ would suggest a new axiom. A number that looks bad and an input that is missing are two
+different things — only the latter halts a derivation.
+
+**How BFC differs from GRF** (both ask about falsification, but not the same question):
+
+| Module | Question | Layer |
 |---|---|---|
-| Narrative Stripping (NS) | `plugins/ns.py` | Strip rhetoric, emotion, and vague quantifiers; extract the logical core |
-| Implicit Assumption Perspective (IAP) | `plugins/iap.py` | Reveal hidden assumptions, privilege bypass, and circular reasoning |
-| Fragility Latch (LCH) | `plugins/lch.py` | Compute the ΔD collapse probability of each assumption; find the most fragile variable |
-| Causal Chain Synchronization (CCS) | `plugins/ccs.py` | Reverse verification + counterfactual validation + black-hole detection |
-| State Anchoring (STATE) | `plugins/state.py` | Responsibility anchoring + SHA-256 audit certificate |
+| ⇄ GRF | Reality fed back — does the **structure have a fallback path ΔD**? | behaviour |
+| BFC | Does this claim **have evidence, do the sources contradict, what is the verdict**? | cognition |
+
+BFC is **off by default**: without `facts` it passes through untouched (`status = SKIPPED`), so
+existing verdicts and chain roots do not move. It admits exactly two truth values —
+`binary=None` means "not declared", always accompanied by a `VERDICT_UNDECLARED` signal and
+never counted as a third truth value in any decision.
+
+### Topology symbols (de-semantic)
+
+A symbol carries no semantics; semantics is produced when operators act on it.
+The labels △/◇ are **relative** and never take part in adjudication.
+
+| Symbol | Topological meaning | Constraint |
+|---|---|---|
+| `□` | entity node | no intrinsic attribute; vanishes once every incident edge is deleted |
+| `→` | causal directed edge | may carry `weight` / `validity` parameters |
+| `t` | chain-internal time order (axiom 5) | optional; when absent it is derived by **longest path**. A declared value must lie in `[t(src), t(dst)-1]` |
+| `⦿` | global axiom constraint | immutable, globally in force |
+| `△` | upstream node (relative label) | a falsifiable input assumption to its downstream |
+| `◇` | downstream node (relative label) | an untamperable output decision to its upstream |
+
+`t` is not a timestamp; it is "which link of this chain". Normative axiom 5 makes time a
+**constitutive condition** rather than a detachable field: "without this premise, the very concept
+of a *chain* cannot stand". So multiple roots (parallel chains) are **legal**; the same ordered pair
+declared twice (a fork) is **not**; and a directed cycle leaves the order unassignable, so the chain
+does not stand at all.
+
+### Four parallel checks
+
+| Check | Rule | Severity |
+|---|---|---|
+| consistency | node identities globally unique; no self-contradictory edge definition | **fatal** — halts the derivation |
+| constraint | every edge parameter satisfies ⦿, nothing out of range | **fatal** — halts the derivation |
+| closure | no dangling node/edge, no causal paradox (self-loops included) | warning — may be forced through, but the **result is void** |
+| time_order | no fork (T305), order not inverted (T307), order assignable (T308) | warning — may be forced through, but the **result is void** |
+
+Time order is a process of its own rather than part of closure, because the questions differ:
+closure asks *is the graph self-consistent*, time order asks *is this graph still a chain*.
+They can fail independently, and merging them would bury one real question.
+
+### The meta-causal ledger (chaos · wuji · illusion · tiandao · lunhui)
+
+The five meta-bases of the normative reference's clause 6 become five computable ledgers.
+They measure; they never adjudicate:
+
+| Meta-base | Realised as | Criterion |
+|---|---|---|
+| chaos (混沌) | gap ledger `chaos_gaps` | "Chance" is not in chaos, **only in the observer's knowledge gap**. Calling an unresolved antecedent "luck" raises high risk |
+| wuji (无极) | parallel chains | Parallel (many roots) is legal; a fork (one pair, many edges) is not. The limit converges uniquely: S∞ = S* |
+| illusion (虚幻) | **A6 narrative entropy** | masked chars / total chars — a rational, never a probability. The reality face (⇄GRF) is recorded alongside it |
+| tiandao (天道) | **A10 audit entropy** | provenance entries per layer (discrete d(version)/dt). A **bounded** A10 is what lets evolution converge to S* |
+| lunhui (轮回) | succession integrity | Not the chain's self-loop but its universal succession: every effect becomes the next cause, order never inverted |
+
+### Orchestration: linear vs spiral vs autonomous evolution
+
+| Entry point | Semantics | Halting criterion |
+|---|---|---|
+| `engine.reconstruct()` | ⊛ linear: each round `ctx.update()` overwrites the previous one | adjacent risk sets identical (fixed point) |
+| `engine.spiral()` | ↻ spiral: freeze the converged subgraph + origin-drift detection + hard energy budget | fixed point **and** no origin drift |
+| `engine.limit_reconstruct()` | ∞ limit: no cap on layer count | distance stays zero across layers → S∞ = S* reached |
+| `engine.evolve()` | ⊛∞ autonomous evolution: **discovers** structural gaps, emits proposals | minimal fixed point `g_{n+1} == g_n` (graph isomorphism) |
+
+**Why `evolve()` refuses to rewrite itself**: the moment an engine can change its own adjudication
+rules, a third party can no longer "recompute the same root from the same code" — the certificate
+degrades into a self-signed sheet of paper. Three identities are therefore hard-coded into the
+return value: `applies_automatically = False` · `requires_human = True` · `auto_applied = 0`.
+Human adjudication goes through `approve_evolution_proposal()`, which **only keeps the books
+(bumps the generation)** and returns `applied_to_code = False` — changing code is a human's job.
 
 </div>
+
+<p align="center">— ✦ —</p>
+
+## ✦ ∞ Infinite Causal Reconstruction
+
+`limit_reconstruct()` is the implementation of "infinite causal reconstruction": **no ceiling on
+the number of layers**, stopping only on semantic criteria.
+
+| Criterion | Meaning |
+|---|---|
+| `LIMIT_REACHED` | distance is `(0,0)` for `limit_layers` consecutive layers → the limit **S∞ = S\*** is reached (normative "Wuji") |
+| `FLAT_SPIRAL` | radius unchanged for three consecutive layers → sealed in place |
+| `NOT_MONOTONE` | distance non-strictly-decreasing for `plateau_layers+1` layers → no longer approaching |
+| `ORIGIN_DRIFT` · `SUPERPOSITION_VIOLATION` · `BUDGET_EXHAUSTED` · `AWAITING_HUMAN` | carried over |
+
+**Distance** `distance = (risk-set size, has unresolved assumptions)`, compared lexicographically —
+a purely structural quantity with no weight estimate, so it recomputes in another process.
+
+**Two non-negotiables**
+
+1. **Infinite must be bounded**: at least one of `energy_budget` / `max_loops` is required, otherwise
+   `ValueError`. This is not a denial of "infinite" but its precondition (Samsara: energy is
+   conserved) — unbounded with no energy constraint is not infinite, it is out of control.
+2. **The engine never invents its own corrections**: when corrections run out it returns
+   `AWAITING_HUMAN` and hands control back. To continue, advance one layer at a time:
+
+```python
+state = None
+while True:
+    step = engine.spiral_step(ctx, delta=next_delta(), state=state)   # the outside decides
+    state = step["spiral_state"]
+    if not step["can_continue"]:
+        break        # stopped by LIMIT_REACHED / FLAT_SPIRAL / NOT_MONOTONE, ...
+```
+
+Chaining the two is what "infinite causal reconstruction" means here: **the engine computes and
+adjudicates; the outside decides the corrections.** If the engine drove itself it would be inventing
+ΔD — that is recommendation generation, and it is out of bounds.
+
+<p align="center">— ✦ —</p>
+
+## ✦ The Single Extension Seam
+
+The engine exposes exactly **one** extension API — `register_operator()`. Not a plugin
+ecosystem: one seam, with gates.
+
+```python
+engine.register_operator(
+    name="AUDIT_X",                  # ASCII identifier; must not collide with the official ten
+    tier=PluginTier.T2_SIGNAL,       # T2 / T3 only — an external operator may never block
+    analyze=fn,                      # the one contract: Dict -> Dict
+    description="...",
+    after="TPG",                     # required: which operator to run after; no default slot
+)
+```
+
+**Four gates** (any failure raises `ValueError` and leaves **no side effect**):
+
+| Gate | Rule |
+|---|---|
+| Name | must be an ASCII identifier, and must not collide with the official ten or any registered operator |
+| Tier | must be a `PluginTier` member, and only `T2_SIGNAL` / `T3_NARRATIVE` — **an external operator may never emit `BLOCKED`**; external logic may not change "whether it passes" |
+| Ordering | `after` is required and must name a registered operator — explicit placement, no default |
+| Choke point | all gates run inside `_register()`, so **no entry path can bypass them** |
+
+**One trace**: `report['operator_manifest']` records `order / name / tier / origin / registered_after`
+for every operator and takes part in `report_hash`; the chain event additionally carries
+`operator_set_hash` (derived from name + tier + order only, so it can be recomputed in another
+process or another language). That is what makes "which operator set produced this chain root"
+independently verifiable — if the manifest were not hashed, anyone could swap the operator set
+while keeping the old claim, and the trace would be decoration.
+
+**Intended for**: porting (SPL-G1 / other languages), teaching, controlled comparisons
+(e.g. five operators vs ten).
+**Not for**: domain rules — those belong to the caller, expressed via `facts` / `assumptions` /
+`criteria` / `feedback`. The engine stays decision-agnostic.
 
 <p align="center">— ✦ —</p>
 
@@ -175,12 +355,12 @@ git clone https://github.com/nohn3043-arch/second-perspective.git
 # git clone https://gitee.com/nohn-ecosystem/second-perspective.git
 cd second-perspective
 # Core is zero-dependency (Python 3.10+ stdlib only; no pip install needed)
-# Optional: pip install -r requirements-openai.txt   # OpenAI narrative adapter
+# The narration layer is built in (OpenAIProvider, T3-only, guardrailed) — nothing to install
 
-# 1) Five-operator end-to-end demo
-python demo_audit.py
+# 1) Ten-operator + superimposed-spiral end-to-end demo
+python "Second Perspective Engine.py"
 
-# 2) Independent verification suite (zero-dependency, 11 checks, CI-friendly exit code)
+# 2) Independent verification suite (zero-dependency, 18 checks, CI-friendly exit code)
 python verify.py
 python verify.py --root    # print only the chain root, for cross-machine comparison
 
@@ -198,45 +378,99 @@ The engine file uses space-separated naming by design — load it with `importli
 
 ```python
 import importlib.util
+import sys
 
-spec = importlib.util.spec_from_file_location("ca", "cognitive audit engine.py")
-ca = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(ca)
+spec = importlib.util.spec_from_file_location("spe", "Second Perspective Engine.py")
+spe = importlib.util.module_from_spec(spec)
+sys.modules["spe"] = spe              # dataclasses look up cls.__module__
+spec.loader.exec_module(spe)
 
-account = ca.ResponsibilityAccount(
+account = spe.ResponsibilityAccount(
     organization="audit_team",
     role="third_party_auditor",
     stage="review",
+    owner="zhangsan/emp-888",         # leave empty → RESPONSIBILITY_CLOSURE → BLOCKED
 )
 
-config = ca.AuditConfigLoader.load_from_dict({
+config = spe.AuditConfigLoader.load_from_dict({
     "allowed_stages": ["pre_decision", "in_decision", "post_decision", "review"],
     "disclaimer": "Structural audit only — does not replace human judgment.",
     "custom_fields": {"standard_version": "2026"},
 })
 
-engine = ca.CognitiveAuditEngine(account=account, config=config)
-engine.load_core_plugins()               # Register NS / IAP / LCH / CCS / STATE
+engine = spe.SecondPerspectiveEngine(account=account, config=config)
+engine.load_core_plugins()   # Register the ten operators: ORI / NS / IAP / LCH / TPG / BFC / CCS / GRF / STATE
 
-report = engine.audit(decision_context)  # Static diagnosis
+decision_context = {
+    # ⊙ origin anchor
+    "origin": "2026Q1 pilot kick-off",
+    "goal": "hold ROI at 12% this quarter",
+    "resources": {"compute": {"budget": 100, "committed": 40}},
 
-# Causal reconstruction: inject correction variables and test convergence
-result = engine.reconstruct(decision_context, delta_vars={"assumption_x": False})
+    # upper-layer decision structure (the semantic layer of .spd)
+    "decision": "ship S1",
+    "assumptions": ["demand stable", "cost controllable"],
+    "outcome": "ROI reaches 12%",
+    "dependencies": {"demand stable": ["cost controllable"]},
+    "branches": [
+        {"assumption": "demand stable", "delta_d": "downgrade to a single-point PoC"},
+        {"assumption": "cost controllable", "delta_d": "raise the resource ceiling"},
+    ],
+
+    # BFC binary fact check (omitting `facts` disables the whole block — verdicts and roots untouched)
+    "facts": [
+        {"id": "F1", "claim": "demand stable", "evidence": ["doc#123"]},
+        {"id": "F2", "claim": "cost controllable", "evidence": ["doc#456"]},
+    ],
+    "observations": {"F1": True, "F2": False},   # truth may only be declared outside; BFC never infers
+
+    # ⇄ gray rollout + reality feedback
+    "gray_levels": [0.01, 0.05, 0.25, 1.0],
+    "commit_ratio": 0.05,
+    "feedback": {"demand stable": "confirmed", "cost controllable": "unobserved"},
+}
+
+report = engine.audit(decision_context)        # single-layer static audit (ten operators)
+print(report["topology"]["graph_hash"])        # ⊞ pure structural fingerprint (labels excluded)
+print(report["origin_anchor"]["origin_hash"])  # ⊙ origin fingerprint (drives drift detection)
+print(report["fact_check"]["status"])          # BFC: VERIFIED / EVIDENCE_VACUUM / …
+
+# ↻ superimposed spiral: freeze the converged subgraph layer by layer,
+#    detect origin drift, hard-capped by the energy budget
+spiral = engine.spiral(
+    decision_context=decision_context,
+    approved_deltas=[{"feedback": {"cost controllable": "confirmed"}}],
+    max_loops=8,
+    energy_budget=5.0,
+)
+print(spiral["verdict"], spiral["spiral"]["radius_trend"])
+
+# ⊛ linear reconstruction is still available (v1 overwrite semantics: no freezing, no drift check)
+linear = engine.reconstruct(decision_context, delta_vars={"commit_ratio": 0.25})
 ```
 
-The five operators can also be imported directly as plugins:
+Existing callers need no changes — `CognitiveAuditEngine` is kept as an alias of `SecondPerspectiveEngine`.
+
+The ten operators, the topology substrate and the spiral stack are all classes inside the
+engine module — take them straight from it, with no package to import:
 
 ```python
-from plugins import (
-    NarrativeStripPlugin,
-    ImplicitAssumptionPlugin,
-    FragilityLatchPlugin,
-    CausalChainSyncPlugin,
-    StateAnchorPlugin,
-)
+# Everything is inlined in Second Perspective Engine.py, arranged by zone:
+#   Zone ②  topology   TopologyGraph · TopologyValidator · TopoEdge · Constraint
+#   Zone ③  operators  OriginAnchorPlugin / NarrativeStripPlugin / ImplicitAssumptionPlugin
+#                      FragilityLatchPlugin / TopologyGraphPlugin / BinaryFactCheckPlugin
+#                      CausalChainSyncPlugin / GrayFeedbackPlugin / StateAnchorPlugin
+#   Zone ④  orch.      SpiralStack · SpiralLayer
+#   Zone ⑤  views      ReportRenderer · PlainLanguageRenderer
+renderer = spe.ReportRenderer()
+plain = spe.PlainLanguageRenderer()
+stack = spe.SpiralStack(energy_budget=5.0)
 ```
 
-The optional narrative generation adapter is at [`llm_adapters/openai_adapter.py`](llm_adapters/openai_adapter.py).
+The narration layer is **built into the engine** (`OpenAIProvider`, zero-dependency, T3 narrative
+permission only, subject to the `FORBIDDEN_LLM_KEYS` guardrail). There is deliberately no external
+adapter: an adapter sitting outside the engine can emit recommendations and bypass the guardrail,
+which the standard forbids (`E302`, `E304`).
 
 </div>
 
@@ -246,32 +480,35 @@ The optional narrative generation adapter is at [`llm_adapters/openai_adapter.py
 
 ```
 second-perspective/
-├── Cognitive Audit Engine.py      # Core engine (space-separated naming by design)
-├── demo_audit.py                  # Five-operator end-to-end demo
-├── verify.py                      # Independent verification suite (11 checks, zero-dep)
+├── Second Perspective Engine.py   # Sole engine: ten operators + topology + spiral + renderers (one file)
+├── demo_audit.py                  # End-to-end demo (same engine)
+├── verify.py                      # Independent verification suite (18 checks, zero-dep)
+├── verify_convergence_fix.py      # Convergence-logic regression (S1–S6)
+├── case_memo_audit.py             # Case audit: investment decision memo
+├── case_strategy_audit.py         # Case audit: three-year strategy plan
 ├── TESTING.md                     # Self-verification & evaluation-design guide (single entry)
 ├── TESTING-zh.md                  # Chinese edition of the guide
-├── plugins/                       # Five operators as plugins
-│   ├── ns.py                      #   Narrative Stripping
-│   ├── iap.py                     #   Implicit Assumption Perspective
-│   ├── lch.py                     #   Fragility Latch
-│   ├── ccs.py                     #   Causal Chain Synchronization
-│   ├── state.py                   #   State Anchoring
-│   └── report.py                  #   Bilingual report renderer
-├── language Standard/             # Language Standard 2026
+├── language Standard/             # Language Standard 2026 (the only toolchain outside the engine)
 │   ├── 2026.md                    #   Normative standard (natural language)
 │   ├── grammar.md                 #   Grammar specification (English)
 │   ├── grammar-zh.md              #   Grammar specification (Chinese edition)
-│   ├── decision.ebnf              #   Formal grammar (ISO/IEC 14977 EBNF)
+│   ├── decision.ebnf              #   Upper-layer grammar .spd (ISO/IEC 14977 EBNF)
+│   ├── topology.ebnf              #   Topology-layer grammar .tpg (extension 2026.2)
 │   ├── dsl.py                     #   Validator + generator, zero-dependency CLI
 │   └── examples/                  #   .spd samples (valid / invalid / generated, EN + ZH)
 ├── 全新决策结构语言.md            # One-page decision-structure language overview
-├── docs/COMPLIANCE_SHANGHAI.md    # Shanghai compliance note
-├── llm_adapters/openai_adapter.py # Optional OpenAI narrative adapter
-├── IMDA_AI_Verify_Causal_Audit_Report.pdf
-├── requirements.txt · requirements-openai.txt
+├── docs/                          # IMDA report · Zenodo deposit · Shanghai compliance note
+├── logs/                          # Audit logs written by the case scripts
+├── requirements.txt               # Core is zero-dependency; this file is informational only
 └── LICENSE
 ```
+
+**Why one file**: there are only ten operators, and each is a pure structural verdict —
+splitting them into a package added nothing but `import` statements and directory levels.
+Inlined, "zero-dependency" stops being a slogan: copy one file, audit offline, review it
+line by line. Inside, the file is layered into **Zones ①–⑥** (base types / topology
+substrate / ten operators / orchestration / view layer / demo) — top to bottom is the
+dependency direction.
 
 ### Language toolchain
 
@@ -293,6 +530,12 @@ but Chinese `.spd` records are still fully checked. Per the standard's *Constrai
 **rejects** conclusions, recommendations, ranking/scoring and optimisation guidance; the generator
 accordingly emits *form-valid samples only*, never advice.
 
+`topology.ebnf` is a **grammar extension (2026.2)**, not a replacement. The two grammars live on
+different layers: `.spd` describes, for humans, the boundary within which a decision holds; `.tpg`
+is the de-semantic □/→/⦿ substrate the ten operators act upon. The extension declares its own
+symbols (⊙ / ⊞ / ⇄ / ↻) and its own diagnostic codes (`T101`–`T303`), and explicitly forbids mixing
+the two layers.
+
 <p align="center">— ✦ —</p>
 
 ## ✦ Ecosystem
@@ -301,7 +544,7 @@ GCAE is a member of the NOHN AI ecosystem — a family of projects built around 
 
 | Project | Repository | Role |
 |---|---|---|
-| **Second-Perspective (GCAE)** | [nohn3043-arch/second-perspective](https://github.com/nohn3043-arch/second-perspective) | Global cognitive audit engine — five-operator causal audit core (IMDA 95/100) |
+| **Second-Perspective (GCAE)** | [nohn3043-arch/second-perspective](https://github.com/nohn3043-arch/second-perspective) | Global cognitive audit engine — Second Perspective Engine 1.0, ten-operator causal audit core (IMDA 95/100) |
 | **NOMOS** | [nohn3043-arch/second-perspective](https://github.com/nohn3043-arch/second-perspective) (`Intelligent-Decision-Hub--Nomos` branch) | Auditable deterministic decision hub (IMDA 95/100) |
 | **SPL-G1** | [nohn3043-arch/SPL-G1](https://github.com/nohn3043-arch/SPL-G1) | Hardware causal-audit trusted compute unit (TCU) |
 | **SPL-Virtual-World-Base** | [nohn3043-arch/Second-Reality](https://github.com/nohn3043-arch/Second-Reality) | Virtual-world and metaverse infrastructure (Constitution / Law / Bridge) |

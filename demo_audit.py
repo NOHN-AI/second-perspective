@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-SPL Cognitive Audit Engine — 五算子端到端验证 Demo
+第二视角引擎 SPE 1.0 — 九算子端到端验证 Demo
 
 用法:
     python demo_audit.py
@@ -15,12 +15,13 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from importlib import import_module
 
 # 动态导入（文件名有空格，不能正常 import）
-engine_mod = import_module("Cognitive Audit Engine")
+engine_mod = import_module("Second Perspective Engine")
 CognitiveAuditEngine = engine_mod.CognitiveAuditEngine
 ResponsibilityAccount = engine_mod.ResponsibilityAccount
 AuditConfigLoader = engine_mod.AuditConfigLoader
 
-from plugins import ReportRenderer
+# 渲染器已内联进引擎（单文件化），不再有 plugins 包。
+ReportRenderer = engine_mod.ReportRenderer
 
 
 def main():
@@ -38,7 +39,7 @@ def main():
     )
 
     engine = CognitiveAuditEngine(account=account, config=config)
-    # 加载官方五算子插件（引擎负责包装为带权限层级别的 AuditPlugin）
+    # 加载官方九算子插件（引擎负责包装为带权限层级别的 AuditPlugin）
     engine.load_core_plugins()
 
     # ── 测试用例 1: 带叙事粉饰 + 隐假设 + 缺分支响应 ──
