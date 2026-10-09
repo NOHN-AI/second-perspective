@@ -13,7 +13,7 @@
 </blockquote>
 
 <p align="center">
-[English](README.md) | 简体中文
+  <a href="README.md">English</a> | 简体中文
 </p>
 
 <div style="max-width:880px;margin:0 auto;padding:0 16px">
