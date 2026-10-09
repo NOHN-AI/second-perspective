@@ -43,6 +43,40 @@
 
 ---
 
+## ✦ English Glossary
+
+*Every term explained in one plain sentence.*
+
+| Term | Plain meaning |
+|---|---|
+| **NOMOS** | A deterministic decision core that neither guesses nor learns — it offers candidates, never conclusions. |
+| **IMDA AI Verify** | Singapore's official test framework; NOMOS scored 95/100 in the causal-audit track. |
+| **Deterministic** | Same input always gives the same output — no randomness, no learning. |
+| **First-order invalidation** | When an assumption is overturned, the invalidation propagates forward and drops every option that depended on it. |
+| **Second-order interaction** | How assumptions affect each other, instead of treating failures as unrelated independent events. |
+| **Synergy / Redundancy / Amplification** | When several assumptions fail together, the effect can be stronger, weaker, or out of proportion to a simple sum. |
+| **Δ (interaction strength)** | The size of a second-order effect; **it must be declared explicitly by the responsible person** — the engine never estimates or learns it. |
+| **I-1 … I-4** | Four invariants: non-conjecture · order conservation · bounded effect · monotonicity — they keep second-order interaction from running wild. |
+| **Three-layer reconstruction** | Forward failure propagation + backward root-cause tracing + incremental rebuild; one layer per round. |
+| **DeltaVar** | A correction term declared by a human; the engine applies it verbatim and never invents corrections of its own. |
+| **ConvergenceChecker** | Formally decides whether convergence happened, using five states rather than heuristic guessing. |
+| **FIXED_POINT / NO_GAIN** | The two states that count as truly converged. |
+| **BUDGET_EXHAUSTED** | Running out of budget **≠** convergence, and it is never allowed to be reported as such. |
+| **DIVERGED / BLOCKED** | Still changing, or stuck on a structural problem that needs a human to step in. |
+| **P-1 / P-2 / P-3** | Three propositions: termination · fixed point · bounded effect — the mathematical basis behind convergence. |
+| **session_root_hash** | The root that strings a whole session into a hash chain; change a single character and it no longer matches. |
+| **Human gate** | Each round advances exactly one step and stops; a human signature is required to move on. |
+| **LLM Gate (T1/T2/T3)** | Three permission tiers — annotate / propose / narrate; an LLM may never adjudicate, flip a state or change a ranking. |
+| **Provenance-tracked** | Every LLM output carries a provenance mark and has been stripped of structural power. |
+| **Counterfactual re-selection** | Recomputing "what would the result have been if it hadn't been this way". |
+| **Pareto / weight sensitivity** | Finding which metric or weight, when changed, would alter the ranking. |
+| **DecisionRecord** | An append-only decision file that, together with the hash chain, can be independently re-verified. |
+| **Domain control pack** | A pluggable industry rule pack (e.g. financial risk control) — it only observes, never overrules. |
+| **Tenant isolation** | Multi-tenant data is mutually invisible, partitioned by `X-Tenant-Id`. |
+| **KMS signing** | Outputs are stamped with an HMAC-SHA256 signature via KMS to prevent tampering. |
+
+---
+
 <div align="center">
 
 [← 返回 README](./README.md) &nbsp;·&nbsp; [中文说明](./README-zh.md)
