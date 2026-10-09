@@ -41,6 +41,38 @@
 
 ---
 
+## ✦ English Glossary
+
+*Every term explained in one plain sentence.*
+
+| Term | Plain meaning |
+|---|---|
+| **GCAE (Global Cognitive Audit Engine)** | A neutral "decision health check" — it doesn't change your model's code, it audits the structure of your decision. |
+| **Neutral audit** | Bound to no model vendor; it only verifies structure and issues no subjective conclusion. |
+| **Core offline** | The whole audit runs locally with strong determinism; online enhancement is off by default. |
+| **Decision-agnostic** | The engine won't decide for you or suggest optimizations — only structural diagnosis. |
+| **Five Operators** | The five steps of the audit pipeline: NS → IAP → LCH → CCS → STATE. |
+| **Narrative Stripping (NS)** | Strips rhetoric, emotion and vague qualifiers, keeping only the logical backbone. |
+| **Implicit Assumption Perspective (IAP)** | Digs out unstated premises, overreaching assumptions and circular arguments. |
+| **Fragility Latch (LCH)** | Computes a collapse probability ΔD for each assumption to find the most fragile link. |
+| **Causal Chain Synchronization (CCS)** | Backward verification + counterfactual verification + information-black-hole detection. |
+| **State Anchoring (STATE)** | Anchors the responsible party and issues a SHA-256 audit certificate. |
+| **p → Q** | p is the principle / rule / constraint, Q is the result / state; the arrow is a causal link that cannot be bypassed or cut. |
+| **Structural Audit Predicate Φ{f_s, x, y}** | Answers one question only: does this decision structure meet the minimum requirement of rational consistency — yes or no. |
+| **¬A ⇒ ΔD** | A valid decision = decision D × premise A × branch response ΔD; when a core assumption fails, the branch response must fire. |
+| **ΔD** | The magnitude of system change after an assumption fails. |
+| **Information black hole** | A missing mandatory node in the causal chain that makes at least two downstream nodes impossible. |
+| **ResponsibilityAccount** | Anchors every audit conclusion to a specific organization / role / stage. |
+| **Audit certificate** | A SHA-256 hash-chain credential, comparable across machines and independently verifiable. |
+| **Deterministic / seeded** | Same input always gives the same output; even randomness uses a fixed seed. |
+| **Decision Structure Language (`.spd`)** | A structural DSL that only describes the boundaries within which a decision holds; it carries no execution semantics. |
+| **Validator (`dsl.py check`)** | Checks whether a `.spd` record satisfies the grammar and constraints; non-compliant ones are rejected outright. |
+| **Diagnostic codes** | The 19 machine-readable diagnostic numbers. |
+| **IMDA AI Verify** | Singapore's official AI governance framework; this engine scores 95 overall. |
+| **Clean-room declaration** | Without full evidence of independent development, substantial derivative infringement is presumed. |
+
+---
+
 <div align="center">
 
 [← 返回 README](./README.md) &nbsp;·&nbsp; [中文说明](./README-zh.md)
