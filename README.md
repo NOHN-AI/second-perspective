@@ -6,7 +6,7 @@
 </p>
 
 <blockquote align="center">
-  <em>Global Cognitive Audit Engine (GCAE) · Second Perspective Engine 1.1 · Second-Perspective Language</em>
+  <em>Global Cognitive Audit Engine (GCAE) · Second Perspective Engine 1.2 · Second-Perspective Language</em>
 </blockquote>
 
 <p align="center">
@@ -209,11 +209,11 @@ They measure; they never adjudicate:
 
 | Meta-base | Realised as | Criterion |
 |---|---|---|
-| Hundun (混沌) | gap ledger `chaos_gaps` | "Chance" is not in chaos, **only in the observer's knowledge gap**. Calling an unresolved antecedent "luck" raises high risk |
-| Wuji (无极) | parallel chains | Parallel (many roots) is legal; a fork (one pair, many edges) is not. The limit converges uniquely: S∞ = S* |
-| Xuhuan (虚幻) | **A6 narrative entropy** | masked chars / total chars — a rational, never a probability. The reality face (⇄GRF) is recorded alongside it |
-| Tiandao (天道) | **A10 audit entropy** | provenance entries per layer (discrete d(version)/dt). A **bounded** A10 is what lets evolution converge to S* |
-| Lunhui (轮回) | succession integrity | Not the chain's self-loop but its universal succession: every effect becomes the next cause, order never inverted |
+| Hundun (溯源缺口) | gap ledger `chaos_gaps` | "Chance" is not in chaos, **only in the observer's knowledge gap**. Calling an unresolved antecedent "luck" raises high risk |
+| Wuji (并行收敛) | parallel chains | Parallel (many roots) is legal; a fork (one pair, many edges) is not. The limit converges uniquely: S∞ = S* |
+| Xuhuan (叙事遮蔽) | **A6 narrative entropy** | masked chars / total chars — a rational, never a probability. The reality face (⇄GRF) is recorded alongside it |
+| Tiandao (审计有界) | **A10 audit entropy** | provenance entries per layer (discrete d(version)/dt). A **bounded** A10 is what lets evolution converge to S* |
+| Lunhui (因果承接) | succession integrity | Not the chain's self-loop but its universal succession: every effect becomes the next cause, order never inverted |
 
 ### Orchestration: linear vs spiral vs autonomous evolution
 
@@ -407,7 +407,7 @@ cd second-perspective
 # 1) Ten-operator + superimposed-spiral end-to-end demo
 python "Second Perspective Engine.py"
 
-# 2) Independent verification suite (zero-dependency, 18 checks, CI-friendly exit code)
+# 2) Independent verification suite (zero-dependency, 19 checks, CI-friendly exit code)
 python verify.py
 python verify.py --root    # print only the chain root, for cross-machine comparison
 
@@ -446,7 +446,7 @@ config = spe.AuditConfigLoader.load_from_dict({
 })
 
 engine = spe.SecondPerspectiveEngine(account=account, config=config)
-engine.load_core_plugins()   # Register the ten operators: GA / NS / IAP / LCH / LFT / BFC / CCS / GRF / ACC
+engine.load_core_plugins()   # Register the ten operators: GA / NS / IAP / LCH / LFT / BFC / CCS / GRF / META / ACC
 
 decision_context = {
     # ⊙ origin anchor
@@ -529,7 +529,7 @@ which the standard forbids (`E302`, `E304`).
 second-perspective/
 ├── Second Perspective Engine.py   # Sole engine: ten operators + topology + spiral + renderers (one file)
 ├── demo_audit.py                  # End-to-end demo (same engine)
-├── verify.py                      # Independent verification suite (18 checks, zero-dep)
+├── verify.py                      # Independent verification suite (19 checks, zero-dep)
 ├── verify_convergence_fix.py      # Convergence-logic regression (S1–S6)
 ├── case_memo_audit.py             # Case audit: investment decision memo
 ├── case_strategy_audit.py         # Case audit: three-year strategy plan
@@ -568,7 +568,7 @@ verified: **grammar** (`decision.ebnf`) → **validator** (`dsl.py check`) → *
 python "language Standard/dsl.py" check "language Standard/examples/valid_decision.spd"   # PASS, exit 0
 python "language Standard/dsl.py" check "language Standard/examples/invalid_decision.spd" # FAIL, exit 1
 python "language Standard/dsl.py" gen --seed 2026 --count 5 --out samples/ --self-check
-python "language Standard/dsl.py" codes                                                    # 19 diagnostic codes
+python "language Standard/dsl.py" codes                                                    # 20 diagnostic codes
 ```
 
 Zero external dependencies, stdlib only, deterministic (seeded). The validator ships a **bilingual
@@ -591,7 +591,7 @@ GCAE is a member of the NOHN AI ecosystem — a family of projects built around 
 
 | Project | Repository | Role |
 |---|---|---|
-| **Second-Perspective (GCAE)** | [nohn3043-arch/second-perspective](https://github.com/nohn3043-arch/second-perspective) | Global cognitive audit engine — Second Perspective Engine 1.0, ten-operator causal audit core (IMDA 95/100) |
+| **Second-Perspective (GCAE)** | [nohn3043-arch/second-perspective](https://github.com/nohn3043-arch/second-perspective) | Global cognitive audit engine — Second Perspective Engine 1.2, ten-operator causal audit core (IMDA 95/100) |
 | **NOMOS** | [nohn3043-arch/second-perspective](https://github.com/nohn3043-arch/second-perspective) (`Intelligent-Decision-Hub--Nomos` branch) | Auditable deterministic decision hub (IMDA 95/100) |
 | **SPL-G1** | [nohn3043-arch/SPL-G1](https://github.com/nohn3043-arch/SPL-G1) | Hardware causal-audit trusted compute unit (TCU) |
 | **SPL-Virtual-World-Base** | [nohn3043-arch/Second-Reality](https://github.com/nohn3043-arch/Second-Reality) | Virtual-world and metaverse infrastructure (Constitution / Law / Bridge) |

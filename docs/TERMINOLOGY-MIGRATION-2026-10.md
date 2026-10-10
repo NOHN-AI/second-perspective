@@ -27,11 +27,11 @@ Wuji/Tiandao/Lunhui 两套策略并存的内部不一致）：
 
 | 旧 | 新 |
 |---|---|
-| Chaos（混沌） | **Hundun · Unparsed Antecedence**（未解析之因的全体；随机性属于解析度，不属于它） |
-| Illusion（虚幻） | **Xuhuan · Narrative Register**（现实之另一面，叙事事件 N_t 的所在；illusion 自带"假"义，名实不符） |
-| Wuji（无极） | **Wuji · Non-forking Convergence**（多链并行不分支，极限唯一收敛） |
-| Tiandao（天道） | **Tiandao · Neutrality Invariant**（审计中立的本体表述） |
-| Lunhui（轮回） | **Lunhui · Effect-to-Cause Succession**（每个果即刻成因，序不可倒置；弃用 Samsara 宗教义） |
+| Chaos（溯源缺口） | **Hundun · Unparsed Antecedence**（未解析之因的全体；随机性属于解析度，不属于它） |
+| Illusion（叙事遮蔽） | **Xuhuan · Narrative Register**（现实之另一面，叙事事件 N_t 的所在；illusion 自带"假"义，名实不符） |
+| Wuji（并行收敛） | **Wuji · Non-forking Convergence**（多链并行不分支，极限唯一收敛） |
+| Tiandao（审计有界） | **Tiandao · Neutrality Invariant**（审计中立的本体表述） |
+| Lunhui（因果承接） | **Lunhui · Effect-to-Cause Succession**（每个果即刻成因，序不可倒置；弃用 Samsara 宗教义） |
 
 ## 三、概念更名（P2/P3）
 
@@ -111,3 +111,37 @@ Wuji/Tiandao/Lunhui 两套策略并存的内部不一致）：
    非 bug；附录 C 注记由 "under review" 改为 resolved。
 
 验证基准（2026-10-10）：verify.py PASS 18 · FAIL 0 · WARN 1；verify_convergence_fix.py 6/6；demo ✅。
+
+---
+
+## 十、SPE 1.2.1 版本口径修正（2026-10-10 同日）
+
+术语 v2 收尾时发现的**版本口径不一致**的修正，以及由此引发的链根代际更替。
+
+**改了什么**：
+
+1. **证书 note 去硬编码**：证书内 "本证书由第二视角引擎 SPE 1.1 生成…" 硬编码了旧版本号，
+   与实际模块常量 `SPE_VERSION = "1.2.0"` 矛盾。改为引用模块常量：
+   `f"本证书由第二视角引擎 SPE {SPE_VERSION} 生成…"`。
+2. **引擎头注释去硬编码**：文件头 "版本：以模块常量 SPE_VERSION 为准（当前 1.2.0）" → 去掉括注，
+   避免同一文件出现两处版本事实源。
+3. **口径一致性批扫**（README.md / README-zh.md / TESTING.md / TESTING-zh.md /
+   `demo_audit.py` / `requirements.txt`）：算子数 9 → 10（META 已在内核）、
+   检查项 18 → 19、诊断码 19 → 20、横幅与演示标题统一至 1.2 口径。
+
+**链根为什么变**（Lineage 承接，非缺陷）：
+
+证书 note 进入报告 → 报告哈希 `report_hash` 进入 AUDIT 事件 → 链根随代际更替。
+按引擎自身的谱系纪律（"改代码必须由人完成，完成后须重算金标并升 SPE_VERSION"），
+本次同步升版：`SPE_VERSION 1.2.0 → 1.2.1`，并重算全部在库金标：
+
+| 金标 | 旧值（1.2.0 代） | 新值（1.2.1 代） |
+|---|---|---|
+| `verify.py --root` | `aece60f5…` | `ca07e5e4…` |
+| `verify_convergence_fix.py` S3 期望链根 | `2b65ea46…` | `b16ba1be…` |
+
+**同步更新的位置**：`TESTING.md`（--root 预期）· `TESTING-zh.md`（同上）·
+`verify_convergence_fix.py`（`STRATEGY_ROOT_EXPECTED` + 注释）。
+
+**未触碰**：`docs/paper/paper.md` 与 `docs/zenodo/**`（含 paper.html / deposit）——
+其内数字与链根属于论文快照口径，是否同步为 1.2.1 数据由作者单独决定。

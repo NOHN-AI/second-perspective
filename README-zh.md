@@ -6,7 +6,7 @@
 </p>
 
 <blockquote align="center">
-  <em>全局认知审计引擎（GCAE）· 第二视角引擎 1.1 · 第二视角语言</em>
+  <em>全局认知审计引擎（GCAE）· 第二视角引擎 1.2 · 第二视角语言</em>
 </blockquote>
 
 <p align="center">
@@ -60,7 +60,7 @@ flowchart TB
     A8["BFC 分区③ · BFC<br/>二元事实校验 —— 断言归约为真/假，不给第三值"]
     A4["⚙️ 分区③ · CCS<br/>因果链 —— 反向验证 · 反事实 · 查信息黑洞"]
     A7["⇄ 分区③ · GRF<br/>灰度执行与现实反馈 —— 灰度档位 + 证伪对齐"]
-    A9["META 分区③ · META<br/>元因果账本 —— 混沌/无极/虚幻A6/天道A10/轮回（只度量，不阻断）"]
+    A9["META 分区③ · META<br/>元因果账本 —— 溯源缺口/并行收敛/叙事遮蔽A6/审计有界A10/因果承接（只度量，不阻断）"]
     A5["⊚ 分区③ · ACC<br/>责任锚定 —— 挂责任人 + 封 SHA-256 证书"]
 
     R["🧾 分区⑤ · ReportRenderer<br/>渲染中英双语报告"]
@@ -148,7 +148,7 @@ flowchart TB
 | 二元事实校验（BFC） | —（字母编码） | `BinaryFactCheckPlugin` | 断言归约为**真 / 假**；证据真空或互斥即阻断，绝不给第三值 |
 | 链闭合扫描（CCS） | ⚙ | `CausalChainSyncPlugin` | 反向验证 + 反事实校验 + 黑洞检测 |
 | 灰度执行与现实反馈（GRF） | ⇄ | `GrayFeedbackPlugin` | 灰度档位 + 现实证伪对齐；证伪却无回退即阻断 |
-| 元因果账本（META） | —（字母编码） | `MetaCausalLedgerPlugin` | 混沌 / 无极 / 虚幻 A6 / 天道 A10 / 轮回 五条元基落成账本；**永不阻断** |
+| 元因果账本（META） | —（字母编码） | `MetaCausalLedgerPlugin` | 溯源缺口 / 并行收敛 / 叙事遮蔽 A6 / 审计有界 A10 / 因果承接 五条元基落成账本；**永不阻断** |
 | 责任锚定（ACC） | ⊚ | `StateAnchorPlugin` | 责任锚定 + SHA-256 审计证书 |
 
 **META 为什么用字母而不是符号**：它是一本**度量账本**，取 `T2_SIGNAL` 权限层，
@@ -195,17 +195,17 @@ BFC 默认**关闸**：不提供 `facts` 时它原样放行（`status = SKIPPED`
 时序之所以单列而不并入闭合：闭合问「图自洽吗」，时序问「这张图**还成不成立为一条链**」。
 两者可以各自独立失败，合并就会丢掉一个真问题。
 
-### 元因果账本（混沌 · 无极 · 虚幻 · 天道 · 轮回）
+### 元因果账本（溯源缺口 · 并行收敛 · 叙事遮蔽 · 审计有界 · 因果承接）
 
 规范第六条的**元因果基底**在此落成五个可计算的账本。它们只度量、不裁决：
 
 | 元基 | 落地为 | 判据 |
 |---|---|---|
-| 混沌 | 缺口账本 `chaos_gaps` | 「随机」不在混沌之中，**只在观测者的知识缺口之中**。把未解析的前置因说成「看运气」→ 高风险 |
-| 无极 | 多线并行 `parallel_chains` | 平行（多起点）合法；分叉（同一对节点多边）违规。极限处唯一收敛 S∞ = S* |
-| 虚幻 | **A6 叙事熵** | 遮蔽字符 / 总字符 —— 有理数，非概率。同时记录现实面（⇄GRF），一体两面缺一不可 |
-| 天道 | **A10 审计熵增** | 每层留痕条数（version 增速的离散版）；**有界**才使演化收敛于 S* |
-| 轮回 | 承接完整性 | 不是链的自环，而是链的普遍承接：果即刻成因，序不可倒置 |
+| 溯源缺口 | 缺口账本 `chaos_gaps` | 「随机」不在溯源缺口之中，**只在观测者的知识缺口之中**。把未解析的前置因说成「看运气」→ 高风险 |
+| 并行收敛 | 多线并行 `parallel_chains` | 平行（多起点）合法；分叉（同一对节点多边）违规。极限处唯一收敛 S∞ = S* |
+| 叙事遮蔽 | **A6 叙事熵** | 遮蔽字符 / 总字符 —— 有理数，非概率。同时记录现实面（⇄GRF），一体两面缺一不可 |
+| 审计有界 | **A10 审计熵增** | 每层留痕条数（version 增速的离散版）；**有界**才使演化收敛于 S* |
+| 因果承接 | 承接完整性 | 不是链的自环，而是链的普遍承接：果即刻成因，序不可倒置 |
 
 ### 编排层：线性重构 vs 叠加螺旋 vs 自主进化
 
@@ -275,7 +275,7 @@ BFC 默认**关闸**：不提供 `facts` 时它原样放行（`status = SKIPPED`
 
 | 判据 | 含义 |
 |---|---|
-| `LIMIT_REACHED` | 距离连续 `limit_layers` 层为 `(0,0)` → 抵达极限 **S∞ = S\***（规范元因果基底「无极」） |
+| `LIMIT_REACHED` | 距离连续 `limit_layers` 层为 `(0,0)` → 抵达极限 **S∞ = S\***（规范元因果基底「并行收敛」） |
 | `FLAT_SPIRAL` | 半径连续三层纹丝不动 → 画地为牢 |
 | `NOT_MONOTONE` | 距离连续 `plateau_layers+1` 层不严格下降 → 不再逼近 |
 | `ORIGIN_DRIFT` · `SUPERPOSITION_VIOLATION` · `BUDGET_EXHAUSTED` · `AWAITING_HUMAN` | 沿用 |
@@ -284,7 +284,7 @@ BFC 默认**关闸**：不提供 `facts` 时它原样放行（`status = SKIPPED`
 
 **两条不可让渡的设计**
 
-1. **无限必须有界**：`energy_budget` 与 `max_loops` 至少要给一个，否则直接 `ValueError`。这不是对「无限」的否定，而是它的前提（轮回：能量动态守恒）—— 没有能量约束的无限不是无限，是失控。
+1. **无限必须有界**：`energy_budget` 与 `max_loops` 至少要给一个，否则直接 `ValueError`。这不是对「无限」的否定，而是它的前提（因果承接：能量动态守恒）—— 没有能量约束的无限不是无限，是失控。
 2. **引擎永不自己生成修正**：修正用尽即 `AWAITING_HUMAN`，控制权交回外部。要继续请用 `spiral_step()` 逐层推进：
 
 ```python
@@ -380,7 +380,7 @@ cd second-perspective
 # ① 十算子 + 叠加螺旋端到端演示
 python "Second Perspective Engine.py"
 
-# ② 独立验证套件（零依赖 · 18 项检查 · 退出码可接 CI）
+# ② 独立验证套件（零依赖 · 19 项检查 · 退出码可接 CI）
 python verify.py
 python verify.py --root    # 只打印链根，供跨机比对
 
@@ -419,7 +419,7 @@ config = spe.AuditConfigLoader.load_from_dict({
 })
 
 engine = spe.SecondPerspectiveEngine(account=account, config=config)
-engine.load_core_plugins()   # 注册十算子：GA / NS / IAP / LCH / LFT / BFC / CCS / GRF / ACC
+engine.load_core_plugins()   # 注册十算子：GA / NS / IAP / LCH / LFT / BFC / CCS / GRF / META / ACC
 
 decision_context = {
     # ⊙ 第一原点锚定
@@ -495,7 +495,7 @@ stack = spe.SpiralStack(energy_budget=5.0)
 second-perspective/
 ├── Second Perspective Engine.py   # 唯一引擎：十算子 + 拓扑底座 + 螺旋编排 + 双语渲染器（单文件）
 ├── demo_audit.py                  # 端到端演示（走同一引擎）
-├── verify.py                      # 独立验证套件（零依赖，18 项检查）
+├── verify.py                      # 独立验证套件（零依赖，19 项检查）
 ├── verify_convergence_fix.py      # 收敛逻辑回归（S1–S6）
 ├── case_memo_audit.py             # 案例审计：投资决策备忘录
 ├── case_strategy_audit.py         # 案例审计：三年战略规划
@@ -531,7 +531,7 @@ import 与目录层级；内联后「零依赖」不再是口号——一个文�
 python "language Standard/dsl.py" check "language Standard/examples/valid_decision.spd"   # 通过，退出码 0
 python "language Standard/dsl.py" check "language Standard/examples/invalid_decision.spd" # 失败，退出码 1
 python "language Standard/dsl.py" gen --seed 2026 --count 5 --out samples/ --self-check
-python "language Standard/dsl.py" codes                                                    # 19 条诊断码
+python "language Standard/dsl.py" codes                                                    # 20 条诊断码
 ```
 
 零外部依赖，仅标准库，确定性（按 seed 可复现）。校验器内置**中英双语约束词库**，`gen` 支持
@@ -547,7 +547,7 @@ GCAE 是 NOHN AI 生态的一员 —— 一个围绕第二视角因果审计与�
 
 | 项目 | 仓库 | 角色 |
 |---|---|---|
-| **Second-Perspective (GCAE)** | [nohn3043-arch/second-perspective](https://github.com/nohn3043-arch/second-perspective) | 全局认知审计引擎 —— 第二视角引擎 1.1，十算子因果审计内核（IMDA 95/100） |
+| **Second-Perspective (GCAE)** | [nohn3043-arch/second-perspective](https://github.com/nohn3043-arch/second-perspective) | 全局认知审计引擎 —— 第二视角引擎 1.2，十算子因果审计内核（IMDA 95/100） |
 | **NOMOS** | [nohn3043-arch/second-perspective](https://github.com/nohn3043-arch/second-perspective)（`Intelligent-Decision-Hub--Nomos` 分支） | 可审计的确定性决策中枢（IMDA 95/100） |
 | **SPL-G1** | [nohn3043-arch/SPL-G1](https://github.com/nohn3043-arch/SPL-G1) | 硬件因果审计可信计算单元（TCU） |
 | **SPL-Virtual-World-Base** | [nohn3043-arch/Second-Reality](https://github.com/nohn3043-arch/Second-Reality) | 虚拟世界与元宇宙基础设施（宪法 / 法律 / 桥） |

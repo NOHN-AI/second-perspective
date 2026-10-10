@@ -144,7 +144,7 @@ class SpiralVerdict(str, Enum):
     BLOCKED = "BLOCKED"
 
     # —— 极限收敛器（limit_reconstruct / spiral_step）专用 ——
-    # 规范元因果基底第二条「无极」：极限处唯一收敛（S∞ = S*）。
+    # 规范元因果基底第二条（并行收敛）：极限处唯一收敛（S∞ = S*）。
     # 「无限」指的是层数无上限地逼近目标稳态，不是跑到天荒地老；
     # 因此下面三个终局判据正是「凭什么停」的可执行答案。
     LIMIT_REACHED = "LIMIT_REACHED"      # 距离归零并连续数层保持 → 抵达 S∞ = S*
@@ -800,7 +800,7 @@ class TopologyGraph:
            用最长路径而非最短路径，是因为「前置因先于后继果」要求 t 必须晚于
            **全部**前置因，否则序就只是某一条路径的序，而不是链的序。
         2. 若存在有向环，则不存在单调赋值 —— 报 unassignable，链不成立（T308）。
-           这也解释了规范为什么说轮回「不是链的自环」：自环会让序无处安放。
+           这也解释了规范为什么强调因果承接不是链的自环：自环会让序无处安放。
         3. 观测位置：规范原文「一个观测者本身就是一条类时曲线，因此只能位于一条
            链上」。故此处同时给出 observer_anchor —— 本次审计所站的那条链的起点。
            它是 □0（第一原点）在拓扑中的镜像；无原点节点时退回唯一的起点，
@@ -1362,8 +1362,9 @@ def _ctx_branches(ctx: Any) -> List[Dict[str, Any]]:
 #
 # 为什么需要它
 # ------------
-# 规范第六条「元因果基底」给出了「混沌 = 原初宇宙的起点，万事万物的能量本根」
-# 与「轮回 = 能量动态守恒，每个果即刻成为下一个因」。落到可审计的层面就是三件事：
+# 规范第六条元因果基底给了两条根本设定：溯源缺口是原初宇宙的起点、
+# 万事万物的能量本根；因果承接是能量动态守恒，每个果即刻成为下一个因。
+# 落到可审计的层面就是三件事：
 #
 #     原点事件     链不能凭空开始。没有起点，后面所有节点都失去序的依据。
 #     目标稳态 S*  螺旋重构必须有收敛方向；没有终点，「迭代」退化为「转圈」。
@@ -2562,7 +2563,7 @@ class BinaryFactCheckPlugin:
         """证据极性：none / support / oppose / conflict。
 
         只认显式声明的极性（dict 里的 polarity / supports / verdict）。
-        纯字符串证据视为**无极性**的中性来源——不猜测它的倾向。
+        纯字符串证据视为**并行收敛性**的中性来源——不猜测它的倾向。
         """
         polarities = set()
         for item in evidence:
@@ -2889,7 +2890,7 @@ class CausalChainSyncPlugin:
 # ================================================
 #
 # 把「预测的崩塌」与「现实返回的观测」对齐。这是整条流水线里唯一引入
-# 现实输入的算子，对应规范里「虚幻 — 现实的反面，与现实一体两面」。
+# 现实输入的算子，对应规范里叙事遮蔽那一支——现实的反面，与现实一体两面。
 #
 # 三层判定
 # --------
@@ -3156,31 +3157,32 @@ class GrayFeedbackPlugin:
 # META — 元因果账本 / Meta-Causal Ledger
 # ========================================
 #
-# 规范第六条「元因果基底（混沌·无极·虚幻·天道·轮回）」的**判据化**。
+# 规范第六条元因果基底的**判据化**。五基在此改用因果论术语：
+# 溯源缺口 / 并行收敛 / 叙事遮蔽 / 审计有界 / 因果承接。
 # 它不引入任何新的因果律，只把规范里已经写死、却在引擎里只停留在注释里的
 # 五条元基，落成五个可计算的账本。五条元基的原文与落地口径一一对应：
 #
-#   混沌  原文：原初宇宙的起点，万事万物的能量本根。它看似无规则地涌动，
-#               但「随机」不在混沌之中，只在观测者的知识缺口之中：
-#               全部前置因未被解析，故显为混沌。
+#   溯源缺口  原文：原初宇宙的起点，万事万物的能量本根。它看似无规则地涌动，
+#               但随机不在世界，在观测者的知识缺口之中：
+#               全部前置因未被解析，故显为溯源缺口。
 #         落地：chaos_gaps     未解析的前置因逐条点名（既无分支补偿 ΔD，
 #                              也无现实反馈 —— 两条结构化信号都没有）
 #               misattributed 把「未解析」说成「随机/运气/说不准」的地方。
 #                              这是规范点名要拦截的归因错误：随机不在世界，在缺口。
 #
-#   无极  原文：最初之始，亦是最终之终。它容纳未来的一切因果链：多线并行，
+#   并行收敛  原文：最初之始，亦是最终之终。它容纳未来的一切因果链：多线并行，
 #               而非分支分叉；极限处唯一收敛（S∞ = S*）。
 #         落地：parallel_chains 多起点 —— 合法，这就是「平行」
 #               forks           同一对节点的多条边 —— 违规，这就是「分叉」
 #               limit_reached   由 ∞ 极限收敛器的状态回传，本算子只读不判
 #
-#   虚幻  原文：现实的反面，与现实一体两面，为一切谎言与梦境提供基底。
+#   叙事遮蔽  原文：现实的反面，与现实一体两面，为一切谎言与梦境提供基底。
 #               它是叙事事件 N_t 的所在：⊖ 从中析出干逻辑，A6 叙事熵度量其遮蔽程度。
 #         落地：a6_narrative_entropy = 遮蔽字符数 / 原文总字符数（有理数，非概率）
 #               reality_face         同一时刻的现实面：⇄GRF 的现实对齐状态
 #               —— 「一体两面」的两半必须同时出现在账本里，缺任何一半都不算记完。
 #
-#   天道  原文：公平本身：相对的公平，对万物一视同仁，维系世间的动态平衡。
+#   审计有界  原文：公平本身：相对的公平，对万物一视同仁，维系世间的动态平衡。
 #               这是审计中立的本体表述：审计不参与决策，只审计决策如何形成；
 #               A10 审计熵增有界，使演化收敛于 S*。
 #         落地：audit_neutrality 审计只审计「决策如何形成」（恒 True，作为断言留痕）
@@ -3188,7 +3190,7 @@ class GrayFeedbackPlugin:
 #               bounded           A10 是否有界 —— 这是自主进化能收敛于 S* 的算术前提，
 #                                 也是 evolve() 的停机定理来源。
 #
-#   轮回  原文：在万事万物中无处不在；它不是链的自环，而是链的普遍承接：
+#   因果承接  原文：在万事万物中无处不在；它不是链的自环，而是链的普遍承接：
 #               能量动态守恒，每一个果即刻成为下一个因，序不可倒置。
 #         落地：succession_intact 承接完整性：序排得出来、且无自环
 #               energy_ledger     ⇄ 能量账本（取 ⊙GA 的只做减法结果，不重复估算）
@@ -3204,14 +3206,14 @@ class GrayFeedbackPlugin:
 # 确定性 · 零随机 · 零概率词 · 零 LLM 调用
 # ----------------------------------------------------------------------------
 
-CHAOS_ATTRIBUTION_PATTERNS = (
+TRACE_ATTRIBUTION_PATTERNS = (
     "随机", "运气", "说不准", "看情况", "玄学", "碰运气", "天意", "听天由命",
     "不可预测", "random", "luck", "lucky", "by chance", "unpredictable",
 )
 
 
 class MetaCausalLedgerPlugin:
-    """META 算子：元因果账本（混沌 · 无极 · 虚幻 · 天道 · 轮回）。"""
+    """META 算子：元因果账本（溯源缺口 · 并行收敛 · 叙事遮蔽 · 审计有界 · 因果承接）。"""
 
     PLUGIN_NAME = "META"
     PLUGIN_VERSION = "1.0.0"
@@ -3222,11 +3224,11 @@ class MetaCausalLedgerPlugin:
     DEFAULT_NARRATIVE_ENTROPY_CEILING = 0.15
     DEFAULT_AUDIT_ENTROPY_CEILING = 12.0
 
-    BK_UNPARSED_ANTECEDENCE = "混沌"
-    BK_NONFORKING_CONVERGENCE = "无极"
-    BK_NARRATIVE_REGISTER = "虚幻"
-    BK_NEUTRALITY_INVARIANT = "天道"
-    BK_EFFECT_TO_CAUSE_SUCCESSION = "轮回"
+    BK_UNPARSED_ANTECEDENCE = "trace_gap"
+    BK_NONFORKING_CONVERGENCE = "parallel_convergence"
+    BK_NARRATIVE_REGISTER = "narrative_occlusion"
+    BK_NEUTRALITY_INVARIANT = "bounded_audit"
+    BK_EFFECT_TO_CAUSE_SUCCESSION = "causal_succession"
 
     def __init__(self) -> None:
         self.name = self.PLUGIN_NAME
@@ -3275,7 +3277,7 @@ class MetaCausalLedgerPlugin:
 
     def _unparsed_antecedence(self, ctx: Dict[str, Any], tpg: Dict[str, Any],
                ns: Dict[str, Any]) -> Dict[str, Any]:
-        """混沌：随机不在混沌之中，只在观测者的知识缺口之中。"""
+        """溯源缺口：随机不在溯源缺口之中，只在观测者的知识缺口之中。"""
         topo = tpg.get("topology", {}) or {}
         edges = topo.get("edges", []) or []
 
@@ -3298,16 +3300,16 @@ class MetaCausalLedgerPlugin:
             })
 
         text = self._text(ctx).lower()
-        misattributed = [p for p in CHAOS_ATTRIBUTION_PATTERNS if p.lower() in text]
+        misattributed = [p for p in TRACE_ATTRIBUTION_PATTERNS if p.lower() in text]
 
         if misattributed and gaps:
-            status, reason = "HIGH_RISK", "CHAOS_MISATTRIBUTED_WITH_GAPS"
+            status, reason = "HIGH_RISK", "TRACE_MISATTRIBUTED_WITH_GAPS"
         elif misattributed:
-            status, reason = "WARNING", "CHAOS_MISATTRIBUTED"
+            status, reason = "WARNING", "TRACE_MISATTRIBUTED"
         elif gaps:
-            status, reason = "WARNING", "CHAOS_GAPS_UNRESOLVED"
+            status, reason = "WARNING", "TRACE_GAPS_UNRESOLVED"
         else:
-            status, reason = "PASS", "CHAOS_RESOLVED"
+            status, reason = "PASS", "TRACE_RESOLVED"
 
         return {
             "status": status,
@@ -3315,11 +3317,11 @@ class MetaCausalLedgerPlugin:
             "gaps": gaps,
             "gap_count": len(gaps),
             "misattributed": misattributed,
-            "doctrine": "「随机」不在混沌之中，只在观测者的知识缺口之中",
+            "doctrine": "随机不在世界，在观测者的知识缺口之中",
         }
 
     def _nonforking_convergence(self, ctx: Dict[str, Any], tpg: Dict[str, Any]) -> Dict[str, Any]:
-        """无极：多线并行，而非分支分叉；极限处唯一收敛。"""
+        """并行收敛：多线并行，而非分支分叉；极限处唯一收敛。"""
         order = (tpg.get("topology", {}) or {}).get("time_order", {}) or {}
         forks = order.get("forks", []) or []
         parallel = int(order.get("parallel_chains", 0) or 0)
@@ -3328,7 +3330,7 @@ class MetaCausalLedgerPlugin:
         limit_reached = bool(isinstance(lim, dict) and lim.get("limit_reached"))
 
         status = "WARNING" if forks else "PASS"
-        reason = "WUJI_FORK_VIOLATION" if forks else "WUJI_PARALLEL_OK"
+        reason = "CONVERGENCE_FORK_VIOLATION" if forks else "CONVERGENCE_PARALLEL_OK"
         return {
             "status": status,
             "reason": reason,
@@ -3342,7 +3344,7 @@ class MetaCausalLedgerPlugin:
 
     def _narrative_register(self, ctx: Dict[str, Any], ns: Dict[str, Any],
                   grf: Dict[str, Any]) -> Dict[str, Any]:
-        """虚幻：叙事事件 N_t 的所在；A6 叙事熵度量其遮蔽程度。"""
+        """叙事遮蔽：叙事事件 N_t 的所在；A6 叙事熵度量其遮蔽程度。"""
         text = self._text(ctx)
         segments = ns.get("narrative_segments", []) or []
         masked = sum(len(str(s.get("marker", ""))) for s in segments
@@ -3355,7 +3357,7 @@ class MetaCausalLedgerPlugin:
         status = "WARNING" if a6 > ceiling else "PASS"
         return {
             "status": status,
-            "reason": "ILLUSION_OCCLUDED" if status == "WARNING" else "ILLUSION_TRANSPARENT",
+            "reason": "NARRATIVE_OCCLUDED" if status == "WARNING" else "NARRATIVE_TRANSPARENT",
             "a6_narrative_entropy": a6,
             "masked_chars": masked,
             "total_chars": total,
@@ -3366,11 +3368,11 @@ class MetaCausalLedgerPlugin:
                 "status": grf.get("status"),
                 "reason": grf.get("reason"),
             },
-            "doctrine": "虚幻与现实一体两面；A6 只度量遮蔽，不判断对错",
+            "doctrine": "叙事遮蔽与现实一体两面；A6 只度量遮蔽，不判断对错",
         }
 
     def _neutrality_invariant(self, ctx: Dict[str, Any], tpg: Dict[str, Any]) -> Dict[str, Any]:
-        """天道：审计中立；A10 审计熵增有界，使演化收敛于 S*。"""
+        """审计有界：审计中立；A10 审计熵增有界，使演化收敛于 S*。"""
         topo = tpg.get("topology", {}) or {}
         provenance = topo.get("provenance", []) or []
 
@@ -3388,7 +3390,7 @@ class MetaCausalLedgerPlugin:
 
         return {
             "status": "PASS" if bounded else "WARNING",
-            "reason": "TIANDAO_BOUNDED" if bounded else "TIANDAO_ENTROPY_UNBOUNDED",
+            "reason": "AUDIT_BOUNDED" if bounded else "AUDIT_ENTROPY_UNBOUNDED",
             # 审计中立的本体断言：引擎只审计「决策如何形成」，
             # 不参与决策、不出建议、不给排名 —— 这三条在结构上由
             # FORBIDDEN_LLM_KEYS 与决策无关性共同保证。
@@ -3403,7 +3405,7 @@ class MetaCausalLedgerPlugin:
 
     def _effect_to_cause_succession(self, ctx: Dict[str, Any], tpg: Dict[str, Any],
                 ori: Dict[str, Any]) -> Dict[str, Any]:
-        """轮回：不是链的自环，而是链的普遍承接；果即刻成因，序不可倒置。"""
+        """因果承接：不是链的自环，而是链的普遍承接；果即刻成因，序不可倒置。"""
         order = (tpg.get("topology", {}) or {}).get("time_order", {}) or {}
         assignable = bool(order.get("assignable"))
         inverted = order.get("inverted", []) or []
@@ -3411,8 +3413,8 @@ class MetaCausalLedgerPlugin:
         succession = assignable and not inverted
         return {
             "status": "PASS" if succession else "WARNING",
-            "reason": "LUNHUI_SUCCESSION_INTACT" if succession
-                      else "LUNHUI_ORDER_BROKEN",
+            "reason": "SUCCESSION_INTACT" if succession
+                      else "SUCCESSION_BROKEN",
             "succession_intact": succession,
             "assignable": assignable,
             "inverted": inverted,
@@ -3707,7 +3709,7 @@ class StateAnchorPlugin:
 #   1. 原点不可漂移   origin_hash 一旦确立即为锚点；后续层不同即 ORIGIN_DRIFT。
 #                     这是螺旋最致命的失效模式——绕圈绕到目标已经不是原来那个。
 #   2. 能量守恒       ↻ 每层消耗 loop_cost；预算不足以再走一层即停。
-#                     拓扑无边界，但预算有硬顶（轮回公理）。
+#                     拓扑无边界，但预算有硬顶（因果承接公理）。
 #   3. 半径单调       radius = 未收敛风险集规模。半径必须随层数收敛；
 #                     若连续两层半径不降且状态为 DIVERGED，标记 FLAT_SPIRAL。
 #
@@ -4182,7 +4184,7 @@ class SecondPerspectiveEngine:
         BinaryFactCheckPlugin,       #   二元事实校验
         CausalChainSyncPlugin,       # ⚙ 链闭合扫描
         GrayFeedbackPlugin,          # ⇄ 灰度执行与现实反馈
-        MetaCausalLedgerPlugin,      #   元因果账本（混沌·无极·虚幻·天道·轮回）
+        MetaCausalLedgerPlugin,      #   元因果账本（溯源缺口·并行收敛·叙事遮蔽·审计有界·因果承接）
         StateAnchorPlugin,           # ⊚ 责任锚定 + 最终裁定
     ]
 
@@ -4563,7 +4565,7 @@ class SecondPerspectiveEngine:
            origin_anchor         ⊙ 原点指纹与资源账本
            topology              ⊞ 拓扑指纹 / 四类并行校验 / 链内时序 / 纯拓扑图
            fact_check            BFC 二元裁定表与补齐条件
-           meta_ledger           META 元因果账本（混沌 / 无极 / 虚幻A6 / 天道A10 / 轮回）
+           meta_ledger           META 元因果账本（溯源缺口 / 并行收敛 / 叙事遮蔽A6 / 审计有界A10 / 因果承接）
            analysis              十算子结果
            implicit_assumptions  ⊕ 未声明预设
            vulnerability         ⊿ 崩塌等级与最脆弱变量
@@ -4573,7 +4575,7 @@ class SecondPerspectiveEngine:
         ------------------------------------------------------------
            _spiral_state  dict 已跑层栈快照 —— META 用它把 A10 从「总条数」
                                换算成「每层增速」
-           _limit_state   dict 上一层是否已抵达 S∞ = S* —— 无极账本读它
+           _limit_state   dict 上一层是否已抵达 S∞ = S* —— 并行收敛账本读它
         两者都是**既成事实的回传**，不是对下一层的预测；不注入即视为空。
         """
         # ---------- 第一阶段：三个静态算子先把 ctx 加工一遍 ----------
@@ -5092,7 +5094,7 @@ class SecondPerspectiveEngine:
         ----------------------
         1. **层数不设上限**。max_loops=None 时无限跑，唯一的算术硬顶是螺旋预算。
            硬闸门：energy_budget 与 max_loops 至少要给一个，否则直接拒绝 ——
-           没有能量约束的「无限」不是无限，是失控（轮回：能量动态守恒）。
+           没有能量约束的「无限」不是无限，是失控（因果承接：能量动态守恒）。
         2. **判据驱动停机**（三类新判据）：
                LIMIT_REACHED  距离连续 limit_layers 层为 (0,0) → 抵达 S∞ = S*
                FLAT_SPIRAL    半径连续三层纹丝不动 → 画地为牢
@@ -5652,7 +5654,7 @@ class SecondPerspectiveEngine:
                 'version_monotone': monotone,
                 'ceiling': ceiling,
                 'bounded': bounded,
-                'doctrine': '天道：A10 有界，使演化收敛于 S*',
+                'doctrine': '审计有界：A10 有界，使演化收敛于 S*',
             },
             'fixed_point': {
                 'found': fixed_round is not None,

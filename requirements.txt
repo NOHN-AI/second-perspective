@@ -1,11 +1,11 @@
-# 第二视角引擎 SPE 1.0 —— 核心零依赖
+# 第二视角引擎 SPE 1.2 —— 核心零依赖
 #
-# 九个因果算子（ORI / NS / IAP / LCH / TPG / BFC / CCS / GRF / STATE）、
+# 十个因果算子（GA / NS / IAP / LCH / LFT / BFC / CCS / GRF / META / ACC）、
 # 无语义拓扑底座、叠加螺旋编排、双语渲染器，以及决策结构语言校验器
 # （language Standard/dsl.py）与审计证书链，全部只使用 Python 标准库，
 # 无需安装任何第三方包即可运行：
 #
-#     python "Second Perspective Engine.py"                        # 九算子 + 螺旋端到端演示
+#     python "Second Perspective Engine.py"                        # 十算子 + 螺旋端到端演示
 #     python verify.py                                             # 独立验证套件
 #     python "language Standard/dsl.py" check <file.spd>           # 结构校验
 #

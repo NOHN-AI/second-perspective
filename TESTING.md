@@ -46,9 +46,9 @@ Expected result: **PASS 18 · FAIL 0 · WARN 1**, exit code 0 ("all hard checks 
 
 ```bash
 python verify.py --root
-# Expected output (single line, byte-for-byte; SPE 1.1 terminology v2 — the chain root
-# changes with the operator renames):
-# aece60f584b60a05860b5bf996b390174d4c02aaf2b2bffb1b20ffde2e9c38d1
+# Expected output (single line, byte-for-byte; SPE 1.2 · terminology v2 — this chain root is
+# current as of the 1.2.1 version-generation change; supersedes aece60f5… of SPE 1.2.0):
+# ca07e5e415204eeea911cf4a325ba94310eb60529ac0d5c6fcc56945624cfa82
 ```
 
 One WARN is an **honestly disclosed design trade-off, not a defect**:
@@ -56,13 +56,13 @@ One WARN is an **honestly disclosed design trade-off, not a defect**:
 - **V3b — the certificate does not bind the original input**: the report stores only derived conclusions (a privacy design: sensitive decision data is never persisted); the cost is that the certificate cannot independently prove "this is exactly the input that was audited." When describing it externally, state the certificate's coverage explicitly — do not let the other party assume it covers the input.
 - (Historical note: an earlier version also carried a second WARN, V9 — nonce non-determinism on the default path; that issue has been fixed via deterministic derivation, and V9 now passes, so it is no longer listed.)
 
-### 3.2 Five-operator end-to-end demo — `demo_audit.py`
+### 3.2 Ten-operator end-to-end demo — `demo_audit.py`
 
 ```bash
 python demo_audit.py
 ```
 
-Expected: no errors; prints the audit report text of all five operators (NS / IAP / LCH / CCS / ACC) over the example decision.
+Expected: no errors; prints the structural audit report over the example decisions, covering the ten-operator pipeline (which includes the five-operator core NS / IAP / LCH / CCS / ACC).
 
 ### 3.3 DSL toolchain (optional)
 

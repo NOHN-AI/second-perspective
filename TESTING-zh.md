@@ -46,8 +46,9 @@ python verify.py --root     # 只打印链根（单行），供跨机比对
 
 ```bash
 python verify.py --root
-# 预期输出（单行，逐字符一致；SPE 1.1 术语 v2，算子更名后链根随之更新）：
-# aece60f584b60a05860b5bf996b390174d4c02aaf2b2bffb1b20ffde2e9c38d1
+# 预期输出（单行，逐字符一致；SPE 1.2 · 术语 v2，此链根自 1.2.1 版本代际变更后生效，
+# 接替 SPE 1.2.0 的 aece60f5…）：
+# ca07e5e415204eeea911cf4a325ba94310eb60529ac0d5c6fcc56945624cfa82
 ```
 
 一项 WARN 是**如实披露的设计取舍，不是缺陷**：
@@ -58,13 +59,13 @@ python verify.py --root
 - （历史注：早期版本还有 V9 — 默认路径 nonce 不确定 的 WARN；该问题已通过
   确定性推导修复，V9 现为 PASS，不再列入 WARN。）
 
-### 3.2 五算子端到端演示 — `demo_audit.py`
+### 3.2 十算子端到端演示 — `demo_audit.py`
 
 ```bash
 python demo_audit.py
 ```
 
-预期：无报错，输出五算子（NS / IAP / LCH / CCS / ACC）对示例决策的审计报告文本。
+预期：无报错，输出十算子流水线（含 NS / IAP / LCH / CCS / ACC 五算子内核）对示例决策的结构审计报告文本。
 
 ### 3.3 DSL 工具链（可选）
 

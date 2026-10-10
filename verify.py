@@ -17,7 +17,7 @@ FAIL 即为产品当前缺陷，请在对外承诺前修复。
 V10–V13 覆盖拓扑层四项能力，V14 覆盖二元事实校验，
 V15 覆盖唯一插件缝（四道闸门 · 清单入哈希 · 越权降级），
 V16 覆盖 ∞ 极限收敛器（层数无上限 · 判据停机 · 引擎不自驱），
-V17 覆盖元因果账本（混沌·无极·虚幻 A6·天道 A10·轮回）与链内时序（公理 5），
+V17 覆盖元因果账本（溯源缺口·并行收敛·叙事遮蔽 A6·审计有界 A10·因果承接）与链内时序（公理 5），
 以及自主进化层（只提案不适用 · 版本谱系 · 记账不改判定）。
 """
 
@@ -818,15 +818,15 @@ def _codes(validation):
 def check_v17_meta_and_autonomous_evolution():
     """V17 元因果账本 + 链内时序 + 自主进化层。
 
-    规范第六条把元因果基底定为五条（混沌·无极·虚幻·天道·轮回）；
+    规范第六条把元因果基底定为五条（溯源缺口·并行收敛·叙事遮蔽·审计有界·因果承接）；
     规范第六节（IR 层）把运行期演化定为 evolve / rewrite / 最小不动点 / A10。
     本项验证这两件事在内核里可计算、可复现，并且**进化不越权**。
 
     a 五元基齐备    META 账本五条元基全在，各有 status 与 reason
     b A6 可复现     同一输入两次审计，A6 叙事熵逐位相同（有理数，非概率）
-    c A10 有界      天道：A10 审计熵增给出数值与判据；有界才收敛于 S*
-    d 混沌归因拦截  「随机 / 运气」+ 真实缺口 → HIGH_RISK，且缺口被逐条点名
-    e 平行 ≠ 分支   多起点合法（无极 PASS）；同一对节点多边 → T305 分叉违规
+    c A10 有界      审计有界：A10 审计熵增给出数值与判据；有界才收敛于 S*
+    d 溯源缺口归因拦截  「随机 / 运气」+ 真实缺口 → HIGH_RISK，且缺口被逐条点名
+    e 平行 ≠ 分支   多起点合法（并行收敛 PASS）；同一对节点多边 → T305 分叉违规
     f 时序不可倒置  声明 t 与链内序冲突 → T307；有环 → 时序无法赋值
     g 只提案不适用  三条恒等式：applies_automatically=False · requires_human=True
                     · auto_applied=0
@@ -839,7 +839,7 @@ def check_v17_meta_and_autonomous_evolution():
         eng_a, _ = build(BASE_CTX)
         rep_a = eng_a.audit(dict(BASE_CTX))
         bases = rep_a.get("meta_ledger", {}).get("bases", {})
-        five = ("混沌", "无极", "虚幻", "天道", "轮回")
+        five = ("trace_gap", "parallel_convergence", "narrative_occlusion", "bounded_audit", "causal_succession")
         complete = all(b in bases and "status" in bases[b] and "reason" in bases[b]
                        for b in five)
 
@@ -849,22 +849,22 @@ def check_v17_meta_and_autonomous_evolution():
         a6_ctx["narrative"] = "显然，这次上线是最优选择，毫无疑问。"
         eng_b, _ = build(a6_ctx)
         rep_b = eng_b.audit(dict(a6_ctx))
-        a6 = rep_b["meta_ledger"]["bases"]["虚幻"]["a6_narrative_entropy"]
+        a6 = rep_b["meta_ledger"]["bases"]["narrative_occlusion"]["a6_narrative_entropy"]
         eng_b2, _ = build(a6_ctx)
         rep_b2 = eng_b2.audit(dict(a6_ctx))
-        a6_b = rep_b2["meta_ledger"]["bases"]["虚幻"]["a6_narrative_entropy"]
+        a6_b = rep_b2["meta_ledger"]["bases"]["narrative_occlusion"]["a6_narrative_entropy"]
         a6_ok = isinstance(a6, float) and a6 > 0 and a6 == a6_b
 
-        a10 = bases.get("天道", {}).get("a10_audit_entropy")
-        a10_ok = isinstance(a10, float) and bases["天道"].get("bounded") is True
+        a10 = bases.get("bounded_audit", {}).get("a10_audit_entropy")
+        a10_ok = isinstance(a10, float) and bases["bounded_audit"].get("bounded") is True
 
-        # ---- d 混沌：随机不在世界，在缺口 ----
+        # ---- d 溯源缺口：随机不在世界，在缺口 ----
         chaos_ctx = dict(BASE_CTX)
         chaos_ctx.pop("branches", None)
         chaos_ctx["feedback"] = {}
         chaos_ctx["narrative"] = "这次能不能成全看运气，市场是随机的。"
         eng_d, _ = build(chaos_ctx)
-        chaos = eng_d.audit(chaos_ctx)["meta_ledger"]["bases"]["混沌"]
+        chaos = eng_d.audit(chaos_ctx)["meta_ledger"]["bases"]["trace_gap"]
         chaos_ok = (chaos["status"] == "HIGH_RISK" and chaos["gap_count"] >= 1
                     and bool(chaos["misattributed"]))
 
@@ -945,9 +945,9 @@ def check_v17_meta_and_autonomous_evolution():
         rows = [
             f"a 五元基      : {five_txt}",
             f"b A6 叙事熵   : 两次审计 {a6} == {a6_b} → 可复现={a6 == a6_b}（有理数，非概率）",
-            f"c A10 审计熵增: {a10} | bounded={bases['天道'].get('bounded')}"
-            f" | ceiling={bases['天道'].get('ceiling')}（天道：有界才收敛于 S*）",
-            f"d 混沌归因    : {chaos['status']} | 缺口 {chaos['gap_count']} 条"
+            f"c A10 审计熵增: {a10} | bounded={bases['bounded_audit'].get('bounded')}"
+            f" | ceiling={bases['bounded_audit'].get('ceiling')}（审计有界：有界才收敛于 S*）",
+            f"d 溯源缺口归因    : {chaos['status']} | 缺口 {chaos['gap_count']} 条"
             f" | 归因于随机的词 {chaos['misattributed']}",
             f"e 平行/分支   : 平行起点={par_order['parallel_chains']} 合法"
             f" | 同一对节点多边 → T305={('T305' in fork_codes)}"

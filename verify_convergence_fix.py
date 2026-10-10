@@ -85,7 +85,7 @@ S1_CTX = {
 # ── 干净样本：全字段齐备，算子全部通过 ──
 #    SPE 1.0 起新增 ⊙GA / ⊞LFT / ⇄GRF 三项，缺 origin 会被 GA 判 ORIGIN_VACUUM 阻断、
 #    缺灰度梯度会被 GRF 判 NO_GRAY_LADDER 信号 —— 那两项都是**预期行为**，不是本脚本要测的东西。
-#    故此处补齐 origin / goal / gray_levels / commit_ratio，让「干净」二字在九算子口径下依然成立。
+#    故此处补齐 origin / goal / gray_levels / commit_ratio，让「干净」二字在十算子口径下依然成立。
 CLEAN_CTX = {
     "origin": "服务B上线原点",
     "goal": "服务B在生产环境稳定运行",
@@ -129,7 +129,10 @@ STRATEGY_CTX = {
 #      本次同步把 S3 的期望值重算为上面的常量。
 #      SPE 1.1.0 术语 v2（2026-10）：算子更名 ⊙ORI→⊙GA / ⊞TPG→⊞LFT / ⊚STATE→⊚ACC，
 #      算子名参与 operator_set_hash → S3 期望链根随之重算为下面的常量。
-STRATEGY_ROOT_EXPECTED = "2b65ea46814e7d88b34f44d85558f0d1079028d1151d215ebb2685e7a7e9b08b"
+#      SPE 1.2.1（2026-10）：证书 note 改为引用模块常量 SPE_VERSION（不再硬编码 "SPE 1.1"），
+#      证书 note 进入报告 → AUDIT 事件 report_hash → 链根随版本代际更替而变，
+#      S3 期望链根据此重算。金标更新须与 SPE_VERSION 升级同步，二者不得分开进行。
+STRATEGY_ROOT_EXPECTED = "cb1185c02a99bdf5c0b733238c43bc3f10056bd4298fdb5d46610f5fbb06f54d"
 
 
 def main():

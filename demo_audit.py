@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-第二视角引擎 SPE 1.0 — 九算子端到端验证 Demo
+第二视角引擎 SPE 1.2 — 十算子端到端验证 Demo
 
 用法:
     python demo_audit.py
@@ -39,7 +39,7 @@ def main():
     )
 
     engine = CognitiveAuditEngine(account=account, config=config)
-    # 加载官方九算子插件（引擎负责包装为带权限层级别的 AuditPlugin）
+    # 加载官方十算子插件（引擎负责包装为带权限层级别的 AuditPlugin）
     engine.load_core_plugins()
 
     # ── 测试用例 1: 带叙事粉饰 + 隐假设 + 缺分支响应 ──

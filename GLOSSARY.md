@@ -44,14 +44,14 @@
 | **Relative labels** | 相对标签 | △/◇ 不是节点的固有属性：同一节点在 A→B 上是 ◇，在 B→C 上就是 △。 |
 | **Four parallel checks** | 四类并行校验 | 一致性（致命）· 约束满足（致命）· 拓扑闭合（警告，结果无效）· 链内时序（警告，结果无效）。 |
 | **Meta-Causal Ledger (META)** | 元因果账本 | 把规范第六条的元因果基底落成五个可计算的账本；是**度量**不是裁决，取 T2 层，**永不阻断**。 |
-| **Meta-causal Grounds** | 元因果基底 | 混沌 · 无极 · 虚幻 · 天道 · 轮回 —— 五条元基，规范里本就存在，此前只停在注释里。 |
-| **Hundun · Unparsed Antecedence (混沌)** | 混沌 | 原初起点与能量本根。「随机」不在混沌之中，**只在观测者的知识缺口之中**：全部前置因未被解析，故显为混沌。 |
-| **Wuji · Non-forking Convergence (无极)** | 无极 | 最初之始亦最终之终：**多线并行而非分支分叉**；极限处唯一收敛（S∞ = S\\*）。 |
-| **Xuhuan · Narrative Register (虚幻)** | 虚幻 | 现实的反面，与现实一体两面，是叙事事件 N_t 的所在；由 ⊖ 析出干逻辑。 |
+| **Meta-causal Grounds** | 元因果基底 | 溯源缺口 · 并行收敛 · 叙事遮蔽 · 审计有界 · 因果承接 —— 五条元基，规范里本就存在，此前只停在注释里。 |
+| **Hundun · Unparsed Antecedence (溯源缺口)** | 溯源缺口 | 原初起点与能量本根。「随机」不在溯源缺口之中，**只在观测者的知识缺口之中**：全部前置因未被解析，故显为溯源缺口。 |
+| **Wuji · Non-forking Convergence (并行收敛)** | 并行收敛 | 最初之始亦最终之终：**多线并行而非分支分叉**；极限处唯一收敛（S∞ = S\\*）。 |
+| **Xuhuan · Narrative Register (叙事遮蔽)** | 叙事遮蔽 | 现实的反面，与现实一体两面，是叙事事件 N_t 的所在；由 ⊖ 析出干逻辑。 |
 | **A6 narrative entropy** | A6 叙事熵 | 遮蔽字符数 / 原文总字符数 —— 一个**有理数**，不是概率。它只度量遮蔽程度，不判断对错。 |
-| **Tiandao · Neutrality Invariant (天道)** | 天道 | 公平本身：审计中立的本体表述——审计不参与决策，只审计决策如何形成。 |
+| **Tiandao · Neutrality Invariant (审计有界)** | 审计有界 | 公平本身：审计中立的本体表述——审计不参与决策，只审计决策如何形成。 |
 | **A10 audit entropy** | A10 审计熵增 | 每层新增留痕条数，即 version 递增速率的离散版。**有界**才使演化收敛于 S\\*（这是自主进化的停机定理来源）。 |
-| **Lunhui · Effect-to-Cause Succession (轮回)** | 轮回 | 不是链的自环，而是链的**普遍承接**：能量动态守恒，每一个果即刻成为下一个因，序不可倒置。 |
+| **Lunhui · Effect-to-Cause Succession (因果承接)** | 因果承接 | 不是链的自环，而是链的**普遍承接**：能量动态守恒，每一个果即刻成为下一个因，序不可倒置。 |
 | **Autonomous evolution (`evolve()`)** | 自主进化层 | 引擎自己**发现**结构缺口并产出候选清单，但**永不自己改写判定规则**。 |
 | **Propose-only** | 只提案不适用 | 三条恒等式：`applies_automatically=False` · `requires_human=True` · `auto_applied=0`。 |
 | **Lineage** | 版本谱系 | 「这份链根属于第几代引擎」：代际 + 算子集指纹 + 管线顺序 + 文法版本。它是进化与可复现性共存的前提。 |
@@ -118,13 +118,13 @@
 | **Four parallel checks** | consistency (fatal) · constraint satisfaction (fatal) · closure (warning — result void) · time order (warning — result void). |
 | **Meta-Causal Ledger (META)** | Turns the five meta-grounds of normative clause 6 into five computable ledgers. It **measures**, it does not adjudicate: tier T2, structurally incapable of blocking. |
 | **Meta-causal Grounds** | Hundun · Wuji · Xuhuan · Tiandao · Lunhui — five meta-grounds that already existed in the normative reference, until now only in comments. |
-| **Hundun · Unparsed Antecedence (混沌)** | The primal origin and the root of energy. "Chance" is not in chaos, **only in the observer's knowledge gap**: every antecedent unparsed, hence it appears as chaos. |
-| **Wuji · Non-forking Convergence (无极)** | First beginning and final end: **many chains in parallel, never a fork**; at the limit it converges uniquely (S∞ = S\*). |
-| **Xuhuan · Narrative Register (虚幻)** | The reverse of reality, one thing with two faces, where narrative events N_t live; ⊖ extracts the logical core from it. |
+| **Hundun · Unparsed Antecedence (溯源缺口)** | The primal origin and the root of energy. "Chance" is not in chaos, **only in the observer's knowledge gap**: every antecedent unparsed, hence it appears as chaos. |
+| **Wuji · Non-forking Convergence (并行收敛)** | First beginning and final end: **many chains in parallel, never a fork**; at the limit it converges uniquely (S∞ = S\*). |
+| **Xuhuan · Narrative Register (叙事遮蔽)** | The reverse of reality, one thing with two faces, where narrative events N_t live; ⊖ extracts the logical core from it. |
 | **A6 narrative entropy** | Masked characters / total characters — a **rational number**, not a probability. It measures the degree of occlusion and judges nothing. |
-| **Tiandao · Neutrality Invariant (天道)** | Fairness itself: the ontological statement of audit neutrality — the audit does not take part in the decision, only in how the decision was formed. |
+| **Tiandao · Neutrality Invariant (审计有界)** | Fairness itself: the ontological statement of audit neutrality — the audit does not take part in the decision, only in how the decision was formed. |
 | **A10 audit entropy** | Provenance entries per layer, the discrete form of d(version)/dt. A **bounded** A10 is what lets evolution converge to S\* — the halting theorem behind autonomous evolution. |
-| **Lunhui · Effect-to-Cause Succession (轮回)** | Not the chain's self-loop but its **universal succession**: energy is dynamically conserved, every effect immediately becomes the next cause, and order is never inverted. |
+| **Lunhui · Effect-to-Cause Succession (因果承接)** | Not the chain's self-loop but its **universal succession**: energy is dynamically conserved, every effect immediately becomes the next cause, and order is never inverted. |
 | **Autonomous evolution (`evolve()`)** | The engine **discovers** structural gaps and emits a proposal list, but **never rewrites its own adjudication rules**. |
 | **Propose-only** | Three identities: `applies_automatically=False` · `requires_human=True` · `auto_applied=0`. |
 | **Lineage** | "Which generation of the engine produced this chain root": generation · operator-set hash · pipeline order · grammar version. It is what lets evolution and reproducibility coexist. |
