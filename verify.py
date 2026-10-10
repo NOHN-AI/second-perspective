@@ -125,8 +125,8 @@ def check_v1_zero_dependency():
     try:
         eng, _ = build(BASE_CTX)
         names = [p.name for p in eng.plugins]
-        expect = {"ORI", "NS", "IAP", "LCH", "TPG", "BFC", "CCS", "GRF",
-                  "META", "STATE"}
+        expect = {"GA", "NS", "IAP", "LCH", "LFT", "BFC", "CCS", "GRF",
+                  "META", "ACC"}
         ok = set(names) == expect
         detail = ("引擎装载成功；十算子注册成功；全程未使用 requirements.txt\n"
                   f"registered = {names}")
@@ -375,15 +375,15 @@ def check_v10_origin_anchor():
         no_origin = dict(BASE_CTX)
         no_origin.pop("origin")
         eng, _ = build(no_origin)
-        ori_a = eng.audit(no_origin)["analysis"]["ORI"]
+        ori_a = eng.audit(no_origin)["analysis"]["GA"]
 
         eng2, _ = build(BASE_CTX)
-        ori_b = eng2.audit(dict(BASE_CTX))["analysis"]["ORI"]
+        ori_b = eng2.audit(dict(BASE_CTX))["analysis"]["GA"]
 
         deficit = dict(BASE_CTX)
         deficit["resources"] = {"compute": {"budget": 100.0, "committed": 140.0}}
         eng3, _ = build(deficit)
-        ori_c = eng3.audit(deficit)["analysis"]["ORI"]
+        ori_c = eng3.audit(deficit)["analysis"]["GA"]
 
         ok = (ori_a["status"] == "BLOCKED" and ori_a["reason"] == "ORIGIN_VACUUM"
               and ori_b["status"] == "PASS"
@@ -416,7 +416,7 @@ def check_v11_topology_checks():
             ],
         }
         eng, _ = build(cyclic)
-        tpg_a = eng.audit(cyclic)["analysis"]["TPG"]
+        tpg_a = eng.audit(cyclic)["analysis"]["LFT"]
         codes = [i["code"] for i in tpg_a["validation"]["closure"]["issues"]]
 
         contrad = dict(BASE_CTX)
@@ -428,7 +428,7 @@ def check_v11_topology_checks():
             ],
         }
         eng2, _ = build(contrad)
-        tpg_b = eng2.audit(contrad)["analysis"]["TPG"]
+        tpg_b = eng2.audit(contrad)["analysis"]["LFT"]
 
         ok = ("T303" in codes
               and tpg_a["validation"]["result_valid"] is False
@@ -630,12 +630,12 @@ def check_v15_extension_seam():
         # ---- a 缝可用 + 位置正确 ----
         eng, _ = build(BASE_CTX)
         eng.register_operator("SEAM_PROBE", spe.PluginTier.T2_SIGNAL, _seam_probe,
-                              description="插件缝探针", after="TPG")
+                              description="插件缝探针", after="LFT")
         names = [m["name"] for m in eng.operator_manifest()]
-        pos_ok = names.index("SEAM_PROBE") == names.index("TPG") + 1
+        pos_ok = names.index("SEAM_PROBE") == names.index("LFT") + 1
         in_manifest = any(
             m["name"] == "SEAM_PROBE" and m["tier"] == "T2_SIGNAL"
-            and m["origin"] == "extension" and m["registered_after"] == "TPG"
+            and m["origin"] == "extension" and m["registered_after"] == "LFT"
             for m in eng.operator_manifest()
         )
         rep = eng.audit(dict(BASE_CTX))
@@ -655,13 +655,13 @@ def check_v15_extension_seam():
 
         T2 = spe.PluginTier.T2_SIGNAL
         gates = [
-            reject("重名(ORI)", name="ORI", tier=T2, analyze=_seam_probe, after="TPG"),
+            reject("重名(GA)", name="GA", tier=T2, analyze=_seam_probe, after="LFT"),
             reject("外部持 T1", name="X1", tier=spe.PluginTier.T1_STRUCTURAL,
-                   analyze=_seam_probe, after="TPG"),
+                   analyze=_seam_probe, after="LFT"),
             reject("after 缺失", name="X2", tier=T2, analyze=_seam_probe),
             reject("after 不存在", name="X3", tier=T2, analyze=_seam_probe, after="NOPE"),
-            reject("非 ASCII 标识符", name="探针", tier=T2, analyze=_seam_probe, after="TPG"),
-            reject("非枚举 tier", name="X4", tier="T2_SIGNAL", analyze=_seam_probe, after="TPG"),
+            reject("非 ASCII 标识符", name="探针", tier=T2, analyze=_seam_probe, after="LFT"),
+            reject("非枚举 tier", name="X4", tier="T2_SIGNAL", analyze=_seam_probe, after="LFT"),
         ]
 
         # ---- g 零副作用 ----
@@ -669,7 +669,7 @@ def check_v15_extension_seam():
         e2, _ = build(BASE_CTX)
         n_before, order_before = len(e2.plugins), list(e2.PIPELINE_ORDER)
         try:
-            e2.register_operator("ORI", T2, _seam_probe, after="TPG")
+            e2.register_operator("GA", T2, _seam_probe, after="LFT")
         except ValueError:
             pass
         e2.audit(dict(BASE_CTX))
@@ -679,7 +679,7 @@ def check_v15_extension_seam():
 
         # ---- h 并入哈希 ----
         eng_h, _ = build(BASE_CTX)
-        eng_h.register_operator("SEAM_PROBE", T2, _seam_probe, after="TPG")
+        eng_h.register_operator("SEAM_PROBE", T2, _seam_probe, after="LFT")
         eng_h.audit(dict(BASE_CTX))
         hash_changed = eng_h.chain_root_hash != root_plain
 
@@ -690,14 +690,14 @@ def check_v15_extension_seam():
 
         # ---- j 越权降级 ----
         eng_j, _ = build(BASE_CTX)
-        eng_j.register_operator("BLOCK_PROBE", T2, _blocking_probe, after="TPG")
+        eng_j.register_operator("BLOCK_PROBE", T2, _blocking_probe, after="LFT")
         rep_j = eng_j.audit(dict(BASE_CTX))
         probe_j = rep_j["analysis"].get("BLOCK_PROBE", {})
         downgraded = (probe_j.get("status") == "WARNING"
                       and "_tier_violation" in probe_j)
 
         rows = [
-            f"a 缝可用      : 位置紧随 TPG = {pos_ok} | 清单={in_manifest} | 报告={in_report} "
+            f"a 缝可用      : 位置紧随 LFT = {pos_ok} | 清单={in_manifest} | 报告={in_report} "
             f"| 探针 status={probe_signal}",
             "b–f 四道闸门  : " + " · ".join(f"{lb}→{r}" for lb, r in gates),
             f"g 零副作用    : 算子数/执行序/链根均不变 = {zero_side_effect}",

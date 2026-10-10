@@ -91,9 +91,9 @@ def main():
     iap = analysis.get("IAP", {})
     lch = analysis.get("LCH", {})
     ccs = analysis.get("CCS", {})
-    st = analysis.get("STATE", {})
+    st = analysis.get("ACC", {})
 
-    print("\n--- 最终裁定（STATE）---")
+    print("\n--- 最终裁定（ACC）---")
     v = st.get("verdict", {})
     print(f"Level  : {v.get('level')}")
     print(f"Summary: {v.get('summary')}")
@@ -102,7 +102,7 @@ def main():
     for w in v.get("warn_items", []):
         print(f"  [WARN] {w}")
 
-    print("\n--- 责任锚定（STATE）---")
+    print("\n--- 责任锚定（ACC）---")
     resp = st.get("responsibility", {})
     print(f"anchor_status: {resp.get('anchor_status')}")
     if resp.get("warning"):
@@ -166,8 +166,8 @@ def main():
         "evidence": ["probe#1"],
     }
     r3 = eng3.reconstruct(probe_ctx, max_rounds=3)
-    st3 = r3["final_report"]["analysis"]["STATE"]["verdict"]
-    print(f"STATE verdict    = {st3['level']}  halts={st3['halt_items']}")
+    st3 = r3["final_report"]["analysis"]["ACC"]["verdict"]
+    print(f"ACC verdict    = {st3['level']}  halts={st3['halt_items']}")
     print(f"reconstruct 判定 = {r3['final_state']}  is_true_convergence={r3['is_true_convergence']}")
 
 

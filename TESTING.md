@@ -42,18 +42,19 @@ python verify.py --json     # machine-readable (CI-friendly)
 python verify.py --root     # print only the chain root (single line), for cross-machine comparison
 ```
 
-Expected result: **PASS 9 · FAIL 0 · WARN 2**, exit code 0 ("all hard checks passed").
+Expected result: **PASS 18 · FAIL 0 · WARN 1**, exit code 0 ("all hard checks passed").
 
 ```bash
 python verify.py --root
-# Expected output (single line, byte-for-byte):
-# f5713f49481a80f82356ba1255c0292ddb0d17a235a35348bcff0eef49d6a801
+# Expected output (single line, byte-for-byte; SPE 1.1 terminology v2 — the chain root
+# changes with the operator renames):
+# aece60f584b60a05860b5bf996b390174d4c02aaf2b2bffb1b20ffde2e9c38d1
 ```
 
-The two WARNs are **honestly disclosed design trade-offs, not defects**:
+One WARN is an **honestly disclosed design trade-off, not a defect**:
 
 - **V3b — the certificate does not bind the original input**: the report stores only derived conclusions (a privacy design: sensitive decision data is never persisted); the cost is that the certificate cannot independently prove "this is exactly the input that was audited." When describing it externally, state the certificate's coverage explicitly — do not let the other party assume it covers the input.
-- **V9 — nonce non-determinism on the default path**: the engine's `ResponsibilityAccount` generates its nonce with `uuid4()` by default, and chain events embed that nonce; therefore **byte-level reproduction requires scripts to explicitly pin the clock and nonce** (all scripts in this repository do so). The WARN also points to a fix direction (deterministic derivation via sha256 over account fields).
+- (Historical note: an earlier version also carried a second WARN, V9 — nonce non-determinism on the default path; that issue has been fixed via deterministic derivation, and V9 now passes, so it is no longer listed.)
 
 ### 3.2 Five-operator end-to-end demo — `demo_audit.py`
 
@@ -61,7 +62,7 @@ The two WARNs are **honestly disclosed design trade-offs, not defects**:
 python demo_audit.py
 ```
 
-Expected: no errors; prints the audit report text of all five operators (NS / IAP / LCH / CCS / STATE) over the example decision.
+Expected: no errors; prints the audit report text of all five operators (NS / IAP / LCH / CCS / ACC) over the example decision.
 
 ### 3.3 DSL toolchain (optional)
 

@@ -103,9 +103,9 @@ def main():
     iap = analysis.get("IAP", {})
     lch = analysis.get("LCH", {})
     ccs = analysis.get("CCS", {})
-    st = analysis.get("STATE", {})
+    st = analysis.get("ACC", {})
 
-    print("\n--- 最终裁定（STATE）---")
+    print("\n--- 最终裁定（ACC）---")
     v = st.get("verdict", {})
     print(f"Level  : {v.get('level')}")
     print(f"Summary: {v.get('summary')}")
@@ -114,7 +114,7 @@ def main():
     for w in v.get("warn_items", []):
         print(f"  [WARN] {w}")
 
-    print("\n--- 责任锚定（STATE）---")
+    print("\n--- 责任锚定（ACC）---")
     resp = st.get("responsibility", {})
     print(f"anchor_status: {resp.get('anchor_status')}")
     if resp.get("warning"):

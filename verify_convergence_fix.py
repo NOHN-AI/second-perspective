@@ -8,7 +8,7 @@
     ConvergenceChecker.extract_risk_set 只读插件结果的 'status' 字段，
     而五算子插件输出的是 'pass' / 'halt_count'（无 status）。
     后果：责任已闭环时，插件级 HALT 对收敛判定不可见 ——
-    STATE verdict = AUDIT_HALT 而 reconstruct 判定 = NO_GAIN / is_true_convergence=True。
+    ACC verdict = AUDIT_HALT 而 reconstruct 判定 = NO_GAIN / is_true_convergence=True。
 
 修复口径（Second Perspective Engine.py · extract_risk_set）：
     status 缺失时归一化：
@@ -83,7 +83,7 @@ S1_CTX = {
 }
 
 # ── 干净样本：全字段齐备，算子全部通过 ──
-#    SPE 1.0 起新增 ⊙ORI / ⊞TPG / ⇄GRF 三项，缺 origin 会被 ORI 判 ORIGIN_VACUUM 阻断、
+#    SPE 1.0 起新增 ⊙GA / ⊞LFT / ⇄GRF 三项，缺 origin 会被 GA 判 ORIGIN_VACUUM 阻断、
 #    缺灰度梯度会被 GRF 判 NO_GRAY_LADDER 信号 —— 那两项都是**预期行为**，不是本脚本要测的东西。
 #    故此处补齐 origin / goal / gray_levels / commit_ratio，让「干净」二字在九算子口径下依然成立。
 CLEAN_CTX = {
@@ -127,7 +127,9 @@ STRATEGY_CTX = {
 #      算子清单由 9 项变 10 项（META）；
 #      拓扑指纹亦因 edges 元组新增声明时序 t 而改变。
 #      本次同步把 S3 的期望值重算为上面的常量。
-STRATEGY_ROOT_EXPECTED = "3862cc1f8131a3df5c3a23cc6aedf561a067b039da74ddabe910ffd7e071bdf5"
+#      SPE 1.1.0 术语 v2（2026-10）：算子更名 ⊙ORI→⊙GA / ⊞TPG→⊞LFT / ⊚STATE→⊚ACC，
+#      算子名参与 operator_set_hash → S3 期望链根随之重算为下面的常量。
+STRATEGY_ROOT_EXPECTED = "2b65ea46814e7d88b34f44d85558f0d1079028d1151d215ebb2685e7a7e9b08b"
 
 
 def main():
@@ -138,20 +140,20 @@ def main():
     # ---------- S1 插件级 HALT 可见性 ----------
     eng = build()
     r = eng.reconstruct(dict(S1_CTX), max_rounds=3)
-    verdict = r["final_report"]["analysis"]["STATE"]["verdict"]
+    verdict = r["final_report"]["analysis"]["ACC"]["verdict"]
     ok = r["final_state"] == "BLOCKED" and not r["is_true_convergence"]
     record("S1", "插件级 HALT 可见性（修复回归点）", ok,
-           f"STATE verdict = {verdict['level']} (halts={verdict['halt_items']})\n"
+           f"ACC verdict = {verdict['level']} (halts={verdict['halt_items']})\n"
            f"reconstruct   = {r['final_state']} / is_true_convergence={r['is_true_convergence']}\n"
            f"（修复前实测为 NO_GAIN / True，与 AUDIT_HALT 自相矛盾；修复后阻断可见）")
 
     # ---------- S2 干净输入 → NO_GAIN ----------
     eng = build()
     r = eng.reconstruct(dict(CLEAN_CTX), max_rounds=3)
-    verdict = r["final_report"]["analysis"]["STATE"]["verdict"]
+    verdict = r["final_report"]["analysis"]["ACC"]["verdict"]
     ok = r["final_state"] == "NO_GAIN" and r["is_true_convergence"]
     record("S2", "干净输入 → NO_GAIN（真收敛）", ok,
-           f"STATE verdict = {verdict['level']} / rounds={r['total_rounds']}\n"
+           f"ACC verdict = {verdict['level']} / rounds={r['total_rounds']}\n"
            f"reconstruct   = {r['final_state']} / is_true_convergence={r['is_true_convergence']}")
 
     # ---------- S3 战略报告案例复现（链根不变 = 修复对报告零影响） ----------
@@ -162,14 +164,14 @@ def main():
     eng.load_core_plugins()
     report = eng.audit(dict(STRATEGY_CTX))
     root = eng.chain_root_hash
-    verdict = report["analysis"]["STATE"]["verdict"]
+    verdict = report["analysis"]["ACC"]["verdict"]
     r = eng.reconstruct(dict(STRATEGY_CTX), max_rounds=5)
     ok = (root == STRATEGY_ROOT_EXPECTED and verdict["level"] == "AUDIT_HALT"
           and r["final_state"] == "BLOCKED" and not r["is_true_convergence"])
     record("S3", "战略报告案例：静态审计复现 + 收敛阻断", ok,
            f"chain_root    = {root}\n"
            f"expected      = {STRATEGY_ROOT_EXPECTED}\n"
-           f"STATE verdict = {verdict['level']} / reconstruct = {r['final_state']}")
+           f"ACC verdict = {verdict['level']} / reconstruct = {r['final_state']}")
 
     # ---------- S4 有风险且无批准 delta → DIVERGED + awaiting_human ----------
     ctx = dict(CLEAN_CTX, text="显然，服务B应上线。")

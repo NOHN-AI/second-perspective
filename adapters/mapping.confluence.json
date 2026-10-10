@@ -1,0 +1,19 @@
+{
+  "system": "confluence",
+  "version": 1,
+  "source": {
+    "title": "title",
+    "body": "body.storage.value"
+  },
+  "fields": {
+    "origin": { "headings": ["缘起", "起因", "问题缘起"], "mode": "text" },
+    "goal": { "headings": ["目标", "目标稳态", "期望目标"], "mode": "text" },
+    "narrative": { "headings": ["背景", "背景与问题", "现状说明"], "mode": "text" },
+    "decision": { "headings": ["决策", "决议", "决定"], "mode": "text" },
+    "assumptions": { "headings": ["关键假设", "假设", "前提"], "mode": "list" },
+    "outcome": { "headings": ["预期结果", "结果", "目标值"], "mode": "text" },
+    "branches": { "headings": ["失败路径与回退方案", "失败路径", "回退方案"], "mode": "branches" },
+    "evidence": { "headings": ["证据", "依据", "数据来源"], "mode": "list" }
+  },
+  "required": ["decision", "assumptions", "outcome"]
+}

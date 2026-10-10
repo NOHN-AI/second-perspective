@@ -6,7 +6,7 @@
 </p>
 
 <blockquote align="center">
-  <em>Global Cognitive Audit Engine (GCAE) · Second Perspective Engine 1.0 · Second-Perspective Language</em>
+  <em>Global Cognitive Audit Engine (GCAE) · Second Perspective Engine 1.1 · Second-Perspective Language</em>
 </blockquote>
 
 <p align="center">
@@ -52,16 +52,16 @@ flowchart TB
     E1["🧠 Second Perspective Engine.py · ResponsibilityAccount<br/>anchor organisation / role / stage"]
     E2["⚙️ AuditConfigLoader → load_core_plugins()<br/>load allowed stages + disclaimer,<br/>then register the ten operators"]
 
-    A0["⊙ Zone ③ · ORI<br/>Origin Anchor — origin event · target state · energy constraints"]
+    A0["⊙ Zone ③ · GA<br/>Genesis Anchor — origin event · target state · energy constraints"]
     A1["⊗ Zone ③ · NS<br/>Narrative Stripping — delete rhetoric, keep the logical core"]
     A2["⊕ Zone ③ · IAP<br/>Implicit Assumption — surface undeclared premises and privilege bypass"]
-    A3["⊿ Zone ③ · LCH<br/>Fragility Latch — score each assumption's collapse risk ΔD"]
-    A6["⊞ Zone ③ · TPG<br/>Rule-Free Thinking Topology — build □/→/⦿ + four parallel checks"]
+    A3["⊿ Zone ③ · LCH<br/>Fragility Localization — score each assumption's collapse risk ΔD"]
+    A6["⊞ Zone ③ · LFT<br/>Label-Free Topology — build □/→/⦿ + four parallel checks"]
     A8["BFC Zone ③ · BFC<br/>Binary Fact Check — reduce a claim to true/false, never a third value"]
-    A4["⚙️ Zone ③ · CCS<br/>Causal Chain Sync — reverse check · counterfactual · black-hole detection"]
+    A4["⚙️ Zone ③ · CCS<br/>Chain Closure Scan — reverse check · counterfactual · black-hole detection"]
     A7["⇄ Zone ③ · GRF<br/>Gray Feedback — rollout ladder + reality falsification alignment"]
     A9["META Zone ③ · META<br/>Meta-Causal Ledger — chaos / wuji / illusion A6 / tiandao A10 / lunhui (measures only, never blocks)"]
-    A5["⊚ Zone ③ · STATE<br/>State Anchoring — pin responsibility + seal a SHA-256 certificate"]
+    A5["⊚ Zone ③ · ACC<br/>Accountability Anchoring — pin responsibility + seal a SHA-256 certificate"]
 
     R["🧾 Zone ⑤ · ReportRenderer<br/>render the bilingual report"]
     RC["↻ engine.spiral(approved_deltas = …)<br/>superimposed spiral: freeze converged subgraph + detect origin drift"]
@@ -110,7 +110,7 @@ flowchart TB
 **How to read it**
 
 1. **Top to bottom is one audit run.** Your own description goes in; a structural verdict plus a certificate comes out — nothing else.
-2. **Every step names the operator that does it** (Zone ③, `ORI` through `STATE`), so you can read the diagram and the source side by side. The ten operators always run in the order fixed by `PIPELINE_ORDER`. `META` sits between `GRF` and `STATE`: it needs all four upstream results before it can settle the five meta-bases.
+2. **Every step names the operator that does it** (Zone ③, `GA` through `ACC`), so you can read the diagram and the source side by side. The ten operators always run in the order fixed by `PIPELINE_ORDER`. `META` sits between `GRF` and `ACC`: it needs all four upstream results before it can settle the five meta-grounds.
 3. **Three exits, and their semantics never interfere.** `spiral()` superimposes layers, freezes the converged subgraph and detects origin drift; `reconstruct()` keeps the v1 linear overwrite semantics; `evolve()` only emits proposals and bumps the generation — it **never touches the adjudication rules**.
 4. **The output is deliberately modest, and the side tools are optional.** No advice, no ranking, no score — the `.spd` / `.tpg` checker sits outside the engine, and the narration layer is off by default and can never change a verdict.
 
@@ -141,16 +141,16 @@ an explicit **grammar extension 2026.3**, declared in `language Standard/topolog
 
 | Operator | Symbol | Class in engine | Description |
 |---|---|---|---|
-| Origin Anchor (ORI) | ⊙ | `OriginAnchorPlugin` | Anchor origin event / target state / energy constraints; an origin vacuum blocks |
+| Genesis Anchor (GA) | ⊙ | `OriginAnchorPlugin` | Anchor origin event / target state / energy constraints; an origin vacuum blocks |
 | Narrative Stripping (NS) | ⊗ | `NarrativeStripPlugin` | Strip rhetoric, emotion, and vague quantifiers; extract the logical core |
 | Implicit Assumption (IAP) | ⊕ | `ImplicitAssumptionPlugin` | Reveal hidden assumptions, privilege bypass, and circular reasoning |
-| Fragility Latch (LCH) | ⊿ | `FragilityLatchPlugin` | Compute the ΔD collapse probability of each assumption; find the most fragile variable |
-| Rule-Free Thinking Topology (TPG) | ⊞ | `TopologyGraphPlugin` | Build the de-semantic □/→/⦿ topology; run **four** parallel checks |
+| Fragility Localization (LCH) | ⊿ | `FragilityLatchPlugin` | Compute the ΔD collapse probability of each assumption; find the most fragile variable |
+| Label-Free Topology (LFT) | ⊞ | `TopologyGraphPlugin` | Build the de-semantic □/→/⦿ topology; run **four** parallel checks |
 | Binary Fact Check (BFC) | — (letter code) | `BinaryFactCheckPlugin` | Reduce a claim to **true / false**; an evidence vacuum or contradiction blocks, never a third value |
-| Causal Chain Sync (CCS) | ⚙ | `CausalChainSyncPlugin` | Reverse verification + counterfactual validation + black-hole detection |
+| Chain Closure Scan (CCS) | ⚙ | `CausalChainSyncPlugin` | Reverse verification + counterfactual validation + black-hole detection |
 | Gray Feedback (GRF) | ⇄ | `GrayFeedbackPlugin` | Rollout ladder + reality falsification alignment; falsified with no branch blocks |
-| Meta-Causal Ledger (META) | — (letter code) | `MetaCausalLedgerPlugin` | Chaos / Wuji / Illusion A6 / Tiandao A10 / Lunhui — five meta-bases as ledgers; **never blocks** |
-| State Anchoring (STATE) | ⊚ | `StateAnchorPlugin` | Responsibility anchoring + SHA-256 audit certificate |
+| Meta-Causal Ledger (META) | — (letter code) | `MetaCausalLedgerPlugin` | Hundun / Wuji / Xuhuan A6 / Tiandao A10 / Lunhui — five meta-grounds as ledgers; **never blocks** |
+| Accountability Anchoring (ACC) | ⊚ | `StateAnchorPlugin` | Responsibility anchoring + SHA-256 audit certificate |
 
 **Why META gets a letter code and not a glyph**: it is a **ledger of measures**, placed on the
 `T2_SIGNAL` tier, so it is structurally incapable of flipping a verdict. Giving it a symbol like
@@ -204,16 +204,16 @@ They can fail independently, and merging them would bury one real question.
 
 ### The meta-causal ledger (chaos · wuji · illusion · tiandao · lunhui)
 
-The five meta-bases of the normative reference's clause 6 become five computable ledgers.
+The five meta-grounds of the normative reference's clause 6 become five computable ledgers.
 They measure; they never adjudicate:
 
 | Meta-base | Realised as | Criterion |
 |---|---|---|
-| chaos (混沌) | gap ledger `chaos_gaps` | "Chance" is not in chaos, **only in the observer's knowledge gap**. Calling an unresolved antecedent "luck" raises high risk |
-| wuji (无极) | parallel chains | Parallel (many roots) is legal; a fork (one pair, many edges) is not. The limit converges uniquely: S∞ = S* |
-| illusion (虚幻) | **A6 narrative entropy** | masked chars / total chars — a rational, never a probability. The reality face (⇄GRF) is recorded alongside it |
-| tiandao (天道) | **A10 audit entropy** | provenance entries per layer (discrete d(version)/dt). A **bounded** A10 is what lets evolution converge to S* |
-| lunhui (轮回) | succession integrity | Not the chain's self-loop but its universal succession: every effect becomes the next cause, order never inverted |
+| Hundun (混沌) | gap ledger `chaos_gaps` | "Chance" is not in chaos, **only in the observer's knowledge gap**. Calling an unresolved antecedent "luck" raises high risk |
+| Wuji (无极) | parallel chains | Parallel (many roots) is legal; a fork (one pair, many edges) is not. The limit converges uniquely: S∞ = S* |
+| Xuhuan (虚幻) | **A6 narrative entropy** | masked chars / total chars — a rational, never a probability. The reality face (⇄GRF) is recorded alongside it |
+| Tiandao (天道) | **A10 audit entropy** | provenance entries per layer (discrete d(version)/dt). A **bounded** A10 is what lets evolution converge to S* |
+| Lunhui (轮回) | succession integrity | Not the chain's self-loop but its universal succession: every effect becomes the next cause, order never inverted |
 
 ### Orchestration: linear vs spiral vs autonomous evolution
 
@@ -251,9 +251,9 @@ written down: presenting what it does *not* block as if it did is the fastest wa
 | ⊕ IAP assumption mining | undeclared premises, privilege bypass, circular reasoning | signal |
 | BFC binary fact check | evidence vacuum · mutually negating evidence · falsified premise still in use | `BLOCKED` |
 | ⇄ GRF reality feedback | reality already falsified an assumption while **no fallback path ΔD** exists; no rollout ladder | `BLOCKED` / warning |
-| ⊞ TPG topology checks | identity conflicts, out-of-range parameters (fatal); dangling node/edge, causal paradox (result void) | fatal / warning |
+| ⊞ LFT topology checks | identity conflicts, out-of-range parameters (fatal); dangling node/edge, causal paradox (result void) | fatal / warning |
 | Chain-internal time order (axiom 5) | inverted order; one node pair with multiple edges (a fork); unassignable order from a cycle | warning, result void |
-| ⊚ STATE responsibility anchoring | missing owner; vague responsible party | `BLOCKED` |
+| ⊚ ACC responsibility anchoring | missing owner; vague responsible party | `BLOCKED` |
 | **Reproducible certificate** | same input + same nonce + same clock → **same chain root**, recomputable on another machine, bound to no model vendor | verifiable |
 
 ### 2. What it does NOT block (explicit non-commitments)
@@ -331,7 +331,7 @@ engine.register_operator(
     tier=PluginTier.T2_SIGNAL,       # T2 / T3 only — an external operator may never block
     analyze=fn,                      # the one contract: Dict -> Dict
     description="...",
-    after="TPG",                     # required: which operator to run after; no default slot
+    after="LFT",                     # required: which operator to run after; no default slot
 )
 ```
 
@@ -446,7 +446,7 @@ config = spe.AuditConfigLoader.load_from_dict({
 })
 
 engine = spe.SecondPerspectiveEngine(account=account, config=config)
-engine.load_core_plugins()   # Register the ten operators: ORI / NS / IAP / LCH / TPG / BFC / CCS / GRF / STATE
+engine.load_core_plugins()   # Register the ten operators: GA / NS / IAP / LCH / LFT / BFC / CCS / GRF / ACC
 
 decision_context = {
     # ⊙ origin anchor

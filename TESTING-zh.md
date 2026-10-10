@@ -42,22 +42,21 @@ python verify.py --json     # 机器可读（可接 CI）
 python verify.py --root     # 只打印链根（单行），供跨机比对
 ```
 
-预期结果：**PASS 9 · FAIL 0 · WARN 2**，退出码 0（"全部硬性检查通过"）。
+预期结果：**PASS 18 · FAIL 0 · WARN 1**，退出码 0（"全部硬性检查通过"）。
 
 ```bash
 python verify.py --root
-# 预期输出（单行，逐字符一致）：
-# f5713f49481a80f82356ba1255c0292ddb0d17a235a35348bcff0eef49d6a801
+# 预期输出（单行，逐字符一致；SPE 1.1 术语 v2，算子更名后链根随之更新）：
+# aece60f584b60a05860b5bf996b390174d4c02aaf2b2bffb1b20ffde2e9c38d1
 ```
 
-两项 WARN 是**如实披露的设计取舍，不是缺陷**：
+一项 WARN 是**如实披露的设计取舍，不是缺陷**：
 
 - **V3b — 证书不绑定原始输入**：报告只存派生结论（隐私设计：敏感决策数据不落库），
   代价是证书无法独立证明"审计的正是这一份输入"。对外表述时应主动声明证书覆盖范围，
   不要让对方默认它覆盖输入。
-- **V9 — 默认路径 nonce 不确定**：引擎的 `ResponsibilityAccount` 默认用 `uuid4()` 生成
-  nonce，而链事件含该 nonce；因此**凡要做字节级复现，脚本必须显式固定时钟与 nonce**
-  （本仓库所有脚本均已如此）。该 WARN 给出了修正方向（按账户字段做 sha256 确定性推导）。
+- （历史注：早期版本还有 V9 — 默认路径 nonce 不确定 的 WARN；该问题已通过
+  确定性推导修复，V9 现为 PASS，不再列入 WARN。）
 
 ### 3.2 五算子端到端演示 — `demo_audit.py`
 
@@ -65,7 +64,7 @@ python verify.py --root
 python demo_audit.py
 ```
 
-预期：无报错，输出五算子（NS / IAP / LCH / CCS / STATE）对示例决策的审计报告文本。
+预期：无报错，输出五算子（NS / IAP / LCH / CCS / ACC）对示例决策的审计报告文本。
 
 ### 3.3 DSL 工具链（可选）
 

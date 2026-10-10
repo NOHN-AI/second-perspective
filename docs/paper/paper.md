@@ -1,19 +1,19 @@
 # Structural Auditing of Decision Claims: A Deterministic Offline Method and Its Reproducible Evidence Chain
 
-**Second-Perspective Language 2026.1 and the Global Cognitive Audit Engine (GCAE v2.0.0)**
+**Second-Perspective Language 2026.2 and the Global Cognitive Audit Engine (GCAE · engine SPE 1.2.0)**
 
 Author: Zhichen Ji
 Affiliation: NOHN AI TECHNOLOGY PTE. LTD., Singapore
 Contact: ai@nohnlins.com · ORCID 0009-0006-9578-5657
-Date: 2026-10-09 · Version 1.0 — public technical report
+Date: 2026-10-10 · Version 1.2 — public technical report
 
 ---
 
 ## Abstract
 
-Machine-generated decision claims — the outputs of large language models (LLMs) in high-stakes contexts — are narratives: fluent, plausible, and structurally incomplete. Current evaluation of such outputs concentrates on content truthfulness. We address a different, orthogonal dimension: **structural completeness and evidentiary properties**. This paper specifies a deterministic, offline, model-agnostic method for auditing the structure of decision claims, comprising (i) a formal decision-structure language with a machine-checkable grammar and a validator that rejects conclusion-bearing, recommendation-bearing, ranking, and optimisation text by construction (19 diagnostic codes); (ii) a five-operator audit pipeline (narrative stripping, implicit-assumption surfacing, fragility assessment, causal-chain synchronisation, state anchoring) with an explicit severity model in which only structural absence — never quantitative opinion — may block an audit; and (iii) a tamper-evident, reproducible evidence chain whose integrity any third party can re-verify offline. We define a structural taxonomy of decision claims — *anchored / floating / opaque / hollow* — that is independent of factual truth and measurable by a fixed procedure. We report the results of a shipped, zero-dependency verification suite (11 checks: 9 pass, 2 disclosed limitations) and publish the resulting chain root (`f5713f49…`) as a cross-machine reproducibility reference. The method does not evaluate whether a claim is true; it records, in a form that survives adversarial scrutiny, **whether the claim declares the assumptions it depends on and the responses it commits to when those assumptions fail** — the evidence layer required by record-keeping, transparency, and human-oversight obligations of high-risk AI governance regimes.
+Machine-generated decision claims — the outputs of large language models (LLMs) in high-stakes contexts — are narratives: fluent, plausible, and structurally incomplete. Current evaluation of such outputs concentrates on content truthfulness. We address a different, orthogonal dimension: **structural completeness and evidentiary properties**. This paper specifies a deterministic, offline, model-agnostic method for auditing the structure of decision claims, comprising (i) a formal decision-structure language with a machine-checkable grammar and a validator that rejects conclusion-bearing, recommendation-bearing, ranking, and optimisation text by construction (20 diagnostic codes); (ii) a five-operator audit pipeline (narrative stripping, implicit-assumption surfacing, fragility localization, chain closure scanning, accountability anchoring) with an explicit severity model in which only structural absence — never quantitative opinion — may block an audit; and (iii) a tamper-evident, reproducible evidence chain whose integrity any third party can re-verify offline. We define a structural taxonomy of decision claims — *anchored / floating / opaque / hollow* — that is independent of factual truth and measurable by a fixed procedure. We report the results of a shipped, zero-dependency verification suite (19 checks: PASS 18 · FAIL 0 · WARN 1) and publish the resulting chain root (`aece60f5…`) as a cross-machine reproducibility reference. The method does not evaluate whether a claim is true; it records, in a form that survives adversarial scrutiny, **whether the claim declares the assumptions it depends on and the responses it commits to when those assumptions fail** — the evidence layer required by record-keeping, transparency, and human-oversight obligations of high-risk AI governance regimes.
 
-**摘要** —— 大模型在高风险场景下输出的"决策主张"本质是叙事：流畅、可信、但结构不完整。本文不评估内容真伪（那一维已有大量工作），而是给出**结构完整性与证据属性**这一正交维度的确定性、离线、与模型无关的审计方法：① 一门可机器校验的决策结构语言（19 条诊断码，按构造拒绝结论/建议/排序/优化类表述）；② 五算子审计流水线（叙事剥离、内隐假设透视、脆弱性闩锁、因果链同步、状态锚定），其严重度模型规定：**只有结构性缺失可以阻断，量化意见不能**；③ 可防篡改、可复现的证据链，任何第三方可离线重算。另给出与事实真伪无关、可按固定程序测量的结构分类法（锚定/浮置/不透明/空洞）。随附零依赖验证套件实测结果（11 项：9 通过、2 项如实披露）与跨机复现链根。方法不判断主张真假，只记录"该主张是否声明了所依赖的假设、以及假设失效时所承诺的分支响应"——这正是高风险 AI 治理中记录保持、透明度与人类监督义务所需的证据层。
+**摘要** —— 大模型在高风险场景下输出的"决策主张"本质是叙事：流畅、可信、但结构不完整。本文不评估内容真伪（那一维已有大量工作），而是给出**结构完整性与证据属性**这一正交维度的确定性、离线、与模型无关的审计方法：① 一门可机器校验的决策结构语言（19 条诊断码，按构造拒绝结论/建议/排序/优化类表述）；② 五算子审计流水线（叙事剥离、内隐假设透视、脆弱性定位、链闭合扫描、责任锚定），其严重度模型规定：**只有结构性缺失可以阻断，量化意见不能**；③ 可防篡改、可复现的证据链，任何第三方可离线重算。另给出与事实真伪无关、可按固定程序测量的结构分类法（锚定/浮置/不透明/空洞）。随附零依赖验证套件实测结果（19 项：PASS 18 · FAIL 0 · WARN 1，1 项如实披露的设计取舍）与跨机复现链根。方法不判断主张真假，只记录"该主张是否声明了所依赖的假设、以及假设失效时所承诺的分支响应"——这正是高风险 AI 治理中记录保持、透明度与人类监督义务所需的证据层。
 
 ---
 
@@ -31,11 +31,11 @@ This distinction matters for governance. High-risk AI regimes — the EU AI Act'
 
 This paper specifies and verifies such an evidence layer. Our contributions:
 
-- **C1 — A structural language with a machine-checkable grammar.** The Second-Perspective Decision Structure Language (Standard 2026.1): an ISO/IEC 14977 (EBNF) grammar [.spd] with a normative block order, semantic rules R1–R12, 19 diagnostic codes, and a zero-dependency validator/generator. Its design invariant: the language *cannot* express conclusions, recommendations, rankings, scores, or probabilities (enforced as E301–E304); it describes only the boundary within which a decision holds.
-- **C2 — A deterministic five-operator audit method.** NS (narrative stripping), IAP (implicit-assumption surfacing), LCH (fragility latch, with a published deterministic ΔD formula), CCS (causal-chain synchronisation with black-hole detection), STATE (responsibility anchoring and verdict aggregation). Explicit severity model: **only structural absence may block; quantitative opinion may not** (Section 4.3).
+- **C1 — A structural language with a machine-checkable grammar.** The Second-Perspective Decision Structure Language (Standard 2026.2): an ISO/IEC 14977 (EBNF) grammar [.spd] with a normative block order, semantic rules R1–R13, 20 diagnostic codes, and a zero-dependency validator/generator. Its design invariant: the language *cannot* express conclusions, recommendations, rankings, scores, or probabilities (enforced as E301–E304); it describes only the boundary within which a decision holds.
+- **C2 — A deterministic five-operator audit method.** NS (narrative stripping), IAP (implicit-assumption surfacing), LCH (fragility localization, with a published deterministic ΔD formula), CCS (chain closure scan with black-hole detection), ACC (accountability anchoring and verdict aggregation). Explicit severity model: **only structural absence may block; quantitative opinion may not** (Section 4.3).
 - **C3 — A reproducibility and tamper-evidence architecture.** A sealed hash chain over audit events with a single published chain root; a model-firewall that makes it impossible for LLM output to influence structural verdicts; and an 11-check independent verification suite any third party can run offline (Section 6). We publish the verified chain root as a cross-machine reference value.
 - **C4 — A structural taxonomy.** *Anchored / floating / opaque / hollow* (Section 5): definitions and a fixed measurement procedure, orthogonal to factual truth.
-- **C5 — Honest limitations, pre-registered.** Two known gaps are disclosed as first-class results rather than hidden (Section 7): certificate input-binding (V3b) and default-path nonce non-reproducibility (V9).
+- **C5 — Honest limitations, pre-registered.** Known gaps are disclosed as first-class results rather than hidden (Section 7): both formerly open items are now **resolved** — certificate input-binding (V3b, resolved in SPE 1.2.0 by folding a canonical input digest into the signed certificate) and default-path nonce non-reproducibility (V9, disclosed in the Version 1.0 report, resolved by deterministic nonce derivation) (Section 6).
 
 Scope discipline: the method **does not** decide, rank, recommend, or establish truth. It produces audit conclusions and evidence — nothing else. Every property claimed in this paper is stated with the command or procedure by which a reader can independently check it.
 
@@ -49,7 +49,7 @@ Scope discipline: the method **does not** decide, rank, recommend, or establish 
 | determinism (deterministic) | reproducibility: identical declared inputs yield the identical audit result | not metaphysical determinism; not a claim that the audited process is causally determined |
 | verdict | the audit's terminal classification over declared structure (AUDIT_HALT / AUDIT_WARN / AUDIT_PASS) | not a ruling on the factual truth of the claim; not a legal decision |
 | structure | the declared premises, failure branches and dependencies of a claim | not data structures; not model architecture |
-| anchored (structural state) | a claim whose declared dependencies terminate in committed failure responses — the part no post-hoc narrative can supply | not responsibility anchoring (the STATE operator), which terminates the audit in a named decision unit |
+| anchored (structural state) | a claim whose declared dependencies terminate in committed failure responses — the part no post-hoc narrative can supply | not responsibility anchoring (the ACC operator), which terminates the audit in a named decision unit |
 
 ---
 
@@ -71,7 +71,7 @@ Audit as an institution is built on separation [9]: the Sarbanes–Oxley reforms
 
 ---
 
-## 3. The Decision Structure Language (Standard 2026.1)
+## 3. The Decision Structure Language (Standard 2026.2)
 
 ### 3.1 Grammar
 
@@ -102,7 +102,7 @@ A tool that cannot emit advice cannot be recruited into advice-giving — this i
 
 ### 3.3 Semantic rules and diagnostic codes
 
-Context-free EBNF cannot express the reference integrity of identifiers or graph constraints; those are enforced by the validator as normative rules: every branch id must match a declared assumption id (R1 → E104); every dependency endpoint must be a declared assumption (R2 → E104); assumption ids must be unique (R3 → E105); the dependency graph must be acyclic (R4 → E106); **every assumption must have exactly one matching branch (R5 → E107)**; and R6–R9 restate the E301–E304 constraint layer. Three warnings (W401 vague qualifier, W402 missing observable threshold, W403 self-evident assumption) mark structural quality without blocking.
+Context-free EBNF cannot express the reference integrity of identifiers or graph constraints; those are enforced by the validator as normative rules: every branch id must match a declared assumption id (R1 → E104); every dependency endpoint must be a declared assumption (R2 → E104); assumption ids must be unique (R3 → E105); the dependency graph must be acyclic (R4 → E106); **every assumption must have exactly one matching branch (R5 → E107)**; and R6–R9 restate the E301–E304 constraint layer. Four warnings (W401 vague qualifier, W402 missing observable threshold, W403 self-evident assumption, W404 placeholder branch response — a failure branch that commits to no executable action and would otherwise render a claim falsely *anchored*) mark structural quality without blocking.
 
 The full diagnostic set is 19 codes: E101–E108 (structural), E201–E204 (lexical), E301–E304 (constraint), W401–W403 (advisory warnings); see Appendix A.
 
@@ -114,7 +114,7 @@ The validator and generator (`dsl.py`) are zero-dependency (Python standard libr
 
 ---
 
-## 4. The Audit Method (GCAE v2.0.0)
+## 4. The Audit Method (GCAE · engine SPE 1.2.0)
 
 ### 4.1 Input contract
 
@@ -130,6 +130,9 @@ The engine audits a *decision context*: a dictionary whose keys are all optional
 | `dependencies` | `dependency_graph`, `deps` | `{"A1": ["A2"]}` |
 | `criteria` | — | `{dimension: {"weight": w}}`; weights must sum to 1.0 |
 | `evidence` | — | identifiers supporting the conclusion |
+| `origin` | `origin_event`, `第一原点` | the genesis event anchoring the causal chain (GA); absent ⇒ ORIGIN_VACUUM, a blocking structural absence |
+| `goal` | `target_state`, `objective`, `S*` | the target steady state; absent ⇒ HIGH_RISK (GOAL_UNANCHORED) |
+| `resources` | `energy`, `约束` | `{field: {budget/available, committed/used}}`; negative gap ⇒ HIGH_RISK (RESOURCE_DEFICIT) |
 
 Minimal usable input: `decision`, `assumptions`, `outcome`. Free prose can be audited by placing it in `narrative`. Absence of keys is never an error — it is itself an auditable condition (missing assumptions are *reported*, not guessed).
 
@@ -139,7 +142,7 @@ Minimal usable input: `decision`, `assumptions`, `outcome`. Free prose can be au
 
 **IAP — Implicit Assumption Surfacing.** Detects: self-referential premises; **privilege bypass** (e.g. "no approval required", 特批, exemption from review — severity HALT); unilateral premises (one-sided conditions); circular justification (P == Q, severity HALT); and missing assumptions (a decision declared with no assumptions — severity WARN). The engine additionally reports *conclusion without evidence* and *non-normalised criteria weights* when those inputs are present and defective.
 
-**LCH — Fragility Latch.** For each declared assumption A_i, computes a deterministic collapse probability ΔD:
+**LCH — Fragility Localization.** For each declared assumption A_i, computes a deterministic collapse probability ΔD:
 
 ```
 ΔD(A_i) = clamp[0,1]( 0.30                 # base value
@@ -152,17 +155,17 @@ Minimal usable input: `decision`, `assumptions`, `outcome`. Free prose can be au
 
 Weight rationale (published as design constants, **not statistically fitted**): the most common failure combination — no branch response + non-falsifiable — sums to 0.85 > 0.7, failing; with a branch response it is 0.45 < 0.7, passing. The threshold 0.7 therefore separates one thing: *whether a fallback path was prepared for this assumption*. `system_delta_d` is the maximum over assumptions; pass requires `system_delta_d < 0.7` **and** full branch coverage.
 
-**CCS — Causal Chain Synchronisation.** Four checks: (1) *inverse check* — if ¬P holds, is the system fallback-convergent or collapse-prone (no branches → HALT, SYSTEM_COLLAPSE); (2) *counterfactual check* — is ¬P ⇒ Q′ considered; (3) *chain integrity* — are P, A, Q all present (structural, not semantic, coherence); (4) *black-hole detection* — any missing key variable (P, A, or Q) is a HALT: **the chain breaks; no speculative completion is performed.** Documented limitation: the inverse check counts branch *quantity*, not branch–assumption *identity* correspondence; the identity-matched check lives in LCH. The two checks use different coverage definitions, and this is disclosed in the module header (Section 7, L7).
+**CCS — Chain Closure Scan.** Four checks: (1) *inverse check* — if ¬P holds, is the system fallback-convergent or collapse-prone (no branches → HALT, SYSTEM_COLLAPSE); (2) *counterfactual check* — is ¬P ⇒ Q′ considered; (3) *chain integrity* — are P, A, Q all present (structural, not semantic, coherence); (4) *black-hole detection* — any missing key variable (P, A, or Q) is a HALT: **the chain breaks; no speculative completion is performed.** Documented limitation: the inverse check counts branch *quantity*, not branch–assumption *identity* correspondence; the identity-matched check lives in LCH. The two checks use different coverage definitions, and this is disclosed in the module header (Section 7, L7).
 
-**STATE — State Anchoring.** Anchors responsibility to a minimal decision unit: `ResponsibilityAccount(organization, role, stage, owner, nonce)`. Vague organisations ("team", "company", "everyone") are flagged UNANCHORED. STATE aggregates NS/IAP/LCH/CCS into a verdict — `AUDIT_HALT` if any halt exists, else `AUDIT_WARN` if any warning, else `AUDIT_PASS` — and generates the audit certificate: `audit_id = SPL-{nonce}-{timestamp}` with `signature = SHA-256(org | role | stage | nonce | verdict-level | halt_count | warn_count | timestamp)`.
+**ACC — Accountability Anchoring.** Anchors responsibility to a minimal decision unit: `ResponsibilityAccount(organization, role, stage, owner, nonce)`. Vague organisations ("team", "company", "everyone") are flagged UNANCHORED. ACC aggregates NS/IAP/LCH/CCS into a verdict — `AUDIT_HALT` if any halt exists, else `AUDIT_WARN` if any warning, else `AUDIT_PASS` — and generates the audit certificate: `audit_id = SPL-{nonce}-{timestamp}` with `signature = SHA-256(org | role | stage | nonce | verdict-level | halt_count | warn_count | timestamp | input_digest)`, where `input_digest = SHA-256(canonical-JSON(input))` binds the certificate to the exact audited input (V3b resolved; §6 L1).
 
 ### 4.3 Severity model: only structural absence may block
 
-Plugins carry a permission tier. Structural operators (CCS: missing key variables; STATE: final adjudication) may emit HALT and block an audit. Signal operators (IAP, LCH) may emit risk signals but cannot block. Narrative operators (NS) emit text only; any status field in their output is stripped. The design rule, verbatim from the implementation: **只有「结构性缺失」才能阻断，「量化意见」不能** — structural absence blocks; quantitative opinion does not. This is what keeps the method falsifiable in the right way: it never condemns a decision for being *unlikely*; it condemns only declared structure that is *absent*.
+Plugins carry a permission tier. Structural operators (CCS: missing key variables; ACC: final adjudication) may emit HALT and block an audit. Signal operators (IAP, LCH) may emit risk signals but cannot block. Narrative operators (NS) emit text only; any status field in their output is stripped. The design rule, verbatim from the implementation: **只有「结构性缺失」才能阻断，「量化意见」不能** — structural absence blocks; quantitative opinion does not. This is what keeps the method falsifiable in the right way: it never condemns a decision for being *unlikely*; it condemns only declared structure that is *absent*.
 
 ### 4.4 The model firewall
 
-The engine's optional LLM narrative adapter (off by default) is permission-tiered, and a fixed key set — `status`, `converged`, `blocked`, `verdict`, `decision`, `weight`, `score`, `rank`, `adjudicated`, `is_converged` — is **stripped from any LLM output** before it can touch structural adjudication. Even if a model is prompt-injected into returning verdict fields, they cannot enter the audit result. The audit layer is structurally independent of the audited model: no model modification is required or possible, and model output cannot influence verdicts.
+The engine's optional LLM narrative adapter (off by default) is permission-tiered behind three defence layers. **(1) Key blacklist, recursive:** a fixed key set — `status`, `converged`, `blocked`, `verdict`, `decision`, `weight`, `score`, `rank`, `adjudicated`, `is_converged` — is stripped from LLM output at *any nesting depth* (a model returning `{"meta": {"status": ...}}` does not escape the filter); nesting beyond a fixed depth bound is treated as a violation and discarded. **(2) Whitelist compression at the narrative tier:** a T3-tier model's entire return is collapsed to a single `narrative` key — it cannot introduce *any* field of its own. **(3) Tier enforcement at the operator boundary:** operator-emitted statuses are demoted in-report when they exceed the operator's permission tier, and every violation is recorded, never silently corrected. Even a prompt-injected model therefore cannot move a structural verdict; the audit layer is structurally independent of the audited model: no model modification is required or possible, and model output cannot influence verdicts.
 
 ### 4.5 Evidence chain and reconstruction
 
@@ -189,7 +192,7 @@ Measurement mapping to the pipeline: `hollow` ≈ CCS black-hole (missing P/A/Q)
 
 ## 6. Properties and Verification
 
-Every property below is paired with the check that verifies it. The verification suite (`verify.py`) is zero-dependency, offline, and CI-friendly (exit code 0 = no FAIL). **Results of a full run on 2026-10-09: 11 checks — PASS 9 · FAIL 0 · WARN 2; exit code 0.**
+Every property below is paired with the check that verifies it. The verification suite (`verify.py`) is zero-dependency, offline, and CI-friendly (exit code 0 = no FAIL). **Results of a full run on 2026-10-10 (engine SPE 1.2.0, language Standard 2026.2): 19 checks — PASS 18 · FAIL 0 · WARN 1; exit code 0.**
 
 | # | Property | Statement | Verified by |
 |---|---|---|---|
@@ -201,11 +204,13 @@ Every property below is paired with the check that verifies it. The verification
 | P6 | Blocking on unenforceable responsibility | Missing responsible owner ⇒ `RESPONSIBILITY_CLOSURE = BLOCKED`; once closed, no longer blocks. | V6 (PASS) |
 | P7 | Language-toolchain determinism | Seeded generation is byte-identical across runs; valid/invalid samples exit 0/1. | V7, V7b (PASS) |
 | P8 | Dependency hygiene | Shipped dependency manifest contains no unrelated GUI/packaging deps for the audit core. | V8 (PASS) |
-| P9 | Reproducible reference root | The chain root for the frozen reference context, comparable across machines: `f5713f49481a80f82356ba1255c0292ddb0d17a235a35348bcff0eef49d6a801` | `python verify.py --root` |
-| L1 | Certificate coverage limited to derived report | The chain root hashes the derived audit report, not the raw input; a certificate cannot independently prove *which input* was audited. Disclosed trade-off: sensitive decision data is not persisted. | V3b (WARN, disclosed) |
-| L2 | Default-path nonce non-reproducibility | Default nonce is `uuid4`; byte-level reproduction requires explicitly fixing clock and nonce (all shipped scripts do). | V9 (WARN, disclosed) |
+| P9 | Reproducible reference root | The chain root for the frozen reference context, comparable across machines: `aece60f584b60a05860b5bf996b390174d4c02aaf2b2bffb1b20ffde2e9c38d1` | `python verify.py --root` |
+| L1 | ~~Certificate coverage limited to derived report~~ — **resolved** | Version 1.1 disclosed that the certificate covered only the derived report, not the raw input. Since SPE 1.2.0 the certificate carries `input_digest = SHA-256(canonical-JSON(input))` and the digest is folded into the signature: a certificate now independently proves *which input* was audited, without persisting the input itself (privacy by design retained — the digest does not disclose the input). Retained here for the disclosed process record. | V3b (PASS since SPE 1.2.0) |
+| L2 | ~~Default-path nonce non-reproducibility~~ — **resolved** | Version 1.0 disclosed that the default nonce was `uuid4`-based and not byte-reproducible. The current engine derives the nonce deterministically from responsibility-account fields (`SHA-256`); default-path audits are now byte-reproducible, and V9 passes. Retained here for the disclosed process record. | V9 (PASS since SPE 1.1.0) |
 
-Three further reproduction facts: (i) the end-to-end demonstration halts a decision that is rhetorically padded, assumption-hidden, and branch-less, while passing a fully-structured decision; (ii) the engine gates on stage whitelists at construction (invalid responsibility node ⇒ no audit at all); (iii) the chain root is the *only* external verification credential, and the suite's `--root` mode prints it as a single line for cross-machine comparison.
+Three further reproduction facts: (i) the end-to-end demonstration halts a decision that is rhetorically padded, assumption-hidden, and branch-less, while a fully-structured decision passes with warnings; (ii) the engine gates on stage whitelists at construction (invalid responsibility node ⇒ no audit at all); (iii) the chain root is the *only* external verification credential, and the suite's `--root` mode prints it as a single line for cross-machine comparison.
+
+**Reproduction premises.** All published results assume: CPython ≥ 3.10 (standard library only); UTF-8 as the default text encoding; no external I/O, network, or filesystem mutation during audit; canonical-JSON serialization everywhere a context or report is hashed (sorted keys, compact separators, `_`-prefixed internal keys excluded). Wall-clock dependence exists only when the caller does not inject a deterministic clock (`_clock`); the default-path nonce is derived deterministically (V9), so byte-reproducibility holds under declared premises and fails loudly, not silently, outside them.
 
 **Claim type discipline.** P1–P8 are categorical claims: each is a binary fact, and a single counterexample would refute it — its statement includes the exact procedure producing the counterexample-attempt. P9 is a reproducibility artifact. The paper deliberately makes **no statistical superiority claim** about any other system; such claims would be comparative, not categorical, and are left to per-deployment evaluation under a pre-registered protocol (Section 8).
 
@@ -215,13 +220,15 @@ Three further reproduction facts: (i) the end-to-end demonstration halts a decis
 
 Disclosed as results, not footnotes:
 
-- **L1 (V3b — certificate input-binding).** The certificate covers the derived report, not the raw input. Rationale: privacy by design (sensitive decision data is not persisted). Fix if input-binding is required: fold a normalised digest of the input into the hashed report. Until then, certificate coverage must be stated explicitly to counterparties — never assumed.
-- **L2 (V9 — nonce).** Default-path audits are not byte-reproducible. Reproduction requires fixing clock and nonce, as every shipped script does. Fix direction: derive the nonce deterministically from account fields.
+- **L1 (V3b — certificate input-binding; resolved).** Version 1.1 disclosed that the certificate covered the derived report, not the raw input. SPE 1.2.0 resolves this: the certificate now carries `input_digest = SHA-256(canonical-JSON(input))` (keys sorted, compact separators, internal `_`-prefixed keys excluded) and the digest is part of the signed material. Coverage must still be stated correctly: the digest proves *which* input was audited without disclosing it.
+- **L2 (V9 — nonce; resolved).** Version 1.0 disclosed that default-path audits were not byte-reproducible (`uuid4` nonces). The nonce is now derived deterministically from responsibility-account fields, V9 passes, and default-path audits are byte-reproducible. Retained as a disclosure record.
 - **L3 (LCH weights).** ΔD constants are deterministic design values, **not statistically fitted**. Changing them changes verdicts; that is a design change, not parameter tuning. The threshold's discriminating behaviour is transparent (§4.2) and falsifiable.
 - **L4 (CCS inverse coverage).** Counts branch quantity, not identity-matched correspondence (LCH does the identity-matched check). Two coverage definitions coexist by design decision and are documented in the module header.
 - **L5 (Lexicons are literal).** NS/IAP match lexical patterns; they do not understand semantics. A claim can evade detection through paraphrase. This bounds the method's recall; it is a detector of declared structure, not an interpreter of meaning.
 - **L6 (No open-domain performance claim).** No pre-baked question bank ships with the artifacts: synthetic corpora have no discriminative power for real deployment targets. Evaluation must use the deployer's own real objects and corpus, under a pre-registered protocol (frozen thresholds, paired arms, zero-flip re-runs, Wilson intervals, exact McNemar, dual annotation with κ ≥ 0.70).
 - **L7 (Self-assessment context).** The AI Verify score (95/100) comes from a provider-commissioned assessment of the artifacts, not from the present document. It is a precedent, not an independent audit of this paper's claims. The claims of this paper stand on their own reproduction procedures (§6).
+- **L8 (Chain root is self-sealed; no external time authority).** The chain root is computed locally; no RFC 3161 timestamping authority or external signature anchors it to wall-clock time. Any third party can *recompute* the root offline (that is the point of P2/P9), but *when* an audit happened rests on the local clock (deterministic only when the caller injects `_clock`). External anchoring is a deliberate extension point, not a claim of this report.
+- **L9 (Verification is single-implementation).** All checks in §6 run against the reference implementation. An independent reimplementation, cross-checked against the published chain root and the language standard, is invited (Appendix C) and remains the strongest outstanding validation step.
 
 The method makes **no factual-truth judgement**, no probability judgement about outcomes, and no recommendation. It audits declared structure and produces evidence; nothing more is claimed.
 
@@ -242,7 +249,7 @@ The complementary claim follows: generators **cover**; the audit layer **vouches
 
 ## 9. Conclusion
 
-We specified a deterministic, offline, model-agnostic method for auditing the *structure* of decision claims: a non-advisory formal language (19 diagnostic codes; conclusions/recommendations/rankings/optimisation rejected by construction), a five-operator pipeline with a severity model in which only structural absence may block, a structural taxonomy (anchored/floating/opaque/hollow) orthogonal to factual truth, and a sealed hash-chain evidence architecture with a published verification suite (PASS 9 · FAIL 0 · WARN 2) and a cross-machine reference chain root. Two limitations are shipped as first-class disclosures. This report is the first public, self-contained description of the method and its reference artifacts; its claims are categorical and each is paired with its own refutation procedure. What it establishes is narrow and durable: **the record that a decision declared its assumptions and prepared its failure branches — or did not.** That record, not the narrative, is what survives an audit.
+We specified a deterministic, offline, model-agnostic method for auditing the *structure* of decision claims: a non-advisory formal language (19 diagnostic codes; conclusions/recommendations/rankings/optimisation rejected by construction), a five-operator pipeline with a severity model in which only structural absence may block, a structural taxonomy (anchored/floating/opaque/hollow) orthogonal to factual truth, and a sealed hash-chain evidence architecture with a published verification suite (PASS 18 · FAIL 0 · WARN 1) and a cross-machine reference chain root. Its disclosed limitations are shipped as first-class records — and both formerly open items are now resolved (certificate input-binding; nonce determinism), with two new disclosures added (self-sealed chain root; single-implementation verification). This report is the first public, self-contained description of the method and its reference artifacts; its claims are categorical and each is paired with its own refutation procedure. What it establishes is narrow and durable: **the record that a decision declared its assumptions and prepared its failure branches — or did not.** That record, not the narrative, is what survives an audit.
 
 ---
 
@@ -259,11 +266,11 @@ We specified a deterministic, offline, model-agnostic method for auditing the *s
 9. M. Power, *The Audit Society: Rituals of Verification*. Oxford University Press, 1997.
 10. R. C. Merkle, "A Digital Signature Based on a Conventional Encryption Function," *Advances in Cryptology — CRYPTO '87*, 1987.
 
-**Artifacts.** Second-Perspective repository (GCAE v2.0.0; language Standard 2026.1; verification suite): `https://github.com/nohn3043-arch/second-perspective`. Artifacts cited in this paper: `Cognitive Audit Engine.py`; `plugins/{ns,iap,lch,ccs,state}.py`; `language Standard/{2026.md,decision.ebnf,dsl.py}`; `demo_audit.py`; `verify.py`; `TESTING.md`. See `LICENSE` for terms (personal non-commercial research free; government/enterprise use requires a commercial license).
+**Artifacts.** Second-Perspective repository (GCAE · engine SPE 1.2.0; language Standard 2026.2; verification suite): `https://github.com/nohn3043-arch/second-perspective`. Artifacts cited in this paper: `Second Perspective Engine.py` (single-file engine: ten operators, of which the five-operator audit pipeline is the method specified here; hash-chain sealing; model firewall); `language Standard/{2026.md,decision.ebnf,dsl.py}`; `demo_audit.py`; `verify.py`; `TESTING.md`. See `LICENSE` for terms (personal non-commercial research free; government/enterprise use requires a commercial license).
 
 ---
 
-## Appendix A — The 19 Diagnostic Codes (Language Standard 2026.1)
+## Appendix A — The 20 Diagnostic Codes (Language Standard 2026.2)
 
 | Code | Level | Meaning |
 |---|---|---|
@@ -286,6 +293,7 @@ We specified a deterministic, offline, model-agnostic method for auditing the *s
 | W401 | WARNING | Assumption contains a vague qualifier |
 | W402 | WARNING | Assumption lacks an observable threshold |
 | W403 | WARNING | Assumption looks self-evident |
+| W404 | WARNING | Branch response is a placeholder (no executable action) |
 
 ## Appendix B — ΔD Worked Example (from the fragility module)
 
@@ -302,9 +310,12 @@ Same assumption with a branch response: `0.30 − 0.10 + 0.10 = 0.30` → passes
 ```bash
 git clone https://github.com/nohn3043-arch/second-perspective
 cd second-perspective
-python verify.py            # expect: PASS 9 · FAIL 0 · WARN 2; exit code 0
-python verify.py --root     # expect: f5713f49481a80f82356ba1255c0292ddb0d17a235a35348bcff0eef49d6a801
-python demo_audit.py        # expect: dirty decision HALT; clean decision PASS/WARN
+python verify.py            # expect: PASS 18 · FAIL 0 · WARN 1; exit code 0
+python verify.py --root     # expect: aece60f584b60a05860b5bf996b390174d4c02aaf2b2bffb1b20ffde2e9c38d1
+python demo_audit.py        # expect: dirty decision → AUDIT_HALT; clean decision → AUDIT_WARN
+                            # (the formerly disclosed demo-expectation mismatch is resolved: the
+                            #  clean fixture now declares origin/goal/resources; GA correctly
+                            #  blocks on a missing genesis origin — structural absence by design)
 python "language Standard/dsl.py" check "language Standard/examples/valid_decision.spd"    # exit 0
 python "language Standard/dsl.py" check "language Standard/examples/invalid_decision.spd"  # exit 1
 python "language Standard/dsl.py" gen --seed 2026 --count 5 --out samples/ --self-check    # byte-reproducible
