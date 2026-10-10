@@ -244,7 +244,7 @@ BFC 默认**关闸**：不提供 `facts` 时它原样放行（`status = SKIPPED`
 | ⊞ LFT 拓扑校验 | 身份冲突、参数越界（致命）；悬空节点/边、因果悖论（结果无效） | 致命 / 警告 |
 | 链内时序（公理 5） | 序倒置；同一对节点多边（分叉）；有环致序不可赋值 | 警告，结果无效 |
 | ⊚ ACC 责任锚定 | 缺责任人、责任主体模糊 | `BLOCKED` |
-| **可复现证书** | 同输入 + 同 nonce + 同 clock → **同链根**，跨机可复算，不依赖任何模型厂商 | 可核验 |
+| **可复现证书** | 同输入 + 同 nonce + 同 clock → **同链根**，跨机可复算，不依赖任何模型厂商；SPE 1.2 起签名另带 `input_digest = SHA-256(canonical-JSON(input))`，「这份证书对应的是**这一份**输入」可被独立验证 | 可核验 |
 
 ### 二、拦不住（明确不承诺）
 
@@ -377,8 +377,8 @@ cd second-perspective
 # 核心零依赖（仅需 Python 3.10+ 标准库，无需 pip install）
 # 叙述层内置于引擎（OpenAIProvider，仅 T3 叙述权限、受护栏约束），无需额外安装
 
-# ① 十算子 + 叠加螺旋端到端演示
-python "Second Perspective Engine.py"
+# ① 十算子 + 叠加螺旋端到端演示（引擎本体是库，无 __main__ 入口）
+python demo_audit.py
 
 # ② 独立验证套件（零依赖 · 19 项检查 · 退出码可接 CI）
 python verify.py
@@ -485,6 +485,8 @@ plain = spe.PlainLanguageRenderer()
 stack = spe.SpiralStack(energy_budget=5.0)
 ```
 
+叙述层**内置于引擎**（`OpenAIProvider`，零依赖，仅 T3 叙述权限）。模型防火墙为**三层**：T3 白名单把整个返回压缩成只剩 `narrative`；`FORBIDDEN_LLM_KEYS` 在**任意嵌套深度**递归剥离；递归深度上限 12。因此刻意**不设外部叙述适配器** —— 引擎之外的适配器可以绕过护栏输出建议，为规范所禁（`E302`、`E304`）。`adapters/` 属另一类东西：**输入映射**适配器，把导出文件 + 映射表转成引擎输入，导出文件里没有的字段一律不补（承接 I-1），且碰不了任何判定。
+
 </div>
 
 <p align="center">— ✦ —</p>
@@ -494,13 +496,20 @@ stack = spe.SpiralStack(energy_budget=5.0)
 ```
 second-perspective/
 ├── Second Perspective Engine.py   # 唯一引擎：十算子 + 拓扑底座 + 螺旋编排 + 双语渲染器（单文件）
-├── demo_audit.py                  # 端到端演示（走同一引擎）
+├── demo_audit.py                  # 端到端演示（走同一引擎）—— 先跑这个
 ├── verify.py                      # 独立验证套件（零依赖，19 项检查）
 ├── verify_convergence_fix.py      # 收敛逻辑回归（S1–S6）
 ├── case_memo_audit.py             # 案例审计：投资决策备忘录
 ├── case_strategy_audit.py         # 案例审计：三年战略规划
+├── ARCHITECTURE.md                # 单文件为什么长成这样（面向维护者）
+├── GLOSSARY.md                    # 每个术语一句话说清（中英双语）
 ├── TESTING.md                     # 自验与评测设计指导（English · 主版）
 ├── TESTING-zh.md                  # 自验与评测设计指导（中文版 · 镜像）
+├── adapters/                      # 输入映射适配器（导出文件 + 映射表 → 引擎输入）
+│   ├── map_to_engine.py           #   导出文件里没有的字段一律不补（承接 I-1）
+│   ├── MAPPING-zh.md              #   映射规则说明
+│   ├── mapping.confluence.json    #   映射表示例
+│   └── sample_confluence_decision.json  # 样例决策（Confluence 导出）
 ├── language Standard/             # 语言标准 2026（引擎之外唯一的工具链）
 │   ├── 2026.md                    #   规范性标准（自然语言）
 │   ├── grammar.md                 #   语法规范（英文版）
@@ -510,7 +519,7 @@ second-perspective/
 │   ├── dsl.py                     #   校验器 + 造词器（零依赖 CLI）
 │   └── examples/                  #   .spd 样本（合规 / 违规 / 生成，中英双语）
 ├── 全新决策结构语言.md            # 决策结构语言一页纸概览
-├── docs/                          # IMDA 报告 · Zenodo 存缴 · 上海合规说明
+├── docs/                          # IMDA 报告 · Zenodo 存缴 · 方法论文 · 术语迁移说明 · 上海合规说明
 ├── logs/                          # 案例脚本产出的审计日志
 ├── requirements.txt               # 核心零依赖，本文件仅作说明
 └── LICENSE

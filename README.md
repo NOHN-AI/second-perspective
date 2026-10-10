@@ -60,7 +60,7 @@ flowchart TB
     A8["BFC Zone ③ · BFC<br/>Binary Fact Check — reduce a claim to true/false, never a third value"]
     A4["⚙️ Zone ③ · CCS<br/>Chain Closure Scan — reverse check · counterfactual · black-hole detection"]
     A7["⇄ Zone ③ · GRF<br/>Gray Feedback — rollout ladder + reality falsification alignment"]
-    A9["META Zone ③ · META<br/>Meta-Causal Ledger — chaos / wuji / illusion A6 / tiandao A10 / lunhui (measures only, never blocks)"]
+    A9["META Zone ③ · META<br/>Meta-Causal Ledger — Hundun / Wuji / Xuhuan A6 / Tiandao A10 / Lunhui (measures only, never blocks)"]
     A5["⊚ Zone ③ · ACC<br/>Accountability Anchoring — pin responsibility + seal a SHA-256 certificate"]
 
     R["🧾 Zone ⑤ · ReportRenderer<br/>render the bilingual report"]
@@ -149,7 +149,7 @@ an explicit **grammar extension 2026.3**, declared in `language Standard/topolog
 | Binary Fact Check (BFC) | — (letter code) | `BinaryFactCheckPlugin` | Reduce a claim to **true / false**; an evidence vacuum or contradiction blocks, never a third value |
 | Chain Closure Scan (CCS) | ⚙ | `CausalChainSyncPlugin` | Reverse verification + counterfactual validation + black-hole detection |
 | Gray Feedback (GRF) | ⇄ | `GrayFeedbackPlugin` | Rollout ladder + reality falsification alignment; falsified with no branch blocks |
-| Meta-Causal Ledger (META) | — (letter code) | `MetaCausalLedgerPlugin` | Hundun / Wuji / Xuhuan A6 / Tiandao A10 / Lunhui — five meta-grounds as ledgers; **never blocks** |
+| Meta-Causal Ledger (META) | — (letter code) | `MetaCausalLedgerPlugin` | Hundun · Unparsed Antecedence / Wuji · Non-forking Convergence / Xuhuan · Narrative Register A6 / Tiandao · Neutrality Invariant A10 / Lunhui · Effect-to-Cause Succession — five meta-grounds as ledgers; **never blocks** |
 | Accountability Anchoring (ACC) | ⊚ | `StateAnchorPlugin` | Responsibility anchoring + SHA-256 audit certificate |
 
 **Why META gets a letter code and not a glyph**: it is a **ledger of measures**, placed on the
@@ -202,18 +202,18 @@ Time order is a process of its own rather than part of closure, because the ques
 closure asks *is the graph self-consistent*, time order asks *is this graph still a chain*.
 They can fail independently, and merging them would bury one real question.
 
-### The meta-causal ledger (chaos · wuji · illusion · tiandao · lunhui)
+### The meta-causal ledger (Hundun · Wuji · Xuhuan · Tiandao · Lunhui)
 
 The five meta-grounds of the normative reference's clause 6 become five computable ledgers.
 They measure; they never adjudicate:
 
 | Meta-base | Realised as | Criterion |
 |---|---|---|
-| Hundun (溯源缺口) | gap ledger `chaos_gaps` | "Chance" is not in chaos, **only in the observer's knowledge gap**. Calling an unresolved antecedent "luck" raises high risk |
-| Wuji (并行收敛) | parallel chains | Parallel (many roots) is legal; a fork (one pair, many edges) is not. The limit converges uniquely: S∞ = S* |
-| Xuhuan (叙事遮蔽) | **A6 narrative entropy** | masked chars / total chars — a rational, never a probability. The reality face (⇄GRF) is recorded alongside it |
-| Tiandao (审计有界) | **A10 audit entropy** | provenance entries per layer (discrete d(version)/dt). A **bounded** A10 is what lets evolution converge to S* |
-| Lunhui (因果承接) | succession integrity | Not the chain's self-loop but its universal succession: every effect becomes the next cause, order never inverted |
+| Hundun · Unparsed Antecedence | gap ledger `chaos_gaps` | "Chance" is not in Hundun, **only in the observer's knowledge gap**. Calling an unresolved antecedent "luck" raises high risk |
+| Wuji · Non-forking Convergence | parallel chains | Parallel (many roots) is legal; a fork (one pair, many edges) is not. The limit converges uniquely: S∞ = S* |
+| Xuhuan · Narrative Register | **A6 narrative entropy** | masked chars / total chars — a rational, never a probability. The reality face (⇄GRF) is recorded alongside it |
+| Tiandao · Neutrality Invariant | **A10 audit entropy** | provenance entries per layer (discrete d(version)/dt). A **bounded** A10 is what lets evolution converge to S* |
+| Lunhui · Effect-to-Cause Succession | succession integrity | Not the chain's self-loop but its universal succession: every effect becomes the next cause, order never inverted |
 
 ### Orchestration: linear vs spiral vs autonomous evolution
 
@@ -254,7 +254,7 @@ written down: presenting what it does *not* block as if it did is the fastest wa
 | ⊞ LFT topology checks | identity conflicts, out-of-range parameters (fatal); dangling node/edge, causal paradox (result void) | fatal / warning |
 | Chain-internal time order (axiom 5) | inverted order; one node pair with multiple edges (a fork); unassignable order from a cycle | warning, result void |
 | ⊚ ACC responsibility anchoring | missing owner; vague responsible party | `BLOCKED` |
-| **Reproducible certificate** | same input + same nonce + same clock → **same chain root**, recomputable on another machine, bound to no model vendor | verifiable |
+| **Reproducible certificate** | same input + same nonce + same clock → **same chain root**, recomputable on another machine, bound to no model vendor. Since SPE 1.2 the signature also carries `input_digest = SHA-256(canonical-JSON(input))`, so "this certificate corresponds to **this** input" is independently checkable | verifiable |
 
 ### 2. What it does NOT block (explicit non-commitments)
 
@@ -404,8 +404,8 @@ cd second-perspective
 # Core is zero-dependency (Python 3.10+ stdlib only; no pip install needed)
 # The narration layer is built in (OpenAIProvider, T3-only, guardrailed) — nothing to install
 
-# 1) Ten-operator + superimposed-spiral end-to-end demo
-python "Second Perspective Engine.py"
+# 1) Ten-operator + superimposed-spiral end-to-end demo (the engine file is a library — no __main__ entry)
+python demo_audit.py
 
 # 2) Independent verification suite (zero-dependency, 19 checks, CI-friendly exit code)
 python verify.py
@@ -515,9 +515,13 @@ stack = spe.SpiralStack(energy_budget=5.0)
 ```
 
 The narration layer is **built into the engine** (`OpenAIProvider`, zero-dependency, T3 narrative
-permission only, subject to the `FORBIDDEN_LLM_KEYS` guardrail). There is deliberately no external
-adapter: an adapter sitting outside the engine can emit recommendations and bypass the guardrail,
-which the standard forbids (`E302`, `E304`).
+permission only). The model firewall is **three layers**: the T3 whitelist compresses the whole
+return down to `narrative`; `FORBIDDEN_LLM_KEYS` are stripped recursively at **any nesting depth**;
+and the recursion is capped at depth 12. There is deliberately no external **narration** adapter: an
+adapter sitting outside the engine can emit recommendations and bypass the firewall, which the
+standard forbids (`E302`, `E304`). The `adapters/` package is the opposite kind of thing — an
+**input-mapping** adapter that turns an exported document plus a mapping table into engine input,
+and never fills a field the export does not contain (I-1). It cannot touch a verdict.
 
 </div>
 
@@ -528,13 +532,20 @@ which the standard forbids (`E302`, `E304`).
 ```
 second-perspective/
 ├── Second Perspective Engine.py   # Sole engine: ten operators + topology + spiral + renderers (one file)
-├── demo_audit.py                  # End-to-end demo (same engine)
+├── demo_audit.py                  # End-to-end demo (same engine) — run this one first
 ├── verify.py                      # Independent verification suite (19 checks, zero-dep)
 ├── verify_convergence_fix.py      # Convergence-logic regression (S1–S6)
 ├── case_memo_audit.py             # Case audit: investment decision memo
 ├── case_strategy_audit.py         # Case audit: three-year strategy plan
+├── ARCHITECTURE.md                # Why the single file looks the way it does (Chinese, maintainer-facing)
+├── GLOSSARY.md                    # Every term in one plain sentence (bilingual)
 ├── TESTING.md                     # Self-verification & evaluation-design guide (single entry)
 ├── TESTING-zh.md                  # Chinese edition of the guide
+├── adapters/                      # Input-mapping adapter (export file + mapping table → engine input)
+│   ├── map_to_engine.py           #   Never fills a field the export does not contain (I-1)
+│   ├── MAPPING-zh.md              #   Mapping rules (Chinese)
+│   ├── mapping.confluence.json    #   Sample mapping table
+│   └── sample_confluence_decision.json  # Sample decision (Confluence export)
 ├── language Standard/             # Language Standard 2026 (the only toolchain outside the engine)
 │   ├── 2026.md                    #   Normative standard (natural language)
 │   ├── grammar.md                 #   Grammar specification (English)
@@ -544,7 +555,7 @@ second-perspective/
 │   ├── dsl.py                     #   Validator + generator, zero-dependency CLI
 │   └── examples/                  #   .spd samples (valid / invalid / generated, EN + ZH)
 ├── 全新决策结构语言.md            # One-page decision-structure language overview
-├── docs/                          # IMDA report · Zenodo deposit · Shanghai compliance note
+├── docs/                          # IMDA report · Zenodo deposit · method paper · terminology migration · Shanghai compliance note
 ├── logs/                          # Audit logs written by the case scripts
 ├── requirements.txt               # Core is zero-dependency; this file is informational only
 └── LICENSE
