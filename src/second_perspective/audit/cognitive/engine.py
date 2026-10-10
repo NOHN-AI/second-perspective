@@ -187,7 +187,7 @@ class SpiralVerdict(str, Enum):
     BLOCKED = "BLOCKED"
 
     # —— 极限收敛器（limit_reconstruct / spiral_step）专用 ——
-    # 规范元因果基底第二条「无极」：极限处唯一收敛（S∞ = S*）。
+    # 规范元因果基底第二条（并行收敛）：极限处唯一收敛（S∞ = S*）。
     LIMIT_REACHED = "LIMIT_REACHED"      # 距离归零并连续数层保持 → 抵达 S∞ = S*
     NOT_MONOTONE = "NOT_MONOTONE"        # 距离不再严格下降 → 不再逼近，必须停
     FLAT_SPIRAL = "FLAT_SPIRAL"          # 半径连续数层不降 → 只在原地扩圈
@@ -800,7 +800,7 @@ class CognitiveAuditEngine:
                 'version_monotone': monotone,
                 'ceiling': ceiling,
                 'bounded': bounded,
-                'doctrine': '天道：A10 有界，使演化收敛于 S*',
+                'doctrine': '审计有界：A10 有界，使演化收敛于 S*',
             },
             'fixed_point': {
                 'found': fixed_round is not None,

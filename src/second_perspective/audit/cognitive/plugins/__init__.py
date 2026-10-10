@@ -56,7 +56,7 @@ from .ori  import OriginAnchorPlugin
 from .tpg  import TopologyGraphPlugin
 from .bfc  import BinaryFactCheckPlugin
 from .grf  import GrayFeedbackPlugin
-from .meta import MetaCausalLedgerPlugin, CHAOS_ATTRIBUTION_PATTERNS
+from .meta import MetaCausalLedgerPlugin, TRACE_ATTRIBUTION_PATTERNS
 from .spiral import SpiralLayer, SpiralStack
 
 # 官方十算子，按流水线顺序排列。引擎只额外强制 STATE 最后，
@@ -89,7 +89,7 @@ __all__ = [
     "StateAnchorPlugin",
     # 视图 / 底座 / 编排
     "ReportRenderer",
-    "CHAOS_ATTRIBUTION_PATTERNS",
+    "TRACE_ATTRIBUTION_PATTERNS",
     "TOPOLOGY_VERSION",
     "TOPOLOGY_GRAMMAR_VERSION",
     "SYM_NODE", "SYM_EDGE", "SYM_CONSTRAINT", "SYM_UPSTREAM", "SYM_DOWNSTREAM",

@@ -304,7 +304,7 @@ class BinaryFactCheckPlugin:
         """证据极性：none / support / oppose / conflict。
 
         只认显式声明的极性（dict 里的 polarity / supports / verdict）。
-        纯字符串证据视为**无极性**的中性来源——不猜测它的倾向。
+        纯字符串证据视为**并行收敛性**的中性来源——不猜测它的倾向。
         """
         polarities = set()
         for item in evidence:

@@ -53,7 +53,7 @@ from .plugins import (
     MetaCausalLedgerPlugin,
     StateAnchorPlugin,
     ReportRenderer,
-    CHAOS_ATTRIBUTION_PATTERNS,
+    TRACE_ATTRIBUTION_PATTERNS,
     TOPOLOGY_VERSION,
     TOPOLOGY_GRAMMAR_VERSION,
     SYM_NODE, SYM_EDGE, SYM_CONSTRAINT, SYM_UPSTREAM, SYM_DOWNSTREAM,
@@ -85,7 +85,7 @@ __all__ = [
     "StateAnchorPlugin",
     # 视图 / 底座 / 编排
     "ReportRenderer",
-    "CHAOS_ATTRIBUTION_PATTERNS",
+    "TRACE_ATTRIBUTION_PATTERNS",
     "TOPOLOGY_VERSION",
     "TOPOLOGY_GRAMMAR_VERSION",
     "SYM_NODE", "SYM_EDGE", "SYM_CONSTRAINT", "SYM_UPSTREAM", "SYM_DOWNSTREAM",

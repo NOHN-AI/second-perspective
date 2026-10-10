@@ -49,7 +49,7 @@ def test_evolve_reports_lineage_and_entropy(make_request, make_result):
     lineage = out["lineage"]
     assert lineage["operator_set_hash"], "算子集指纹必须入谱系，否则代际不可自证"
     assert lineage["generation"] == 0
-    # 天道：A10 有界，使演化收敛于 S*
+    # 审计有界：A10 有界，使演化收敛于 S*
     assert out["audit_entropy"]["bounded"] is True
     assert out["audit_entropy"]["a10"] <= out["audit_entropy"]["ceiling"]
     # 停机判据始终是图同构，不是「跑够了」
