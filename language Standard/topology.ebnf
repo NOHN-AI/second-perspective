@@ -2,7 +2,7 @@
    De-semantic Causal Topology — Formal Grammar
    Second Perspective Engine · Topology Layer (拓扑层)
    ------------------------------------------------------------------
-   Version        : 2026.3  — EXTENSION to Language Standard 2026.1
+   Version        : 2026.3  — EXTENSION to Language Standard 2026.2
    Notation       : ISO/IEC 14977 (Extended BNF)
    Normative ref  : 《SPL因果论 · 无语义拓扑语法规范》
    Related        : decision.ebnf (upper layer, .spd records)

@@ -2,7 +2,7 @@
    Decision Structure Language — Formal Grammar
    Second Perspective Language · Language Standard 2026
    ------------------------------------------------------------------
-   Version        : 2026.1
+   Version        : 2026.2
    Notation       : ISO/IEC 14977 (Extended BNF)
    Normative ref  : language Standard/2026.md
    Companion doc  : language Standard/grammar.md
@@ -110,8 +110,9 @@ newline         = ? U+000A | U+000D U+000A ? ;
    R10 assumption text SHOULD carry a measurable threshold          W402
    R11 assumption text SHOULD NOT carry vague qualifiers            W401
    R12 assumption text SHOULD NOT be self-evident                   W403
+   R13 branch response MUST NOT be a bare placeholder                     W404
    ================================================================== *)
 
 (* ==================================================================
-   END OF GRAMMAR — Language Standard 2026.1
+   END OF GRAMMAR — Language Standard 2026.2
    ================================================================== *)

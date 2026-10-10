@@ -2,7 +2,7 @@
 
 | Item | Value |
 |---|---|
-| Version | 2026.1 |
+| Version | 2026.2 |
 | Notation | ISO/IEC 14977 EBNF |
 | Parent standard | [`2026.md`](./2026.md) — Language Standard 2026 |
 | Grammar file | [`decision.ebnf`](./decision.ebnf) |
@@ -173,6 +173,7 @@ Constraints are graded in four tiers. The first three derive from the *Constrain
 | `W401` | Assumption contains a vague qualifier (probably / roughly / 可能 / 大约 …) | Insufficient falsifiability |
 | `W402` | Assumption has no observable threshold (neither a number nor a comparison) | Cannot be adjudicated true or false |
 | `W403` | Assumption looks self-evident (too short, or a platitude) | Does not constitute a valid boundary |
+| `W404` | Branch response is a placeholder (TBD/待定/…, no executable action) | Falsely `"anchored"` claim — the failure path commits to nothing |
 
 ### L4 · Dependency semantics
 
@@ -191,6 +192,7 @@ Constraints are graded in four tiers. The first three derive from the *Constrain
 | `E103` | ERROR | Missing `Assumption` block |
 | `E104` | ERROR | Reference to an undeclared assumption id |
 | `E105` | ERROR | Duplicate id declaration |
+| `W404` | WARN | Branch response is a placeholder |
 | `E106` | ERROR | Cycle in the dependency graph |
 | `E107` | ERROR | Assumption without a matching `Branch` |
 | `E108` | ERROR | Block order violated |
@@ -215,7 +217,7 @@ Exit codes: `0` = conforming (or warnings only); `1` = at least one ERROR; `2` =
 ### 5.1 Conforming sample
 
 ```spd
-# Conforming sample — Decision Structure Language 2026.1
+# Conforming sample — Decision Structure Language 2026.2
 Decision: Accept the Zhangjiang pilot as this quarter's only parallel workstream
 
 Assumption A1: The target account's annual AI budget >= CNY 5,000,000

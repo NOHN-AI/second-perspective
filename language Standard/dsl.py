@@ -4,7 +4,7 @@
 Decision Structure Language (DSL) — Reference Toolkit
 ======================================================
 
-Language Standard 2026.1 · Second Perspective Language
+Language Standard 2026.2 · Second Perspective Language
 Grammar   : ./decision.ebnf          Extension : .spd
 Spec doc  : ./grammar.md             Standard  : ./2026.md
 
@@ -63,7 +63,7 @@ from typing import Dict, List, Optional, Sequence, Tuple
 # Metadata
 # ──────────────────────────────────────────────────────────────────────
 
-LANG_VERSION = "2026.1"
+LANG_VERSION = "2026.2"
 EXTENSION = ".spd"
 
 # Normative block order (see grammar.md §1.1). Permutation raises E108.
@@ -170,6 +170,13 @@ RE_SELF_EVIDENT = re.compile(
 )
 SELF_EVIDENT_MIN_LEN = 8
 
+# Placeholder-branch heuristic (W404): the declared failure response carries no
+# executable action — pure marker words, ellipsis, or a same-as-above reference.
+RE_PLACEHOLDER_BRANCH = re.compile(
+    r"^(?:tbd|tba|todo|xxx|n/?a|placeholder|lorem.*|待定|待补|占位|同上|同下|略|…+|。*|-*|_*)$",
+    re.IGNORECASE,
+)
+
 # ── Diagnostic code index ──
 
 CODE_TABLE: Dict[str, str] = {
@@ -192,6 +199,7 @@ CODE_TABLE: Dict[str, str] = {
     "W401": "Assumption contains a vague qualifier",
     "W402": "Assumption lacks an observable threshold",
     "W403": "Assumption looks self-evident",
+    "W404": "Branch response is a placeholder (no executable action)",
 }
 
 
@@ -448,6 +456,24 @@ def _scan_constraints(lineno: int, label: str, body: str) -> List[Diagnostic]:
     return out
 
 
+def _scan_branch_quality(branch: Branch) -> List[Diagnostic]:
+    """L3 advisories for branch responses: warn only, never block (W404)."""
+    out: List[Diagnostic] = []
+    body = branch.text.strip()
+    if RE_PLACEHOLDER_BRANCH.match(body):
+        out.append(
+            Diagnostic(
+                "W404",
+                "WARN",
+                branch.line,
+                f"branch {branch.id} response is a placeholder — "
+                f"declares no executable action (avoid falsely 'anchored' claims)",
+                branch.text,
+            )
+        )
+    return out
+
+
 def _scan_quality(assumption: Assumption) -> List[Diagnostic]:
     """L3 advisories: warn only, never block."""
     out: List[Diagnostic] = []
@@ -614,6 +640,8 @@ def validate(doc: Document, parse_diags: Optional[List[Diagnostic]] = None) -> L
     # ── L3 quality (W4xx) ──
     for a in doc.assumptions:
         diags.extend(_scan_quality(a))
+    for b in doc.branches:
+        diags.extend(_scan_branch_quality(b))
 
     diags.sort(key=lambda d: (d.line == 0, d.line, d.code))
     return diags

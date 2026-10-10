@@ -48,6 +48,9 @@ def main():
     print("=" * 70)
 
     decision_context = {
+        "origin": "项目立项评审会决议（2026-09）",  # 第一原点：链必须有起点
+        "goal": "项目X按时上线且留存率达标",      # 目标稳态 S*
+        "resources": {"budget": 100, "committed": 120},  # 预算超支（资源缺口）
         "decision": "批准项目X上线",
         "assumptions": [
             "用户需求大概稳定",
@@ -66,8 +69,8 @@ def main():
 
     report = engine.audit(decision_context)
 
-    # 最终裁定与证书位于 STATE 插件输出（analysis 层），非报告顶层
-    state = report["analysis"]["STATE"]
+    # 最终裁定与证书位于 ACC 插件输出（analysis 层），非报告顶层
+    state = report["analysis"]["ACC"]
     verdict = state["verdict"]
     cert = state["certificate"]
 
@@ -98,7 +101,7 @@ def main():
     for f in iap.get("flags", []):
         print(f"  [{f.get('severity')}] {f.get('flag_type')}: {f.get('match','')[:50]}")
 
-    print(f"\n--- LCH (脆弱性对冲) ---")
+    print(f"\n--- LCH (脆弱性定位) ---")
     lch = analysis.get("LCH", {})
     print(f"Pass: {lch.get('pass')}")
     print(f"System Delta D: {lch.get('system_delta_d', 0)}")
@@ -112,8 +115,8 @@ def main():
     for c in ccs.get("checks", []):
         print(f"  [{c.get('severity')}] {c.get('check')}: {c.get('description','')[:80]}")
 
-    print(f"\n--- STATE (责任锚定) ---")
-    st = analysis.get("STATE", {})
+    print(f"\n--- ACC (责任锚定) ---")
+    st = analysis.get("ACC", {})
     resp = st.get("responsibility", {})
     print(f"Anchor: {resp.get('anchor_status')}")
     print(f"Org: {resp.get('organization')} / Role: {resp.get('role')} / Nonce: {resp.get('nonce')}")
@@ -124,6 +127,9 @@ def main():
     print("=" * 70)
 
     clean_context = {
+        "origin": "服务容量扩容需求单 OPS-2026-041",  # 第一原点：链必须有起点
+        "goal": "服务B在生产环境稳定运行",           # 目标稳态 S*
+        "resources": {"budget": 10, "committed": 6},   # 资源预算充足
         "decision": "部署服务B到生产环境",
         "assumptions": [
             "服务B通过了全部集成测试",
@@ -140,7 +146,7 @@ def main():
     }
 
     report2 = engine.audit(clean_context)
-    verdict2 = report2["analysis"]["STATE"]["verdict"]
+    verdict2 = report2["analysis"]["ACC"]["verdict"]
     print(f"\nVerdict: {verdict2['level']}")
     print(f"Summary: {verdict2['summary']}")
 

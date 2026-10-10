@@ -1,4 +1,4 @@
-# Conforming sample — Decision Structure Language 2026.1
+# Conforming sample — Decision Structure Language 2026.2
 # Expected: 0 error / 0 warning, exit code 0 (also passes under --strict)
 
 Decision: Accept the Zhangjiang pilot as this quarter's only parallel workstream
