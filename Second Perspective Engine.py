@@ -1,6 +1,8 @@
 """
-第二视角引擎 1.0 / Second Perspective Engine (SPE 1.0)
+第二视角引擎 / Second Perspective Engine (SPE)
 =====================================================
+
+版本：以模块常量 SPE_VERSION 为准。
 
 SPL 因果论的规范参考内核 —— 无语义拓扑层 + 十算子流水线 + 叠加螺旋式迭代链路
 + 自主进化层（版本谱系 · 只提案不适用）。
@@ -40,7 +42,7 @@ v2.0（已移除）是扁平线性管道 + 线性 bounded 重试，表达不了�
 `.spd` / `.tpg` 语法与 dsl.py 工具链。
 
 --------------------------------------------------------------
-九算子 (Nine Operators)
+十算子 (Ten Operators)
 --------------------------------------------------------------
     ⊙  GA   第一原点锚定   Genesis Anchor        原点事件 / 目标稳态 / 能量资源约束
     ⊗  NS    去语义化       Narrative Strip      剥离修辞立场，只留逻辑骨架
@@ -97,7 +99,7 @@ from typing import Any, Callable, Dict, List, Optional, Protocol, Sequence, Set,
 #         CCS 缩写保留，扩展名更改为 Chain Closure Scan。
 #         算子名参与 operator_set_hash → 本次更名产生新一代 lineage；
 #         旧报告与证书由 Lineage 代际机制承接，不作废。
-SPE_VERSION = "1.2.0"
+SPE_VERSION = "1.2.1"
 ENGINE_NAME = "Second Perspective Engine"
 
 
@@ -355,7 +357,7 @@ class AuditPlugin:
     tier: PluginTier
     analyze_func: Callable[[Dict[str, Any]], Any]
     description: str = ""
-    # core = 官方九算子（load_core_plugins 装载）；extension = 经唯一插件缝注册
+    # core = 官方十算子（load_core_plugins 装载）；extension = 经唯一插件缝注册
     origin: str = "core"
     # 扩展算子的显式定序锚点：紧随哪个算子之后执行
     registered_after: Optional[str] = None
@@ -1277,6 +1279,80 @@ def build_from_decision_context(ctx: Dict[str, Any],
     return g
 
 # ============================================================================
+# 分区②·补 决策上下文提取器（十算子共用单一实现） / Decision-Context Extractors
+# ============================================================================
+#
+# 为什么必须是模块级单份，而不是每个算子自带一个 staticmethod：
+#
+#   历史上这里有 5 份 _extract_assumptions、3 份 _extract_branches、2 份
+#   _extract_text，全是逐份拷贝。它们已经漂移，而且漂移会改变结论：
+#     · 同一份 {"assumptions": [""]}，IAP 认 1 条前提，其余算子认 0 条；
+#     · 同一份 {"assumptions": "A1"}，有一份根本不处理字符串形式；
+#     · 有一份的键集少了 core_assumptions；
+#     · 有一份把 delta_d 当成分支别名——而 delta_d 在本系统里是因果边的
+#       失效变更描述，与「前提失败后的应对路径」不是一回事。
+#
+#   这些数都会进 extract_risk_set 的风险集与收敛分类，于是「同输入 + 同 nonce
+#   → 同链根」在这条路径上并不成立。**副本不是安全的默认态，唯一的实现才是。**
+#
+# 口径（刻意取最严的一版，因为「缺就是缺」优先于「凑得出来」）：
+#   · 空白字符串 → 视为未声明。空串不是前提，也不是待审计文本。
+#   · 列表内的空元素 → 剔除。声明 3 条里有 1 条是空的，就是 2 条，不是 3 条。
+#   · 形状不符（既非 str，也非「全为 dict 的 list」）→ 返回空，不做转换猜测。
+#     把 dict 强转成 str 得到的 "Assumption(id='A1', ...)" 不是前提，是垃圾。
+
+_CTX_TEXT_KEYS = (
+    'text', 'narrative', 'output', 'content',
+    'decision_text', 'llm_output', 'decision',
+)
+_CTX_ASSUMPTION_KEYS = (
+    'assumptions', 'premises', 'hypotheses', 'core_assumptions',
+)
+# 刻意不含 'delta_d'：理由见上。
+_CTX_BRANCH_KEYS = ('branches', 'branch_responses', 'failure_paths')
+
+
+def _ctx_text(ctx: Any) -> str:
+    """从 decision_context 提取待审计文本；取不到就是空串。"""
+    if isinstance(ctx, str):
+        return ctx if ctx.strip() else ''
+    if not isinstance(ctx, dict):
+        return ''
+    for key in _CTX_TEXT_KEYS:
+        val = ctx.get(key)
+        if isinstance(val, str) and val.strip():
+            return val
+    return ''
+
+
+def _ctx_assumptions(ctx: Any) -> List[str]:
+    """提取显式声明的前提列表。空串不是前提。"""
+    if not isinstance(ctx, dict):
+        return []
+    for key in _CTX_ASSUMPTION_KEYS:
+        val = ctx.get(key)
+        if isinstance(val, list):
+            return [str(a) for a in val if a]
+        if isinstance(val, str) and val.strip():
+            return [val]
+    return []
+
+
+def _ctx_branches(ctx: Any) -> List[Dict[str, Any]]:
+    """提取分支响应 [{'assumption': ..., 'delta_d': ...}]。
+
+    某一键形状不符时**继续试下一键**，而不是就地返回空：前者是「没找到」，
+    后者是「找到了但是坏的」，两者的补救动作不一样。
+    """
+    if not isinstance(ctx, dict):
+        return []
+    for key in _CTX_BRANCH_KEYS:
+        val = ctx.get(key)
+        if isinstance(val, list) and all(isinstance(v, dict) for v in val):
+            return val
+    return []
+
+
 # 分区③ 算子 ⊙GA — 第一原点锚定 / Genesis Anchor
 # ============================================================================
 # GA — ⊙ 第一原点锚定 / Genesis Anchor Plugin
@@ -1564,18 +1640,7 @@ class NarrativeStripPlugin:
 
     @staticmethod
     def _extract_text(ctx: Dict[str, Any]) -> str:
-        """从 decision_context 中提取待审计文本。"""
-        if isinstance(ctx, str):
-            return ctx
-        # 尝试常见字段
-        for key in ("text", "narrative", "output", "content", "decision_text", "llm_output"):
-            val = ctx.get(key)
-            if isinstance(val, str) and val.strip():
-                return val
-        # 如果整个 context 就是纯文本
-        if isinstance(ctx.get("decision"), str):
-            return ctx["decision"]
-        return ""
+        return _ctx_text(ctx)
 
     def _strip_narrative(self, text: str) -> List[Dict[str, Any]]:
         """识别并标记所有叙事片段。"""
@@ -1760,25 +1825,11 @@ class ImplicitAssumptionPlugin:
 
     @staticmethod
     def _extract_text(ctx: Dict[str, Any]) -> str:
-        if isinstance(ctx, str):
-            return ctx
-        for key in ("text", "narrative", "output", "content", "decision_text", "llm_output", "decision"):
-            val = ctx.get(key)
-            if isinstance(val, str) and val.strip():
-                return val
-        return ""
+        return _ctx_text(ctx)
 
     @staticmethod
     def _extract_assumptions(ctx: Dict[str, Any]) -> List[str]:
-        """从 decision_context 提取显式声明的前提列表。"""
-        if isinstance(ctx, dict):
-            for key in ("assumptions", "premises", "hypotheses", "core_assumptions"):
-                val = ctx.get(key)
-                if isinstance(val, list):
-                    return [str(a) for a in val]
-                if isinstance(val, str):
-                    return [val]
-        return []
+        return _ctx_assumptions(ctx)
 
     @staticmethod
     def _scan_patterns(text: str, patterns: List[re.Pattern], flag_type: str) -> List[Dict[str, Any]]:
@@ -1957,14 +2008,7 @@ class FragilityLatchPlugin:
 
     @staticmethod
     def _extract_assumptions(ctx: Dict[str, Any]) -> List[str]:
-        if isinstance(ctx, dict):
-            for key in ("assumptions", "premises", "hypotheses", "core_assumptions"):
-                val = ctx.get(key)
-                if isinstance(val, list):
-                    return [str(a) for a in val if a]
-                if isinstance(val, str):
-                    return [val] if val.strip() else []
-        return []
+        return _ctx_assumptions(ctx)
 
     @staticmethod
     def _extract_dependencies(ctx: Dict[str, Any]) -> Dict[str, List[str]]:
@@ -1978,13 +2022,7 @@ class FragilityLatchPlugin:
 
     @staticmethod
     def _extract_branches(ctx: Dict[str, Any]) -> List[Dict[str, Any]]:
-        """提取分支响应。格式: [{"assumption": "A1", "delta_d": "ΔD1"}]"""
-        if isinstance(ctx, dict):
-            for key in ("branches", "branch_responses", "failure_paths", "delta_d"):
-                val = ctx.get(key)
-                if isinstance(val, list):
-                    return val if all(isinstance(v, dict) for v in val) else []
-        return []
+        return _ctx_branches(ctx)
 
     @staticmethod
     def _assess_fragility(
@@ -2471,13 +2509,7 @@ class BinaryFactCheckPlugin:
 
     @staticmethod
     def _extract_assumptions(ctx: Dict[str, Any]) -> List[str]:
-        for key in ("assumptions", "premises", "hypotheses", "core_assumptions"):
-            val = ctx.get(key)
-            if isinstance(val, list):
-                return [str(a) for a in val if a]
-            if isinstance(val, str) and val.strip():
-                return [val]
-        return []
+        return _ctx_assumptions(ctx)
 
     def _normalize_facts(self, raw: List[Any], ctx: Dict[str, Any]) -> List[Dict[str, Any]]:
         """规范化断言列表。id 缺省时按 F1..Fn 编号；证据缺省时回落到 ctx['evidence']。"""
@@ -2664,21 +2696,11 @@ class CausalChainSyncPlugin:
 
     @staticmethod
     def _extract_assumptions(ctx: Dict[str, Any]) -> List[str]:
-        if isinstance(ctx, dict):
-            for key in ("assumptions", "premises", "hypotheses"):
-                val = ctx.get(key)
-                if isinstance(val, list):
-                    return [str(a) for a in val if a]
-        return []
+        return _ctx_assumptions(ctx)
 
     @staticmethod
     def _extract_branches(ctx: Dict[str, Any]) -> List[Dict[str, Any]]:
-        if isinstance(ctx, dict):
-            for key in ("branches", "branch_responses", "failure_paths"):
-                val = ctx.get(key)
-                if isinstance(val, list):
-                    return val if all(isinstance(v, dict) for v in val) else []
-        return []
+        return _ctx_branches(ctx)
 
     @staticmethod
     def _extract_outcome(ctx: Dict[str, Any]) -> str:
@@ -3038,21 +3060,11 @@ class GrayFeedbackPlugin:
 
     @staticmethod
     def _extract_assumptions(ctx: Dict[str, Any]) -> List[str]:
-        for key in ("assumptions", "premises", "hypotheses", "core_assumptions"):
-            val = ctx.get(key)
-            if isinstance(val, list):
-                return [str(a) for a in val if a]
-            if isinstance(val, str) and val.strip():
-                return [val]
-        return []
+        return _ctx_assumptions(ctx)
 
     @staticmethod
     def _extract_branches(ctx: Dict[str, Any]) -> List[Dict[str, Any]]:
-        for key in ("branches", "branch_responses", "failure_paths"):
-            val = ctx.get(key)
-            if isinstance(val, list) and all(isinstance(v, dict) for v in val):
-                return val
-        return []
+        return _ctx_branches(ctx)
 
     def _extract_feedback(self, ctx: Dict[str, Any]) -> Dict[str, str]:
         for key in self.FEEDBACK_KEYS:
@@ -3664,7 +3676,7 @@ class StateAnchorPlugin:
             "signature": sig_hash,
             "algorithm": "SHA-256",
             "verifiable": True,
-            "note": "本证书由第二视角引擎 SPE 1.1 生成，"
+            "note": f"本证书由第二视角引擎 SPE {SPE_VERSION} 生成，"
                     "签名覆盖责任锚、裁定与原始输入摘要（input_digest）。"
                     "任何篡改将导致哈希不匹配。",
         }
@@ -4041,7 +4053,7 @@ class SecondPerspectiveEngine:
         self.account = account
         self.config: Dict[str, Any] = config or {}
         self.plugins: List[AuditPlugin] = []
-        # 执行顺序：类属性是官方九算子的默认序；实例复制一份，
+        # 执行顺序：类属性是官方十算子的默认序；实例复制一份，
         # 使经唯一插件缝注册的扩展算子只影响本引擎实例，不污染其他实例。
         self.PIPELINE_ORDER: List[str] = list(type(self).PIPELINE_ORDER)
         self.llm_provider: Optional[LLMProvider] = None
@@ -4079,7 +4091,7 @@ class SecondPerspectiveEngine:
     #   使「这份链根是在哪个算子集下产生的」可以被独立验证。
 
     def register_plugin(self, plugin: AuditPlugin) -> None:
-        """低层注册原语 —— **仅供 load_core_plugins() 装载官方九算子使用**。
+        """低层注册原语 —— **仅供 load_core_plugins() 装载官方十算子使用**。
 
         外部扩展一律走 register_operator()。此处虽不校验 after，但仍经过
         _register() 的收口闸门，因此不存在"绕过闸门"的路径。
@@ -4097,7 +4109,7 @@ class SecondPerspectiveEngine:
         """唯一插件缝：注册一个外部算子。返回算子名。
 
         四道闸门（任一不过即 ValueError，且**不留任何副作用**）：
-          1. name 须为 ASCII 标识符，且不与官方九算子或已注册算子重名
+          1. name 须为 ASCII 标识符，且不与官方十算子或已注册算子重名
           2. tier 须为 PluginTier 成员，且只能是 T2_SIGNAL / T3_NARRATIVE
              —— 外部算子不得发 BLOCKED：不允许外部逻辑改动「能不能通过」
           3. after 必填，且须指向一个已注册的算子名（显式定序，没有默认落位）
@@ -4125,7 +4137,7 @@ class SecondPerspectiveEngine:
                 or not name.isascii() or not name.isidentifier()):
             raise ValueError(f'算子名必须是 ASCII 标识符: {name!r}')
 
-        # 闸门 1b：重名（含官方九算子）
+        # 闸门 1b：重名（含官方十算子）
         if name in {p.name for p in self.plugins}:
             raise ValueError(f'算子名已注册: {name}')
 
@@ -4159,8 +4171,8 @@ class SecondPerspectiveEngine:
         '''
         self._clock = t
 
-    # 九算子清单。单文件化后不再有外部 plugins/ 包：算子类就在本文件「分区③」内，
-    # 此处只登记「官方九算子分别是哪一类」，实际执行顺序由 PIPELINE_ORDER 定序。
+    # 十算子清单。单文件化后不再有外部 plugins/ 包：算子类就在本文件「分区③」内，
+    # 此处只登记「官方十算子分别是哪一类」，实际执行顺序由 PIPELINE_ORDER 定序。
     CORE_OPERATORS: List[type] = [
         OriginAnchorPlugin,          # ⊙ 第一原点锚定
         NarrativeStripPlugin,        # ⊗ 去语义化
@@ -4175,7 +4187,7 @@ class SecondPerspectiveEngine:
     ]
 
     def load_core_plugins(self) -> List[str]:
-        """加载官方九算子（GA / NS / IAP / LCH / LFT / BFC / CCS / GRF / ACC）。
+        """加载官方十算子（GA / NS / IAP / LCH / LFT / BFC / CCS / GRF / META / ACC）。
 
         算子类位于本文件「分区③」，只暴露 ``name`` 与 ``analyze()``；引擎契约要求
         ``AuditPlugin(name, tier, analyze_func, description)``。此处负责包装，
@@ -4544,7 +4556,7 @@ class SecondPerspectiveEngine:
           verify_facts   bool        显式开闸（等价于提供了 facts）
 
         最小可用输入：{"decision": ..., "assumptions": [...], "outcome": ...}
-        完整示例见本文件底部 _demo()。各算子的别名表见对应分区头部注释。
+        完整示例见 demo_audit.py 与 verify.py。各算子的别名表见对应分区头部注释。
 
         返回 report dict：
            operator_manifest     算子清单（顺序 / 权限层 / 来源），参与报告哈希
@@ -5804,7 +5816,7 @@ CognitiveAuditEngine = SecondPerspectiveEngine
 #   - 「外壳」双语：报告标题、算子名、裁定级别、证书字段、责任账户标签。
 #   - 「证据正文」保原文：logical_core / checks / violations 等分析内容是
 #     动态拼接的证据级文本，不做翻译，避免失真与破坏可签名验证语义。
-#   - 渲染器不修改原始报告，也不参与九算子管线；作为视图层供上层调用。
+#   - 渲染器不修改原始报告，也不参与十算子管线；作为视图层供上层调用。
 #
 # 用法：
 #     # 渲染器已内联于本文件「分区⑤」，与引擎同处一个模块，直接实例化即可。
@@ -6009,7 +6021,7 @@ class ReportRenderer:
 #
 # 把 SecondPerspectiveEngine.audit() 产出的结构化审计报告，翻译成「人话」：
 # 用日常语言重述裁定级别、脆弱环节、暗含假设、因果链校验与责任锚定，
-# 而不改动原始报告、不参与九算子管线、不触碰 SHA-256 证书与收敛判定。
+# 而不改动原始报告、不参与十算子管线、不触碰 SHA-256 证书与收敛判定。
 #
 # 已知覆盖缺口（2026.2 新增四项算子）：本渲染器的词条表尚未覆盖
 # ⊙GA 原点锚定 / ⊞LFT 拓扑校验 / BFC 二元事实校验 / ⇄GRF 现实反馈的
@@ -6289,206 +6301,3 @@ class PlainLanguageRenderer:
 
 # ==================== 便捷入口（demo） ====================
 
-def _demo():
-    """冒烟演示：十算子 + 螺旋叠加 + 极限收敛 + 自主进化。
-
-        1) 责任未闭环            → BLOCKED
-        2) 原点真空              → ⊙GA BLOCKED
-        3) 闭环 + 主观词 + 权重越界 → 拓扑 / 时序 / 脆弱性信号
-        4) 现实证伪无回退路径     → ⇄GRF 阻断
-        5) 螺旋叠加 + 原点漂移    → 逐层冻结，收敛即停
-        6) 二元事实校验          → 证据真空阻断 / 已证伪前提阻断 / 全真通过
-        7) ∞ 极限收敛器          → 层数无上限，判据停机
-        8) 元因果账本            → 混沌 / 无极 / 虚幻(A6) / 天道(A10) / 轮回
-        9) 自主进化层            → 候选清单 + 版本谱系；引擎自查，人工裁决
-    """
-    base = {
-        'narrative': '显然S1是最优方案',
-        'alternatives': {'S1': {'metrics': {'roi': 0.12}}, 'S2': {'metrics': {'roi': 0.08}}},
-        'criteria': {'roi': {'weight': 1.0}},
-        'conclusions': 'Recommend S1',
-        'evidence': ['doc#123'],
-    }
-
-    # 场景1：责任未闭环
-    acct_open = ResponsibilityAccount(organization='ACME', role='Risk Officer', stage='INVESTMENT')
-    eng = SecondPerspectiveEngine(acct_open)
-    eng.load_core_plugins()
-    r = eng.audit(dict(base))
-    print('[1] Responsibility open ->', r['analysis'].get('RESPONSIBILITY_CLOSURE', {}).get('status'))
-
-    # 场景2：原点真空（⊙GA 必须阻断）
-    acct = ResponsibilityAccount(organization='ACME', role='Risk Officer',
-                                 stage='INVESTMENT', owner='张三/工号888')
-    eng2 = SecondPerspectiveEngine(acct)
-    eng2.load_core_plugins()
-    r2 = eng2.audit(dict(base))
-    print('[2] Origin vacuum ->', r2['analysis']['GA']['status'],
-          '|', r2['analysis']['GA']['reason'])
-
-    # 场景3：完整锚定 + 拓扑 + 现实反馈
-    full = dict(base)
-    full.update({
-        'origin': '2026Q1 试点立项',
-        'goal': '本季度把 ROI 稳定到 12%',
-        'resources': {'compute': {'budget': 100, 'committed': 40}},
-        'decision': '上线 S1',
-        'assumptions': ['需求稳定', '成本可控'],
-        'outcome': 'ROI 达到 12%',
-        'dependencies': {'需求稳定': ['成本可控']},
-        'branches': [
-            {'assumption': '需求稳定', 'delta_d': '降级为单点 PoC'},
-            {'assumption': '成本可控', 'delta_d': '资源投入上修'},
-        ],
-        'gray_levels': [0.01, 0.05, 0.25, 1.0],
-        'commit_ratio': 0.05,
-        'feedback': {'需求稳定': 'confirmed', '成本可控': 'unobserved'},
-    })
-    eng3 = SecondPerspectiveEngine(acct)
-    eng3.set_clock(1700000000.0)
-    eng3.load_core_plugins()
-    r3 = eng3.audit(full)
-    print('[3] Origin ->', r3['origin_anchor']['origin_hash'],
-          '| Topology ->', r3['topology']['graph_hash'][:16],
-          '| nodes/edges =', r3['topology']['node_count'], '/', r3['topology']['edge_count'])
-    print('    Validation pass ->', r3['topology']['validation']['pass'],
-          '| result_valid =', r3['topology']['validation']['result_valid'])
-    print('    Verdict ->', r3['analysis']['ACC']['verdict']['level'])
-
-    # 场景4：现实已证伪「需求稳定」，却只给了「成本可控」的回退路径 → ⇄GRF 阻断
-    broken = dict(full)
-    broken['branches'] = [{'assumption': '成本可控', 'delta_d': '资源投入上修'}]
-    broken['feedback'] = {'需求稳定': 'falsified', '成本可控': 'confirmed'}
-    eng4 = SecondPerspectiveEngine(acct)
-    eng4.load_core_plugins()
-    r4 = eng4.audit(broken)
-    print('[4] Reality contradiction ->', r4['analysis']['GRF']['status'],
-          '|', r4['analysis']['GRF']['reason'])
-
-    # 场景5：螺旋叠加（两层修正，观察已收敛子图被冻结）
-    eng5 = SecondPerspectiveEngine(acct)
-    eng5.set_clock(1700000000.0)
-    eng5.load_core_plugins()
-    s = eng5.spiral(
-        decision_context=full,
-        approved_deltas=[
-            {'feedback': {'需求稳定': 'confirmed', '成本可控': 'unobserved'}},
-            {'feedback': {'需求稳定': 'confirmed', '成本可控': 'confirmed'},
-             'commit_ratio': 0.25},
-        ],
-        max_loops=4,
-        energy_budget=5.0,
-    )
-    print('[5] Spiral verdict ->', s['verdict'],
-          '| final_state =', s['final_state'],
-          '| true_convergence =', s['is_true_convergence'])
-    print('    Layers ->', s['spiral']['layer_count'],
-          '| radius trend =', s['spiral']['radius_trend'],
-          '| frozen =', len(s['spiral']['frozen_nodes']), 'nodes')
-    print('    Energy left ->', s['spiral']['energy_left'],
-          '| drift =', s['origin_drift'])
-
-    # 场景6：二元事实校验 —— 证据真空阻断 / 已证伪前提阻断 / 全真通过
-    vacuum = dict(full)
-    vacuum.pop('evidence', None)
-    vacuum['facts'] = [{'id': 'F1', 'claim': '需求稳定', 'evidence': []}]
-    vacuum['observations'] = {'F1': True}
-    eng6 = SecondPerspectiveEngine(acct)
-    eng6.load_core_plugins()
-    r6 = eng6.audit(vacuum)['analysis']['BFC']
-    print('[6] Fact vacuum ->', r6['status'], '|', r6['reason'],
-          '| remediation =', len(r6['remediation']), '条补齐条件')
-
-    falsified = dict(full)
-    falsified['facts'] = [{'id': 'F1', 'claim': '需求稳定', 'evidence': ['doc#123']}]
-    falsified['observations'] = {'F1': False}
-    eng7 = SecondPerspectiveEngine(acct)
-    eng7.load_core_plugins()
-    r7 = eng7.audit(falsified)['analysis']['BFC']
-    print('    Falsified premise ->', r7['status'], '|', r7['reason'])
-
-    verified = dict(full)
-    verified['facts'] = [
-        {'id': 'F1', 'claim': '需求稳定', 'evidence': ['doc#123']},
-        {'id': 'F2', 'claim': '成本可控', 'evidence': ['doc#456']},
-    ]
-    verified['observations'] = {'F1': True, 'F2': True}
-    eng8 = SecondPerspectiveEngine(acct)
-    eng8.load_core_plugins()
-    r8 = eng8.audit(verified)['analysis']['BFC']
-    print('    All verified ->', r8['status'],
-          '| true =', r8['true_count'], '| undeclared =', r8['undeclared_count'])
-
-    # 场景7：∞ 无限因果重构（极限收敛器）—— 层数不设上限，只按语义判据停机
-    eng9 = SecondPerspectiveEngine(acct)
-    eng9.load_core_plugins()
-    lim = eng9.limit_reconstruct(
-        decision_context=dict(full),
-        approved_deltas=[
-            {'feedback': {'需求稳定': 'confirmed', '成本可控': 'unobserved'}},
-            {'feedback': {'需求稳定': 'confirmed', '成本可控': 'confirmed'}},
-            {'commit_ratio': 0.5},
-        ],
-        energy_budget=50.0,          # 唯一的算术硬顶（不设 max_loops）
-    )
-    print('[7] ∞ limit ->', lim['verdict'],
-          '| distance =', lim['distance_trend'],
-          '| true_convergence =', lim['is_true_convergence'],
-          '| is_limit =', lim['is_limit'])
-
-    step = eng9.spiral_step(dict(full), delta={'audit_note': '外部再推一层'},
-                            state=lim['spiral_state'])
-    print('    spiral_step ->', step['verdict'],
-          '| can_continue =', step['can_continue'],
-          '| layers =', step['layer_count'])
-
-    # 场景8：元因果账本 —— 五条元基落成可计算的账本
-    eng10 = SecondPerspectiveEngine(acct)
-    eng10.set_clock(1700000000.0)
-    eng10.load_core_plugins()
-    r10 = eng10.audit(full)
-    ledger = r10['meta_ledger']
-    print('[8] Meta ledger ->', ledger['status'], '|', ledger['reason'])
-    for base in ('混沌', '无极', '虚幻', '天道', '轮回'):
-        body = ledger['bases'][base]
-        print(f'    {base} -> {body["status"]:<8} | {body["reason"]}')
-    print('    A10 (天道) =', ledger['bases']['天道']['a10_audit_entropy'],
-          '| A6 (虚幻) =', ledger['bases']['虚幻']['a6_narrative_entropy'],
-          '| 多线并行 =', ledger['bases']['无极']['parallel_chains'],
-          '| 观测锚点 =', ledger['bases']['轮回']['observer_anchor'] or '(未声明)')
-    print('    time_order assignable ->',
-          r10['topology']['time_order']['assignable'],
-          '| forks =', len(r10['topology']['time_order']['forks']))
-
-    # 场景9：自主进化层 —— 引擎自查出缺口，但**不自己动手**；人工裁决只记账
-    eng11 = SecondPerspectiveEngine(acct)
-    eng11.set_clock(1700000000.0)
-    eng11.load_core_plugins()
-    evo = eng11.evolve(
-        decision_context=dict(full),
-        approved_deltas=[{'commit_ratio': 0.25}],
-        max_loops=4,
-        energy_budget=5.0,
-    )
-    print('[9] Evolution ->', evo['verdict'],
-          '| proposals =', evo['proposal_count'],
-          '| auto_applied =', evo['auto_applied'],
-          '| requires_human =', evo['requires_human'])
-    print('    lineage -> 第', evo['lineage']['generation'], '代',
-          '| operators =', evo['lineage']['operator_count'],
-          '| hash =', evo['lineage']['lineage_hash'])
-    print('    A10 bounded ->', evo['audit_entropy']['bounded'],
-          '| per-layer =', evo['audit_entropy']['per_layer'],
-          '| fixed_point =', evo['fixed_point']['found'])
-    for p in evo['proposals']:
-        print('    候选', p['id'], '|', p['code'],
-              '| auto =', p['applies_automatically'], '| 人工 =', p['requires_human'])
-    if evo['proposals']:
-        verdict = eng11.approve_evolution_proposal(evo['proposals'][0], approved_by='张三/工号888')
-        print('    人工裁决 -> 第', verdict['lineage']['generation'], '代',
-              '| applied_to_code =', verdict['applied_to_code'],
-              '| 仍需改代码 =', verdict['requires_code_change'])
-
-
-if __name__ == '__main__':
-    _demo()
